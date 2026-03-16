@@ -11,6 +11,7 @@ export const siteCopy: Record<
       buy: string;
       sell: string;
       landlords: string;
+      apply: string;
     };
     header: {
       name: string;
@@ -38,6 +39,7 @@ export const siteCopy: Record<
       buy: "Buy",
       sell: "Sell",
       landlords: "Landlords",
+      apply: "Apply",
     },
     header: {
       name: "Abraham Zehaifi",
@@ -66,6 +68,7 @@ export const siteCopy: Record<
       buy: "Comprar",
       sell: "Vender",
       landlords: "Propietarios",
+      apply: "Aplicar",
     },
     header: {
       name: "Abraham Zehaifi",
@@ -81,7 +84,7 @@ export const siteCopy: Record<
       spanish: "Español",
       arabic: "العربية",
       description:
-        "Orientación inmobiliaria en Houston para inquilinos, reubicación, compradores, vendedores, propietarios y búsquedas de vivienda especializadas, incluyendo Texas Medical Center y Rice University.",
+        "Orientación inmobiliaria en Houston para inquilinos, reubicación, compradores, vendedores, propietarios y búsquedas de vivienda especializadas.",
     },
   },
 
@@ -94,6 +97,7 @@ export const siteCopy: Record<
       buy: "شراء",
       sell: "بيع",
       landlords: "المُلّاك",
+      apply: "تقديم",
     },
     header: {
       name: "Abraham Zehaifi",
@@ -109,7 +113,7 @@ export const siteCopy: Record<
       spanish: "Español",
       arabic: "العربية",
       description:
-        "إرشاد عقاري في هيوستن للمستأجرين، والمنتقلين، والمشترين، والبائعين، والمُلّاك، وعمليات البحث السكنية المتخصصة بما في ذلك المركز الطبي في تكساس وجامعة رايس.",
+        "إرشاد عقاري في هيوستن للمستأجرين والمنتقلين والمشترين والبائعين والمُلّاك.",
     },
   },
 };

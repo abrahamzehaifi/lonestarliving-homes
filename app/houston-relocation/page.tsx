@@ -9,16 +9,16 @@ export const metadata: Metadata = {
 
 type Language = "en" | "es" | "ar";
 
-type HoustonRelocationPageProps = {
-  searchParams?: Promise<{
-    lang?: string;
-  }>;
-};
-
 function getLanguage(value?: string): Language {
   if (value === "es" || value === "ar") return value;
   return "en";
 }
+
+type Props = {
+  searchParams?: {
+    lang?: string;
+  };
+};
 
 const copy = {
   en: {
@@ -46,63 +46,63 @@ const copy = {
       },
     ],
     legal:
-      "Brokered by 5th Stream Realty LLC. Submitting a request does not create an agency relationship. Representation, availability, and next steps depend on review, fit, and applicable written agreement.",
+      "Brokered by 5th Stream Realty LLC. Submitting a request does not create an agency relationship.",
   },
 
   es: {
     eyebrow: "Reubicación a Houston",
     title: "Guía de reubicación para una mudanza más organizada a Houston.",
     body:
-      "Apoyo estructurado para inquilinos y compradores calificados que se mudan a Houston, con mejor planificación en torno a tiempos, vecindarios, trayectos, perfil de evaluación y ejecución práctica del siguiente paso.",
+      "Apoyo estructurado para inquilinos y compradores calificados que se mudan a Houston.",
     primaryCta: "Comenzar solicitud de renta",
     secondaryCta: "Explorar compra",
     cards: [
       {
         title: "Planificación de mudanza",
         description:
-          "Útil para clientes que equilibran fechas de mudanza, presión temporal, elección de vecindarios y realidad del trayecto.",
+          "Útil para clientes que equilibran fechas de mudanza y elección de vecindarios.",
       },
       {
         title: "Solicitud estructurada",
         description:
-          "La solicitud captura los detalles base necesarios para dirigir la conversación de reubicación de manera más eficiente.",
+          "La solicitud captura los detalles necesarios para dirigir la conversación.",
       },
       {
-        title: "Siguiente paso con enfoque en ejecución",
+        title: "Siguiente paso enfocado",
         description:
-          "La meta es convertir una consulta amplia de reubicación en una ruta de vivienda más clara y con menos pasos desperdiciados.",
+          "Convertir una consulta amplia en una ruta de vivienda más clara.",
       },
     ],
     legal:
-      "Intermediado por 5th Stream Realty LLC. Enviar una solicitud no crea una relación de agencia. La representación, disponibilidad y los siguientes pasos dependen de revisión, ajuste y acuerdo escrito aplicable.",
+      "Intermediado por 5th Stream Realty LLC. Enviar una solicitud no crea relación de agencia.",
   },
 
   ar: {
     eyebrow: "الانتقال إلى هيوستن",
-    title: "إرشاد للانتقال من أجل انتقال أكثر تنظيمًا إلى هيوستن.",
+    title: "إرشاد للانتقال إلى هيوستن بشكل أكثر تنظيمًا.",
     body:
-      "دعم منظم للمستأجرين والمشترين المؤهلين المنتقلين إلى هيوستن مع تخطيط أفضل يتعلق بالتوقيت والأحياء وأنماط التنقل والجاهزية والفحص والتنفيذ العملي للخطوة التالية.",
+      "دعم منظم للمستأجرين والمشترين المؤهلين المنتقلين إلى هيوستن.",
     primaryCta: "ابدأ طلب الإيجار",
     secondaryCta: "استكشف الشراء",
     cards: [
       {
         title: "تخطيط الانتقال",
         description:
-          "مفيد للعملاء الذين يوازنون بين مواعيد الانتقال والضغط الزمني المؤقت واختيار الأحياء وواقع التنقل اليومي.",
+          "مفيد للعملاء الذين يوازنون بين مواعيد الانتقال واختيار الأحياء.",
       },
       {
         title: "استقبال منظم",
         description:
-          "يلتقط الطلب التفاصيل الأساسية اللازمة لتوجيه محادثة الانتقال بكفاءة أكبر.",
+          "يلتقط الطلب التفاصيل الأساسية اللازمة لتوجيه المحادثة.",
       },
       {
-        title: "خطوة تالية تركز على التنفيذ",
+        title: "خطوة تنفيذ واضحة",
         description:
-          "الهدف هو تحويل استفسار الانتقال العام إلى مسار سكني أوضح مع خطوات مهدورة أقل.",
+          "تحويل استفسار الانتقال إلى مسار سكني أوضح.",
       },
     ],
     legal:
-      "يتم التوسط من خلال 5th Stream Realty LLC. لا يؤدي إرسال الطلب إلى إنشاء علاقة وكالة. تعتمد التمثيل والتوفر والخطوات التالية على المراجعة والملاءمة والاتفاق الكتابي المعمول به.",
+      "يتم التوسط من خلال 5th Stream Realty LLC.",
   },
 } as const;
 
@@ -123,11 +123,8 @@ function DetailCard({
   );
 }
 
-export default async function HoustonRelocationPage({
-  searchParams,
-}: HoustonRelocationPageProps) {
-  const resolvedSearchParams = (await searchParams) ?? {};
-  const lang = getLanguage(resolvedSearchParams.lang);
+export default function HoustonRelocationPage({ searchParams }: Props) {
+  const lang = getLanguage(searchParams?.lang);
   const t = copy[lang];
   const isArabic = lang === "ar";
 
