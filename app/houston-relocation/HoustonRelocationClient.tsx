@@ -1,11 +1,10 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+type Props = {
+  lang: "en" | "es" | "ar";
+};
 
-export default function HoustonRelocationClient() {
-  const searchParams = useSearchParams();
-  const lang = searchParams.get("lang") ?? "en";
-
+export default function HoustonRelocationClient({ lang }: Props) {
   return (
     <main className="min-h-screen bg-[#f5f5f3] text-neutral-950">
       <section className="mx-auto max-w-5xl px-6 py-16">
