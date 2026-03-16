@@ -1,6 +1,55 @@
 import Link from "next/link";
-import HeroSection from "@/components/HeroSection";
-import ServiceCard from "@/components/ServiceCard";
+
+function HeroSection({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <section className="mx-auto max-w-5xl px-6 pt-12">
+      <div className="rounded-[2rem] border border-black/5 bg-white p-8 md:p-10">
+        <p className="text-sm font-medium uppercase tracking-[0.18em] text-neutral-500">
+          {eyebrow}
+        </p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-tight text-neutral-950 md:text-5xl">
+          {title}
+        </h1>
+        <p className="mt-4 max-w-3xl text-base leading-8 text-neutral-600">
+          {description}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function ServiceCard({
+  title,
+  description,
+  href,
+  cta,
+}: {
+  title: string;
+  description: string;
+  href: string;
+  cta: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="rounded-[1.5rem] border border-black/5 bg-white p-6 transition hover:border-black/10 hover:bg-neutral-50"
+    >
+      <h3 className="text-xl font-semibold tracking-tight text-neutral-950">
+        {title}
+      </h3>
+      <p className="mt-3 text-sm leading-7 text-neutral-600">{description}</p>
+      <p className="mt-5 text-sm font-medium text-neutral-900">{cta}</p>
+    </Link>
+  );
+}
 
 function ProcessStep({
   number,
