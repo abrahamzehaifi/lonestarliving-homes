@@ -29,7 +29,6 @@ function isValidEmail(email: string): boolean {
 }
 
 function track(event: string, props?: Record<string, unknown>) {
-  // eslint-disable-next-line no-console
   console.log("[track]", event, props ?? {});
 }
 
@@ -38,12 +37,12 @@ const initialState: RentalFormState = {
   email: "",
   phone: "",
 
-  budget: undefined,
+  budget: "",
   areas: "",
   moveInDate: "",
 
   creditScoreBand: undefined,
-  incomeMonthly: undefined,
+  incomeMonthly: "",
 
   eviction: undefined,
   brokenLease: undefined,
@@ -75,20 +74,24 @@ export default function LeadFormWizard({
     }
 
     if (step === 2) {
-      return !!s.budget && s.budget > 0 && (s.areas ?? "").trim().length >= 2;
+      return (
+        s.budget.trim().length > 0 &&
+        Number(s.budget) > 0 &&
+        s.areas.trim().length >= 2
+      );
     }
 
     if (step === 3) {
       return (
         !!s.moveInDate &&
         !!s.creditScoreBand &&
-        !!s.incomeMonthly &&
-        s.incomeMonthly > 0
+        s.incomeMonthly.trim().length > 0 &&
+        Number(s.incomeMonthly) > 0
       );
     }
 
     if (step === 4) {
-      return s.screeningAck === true && (s.message ?? "").trim().length >= 5;
+      return s.screeningAck === true && s.message.trim().length >= 5;
     }
 
     return false;
@@ -108,21 +111,23 @@ export default function LeadFormWizard({
 
         name: s.name.trim(),
         email: s.email.trim(),
-        phone: s.phone?.trim() || null,
+        phone: s.phone.trim() || null,
 
-        budget: s.budget ?? null,
-        areas: s.areas?.trim() || null,
+        budget: s.budget.trim() ? Number(s.budget) : null,
+        areas: s.areas.trim() || null,
         moveInDate: s.moveInDate || null,
 
         creditScore: bandToNumber(s.creditScoreBand as CreditBand) ?? null,
-        incomeMonthly: s.incomeMonthly ?? null,
+        incomeMonthly: s.incomeMonthly.trim()
+          ? Number(s.incomeMonthly)
+          : null,
 
         eviction: typeof s.eviction === "boolean" ? s.eviction : null,
         brokenLease: typeof s.brokenLease === "boolean" ? s.brokenLease : null,
 
         pets: s.pets ?? "unknown",
 
-        message: (s.message ?? "").trim(),
+        message: s.message.trim(),
 
         screeningAck: s.screeningAck,
         contactConsent: s.contactConsent,
@@ -206,7 +211,7 @@ export default function LeadFormWizard({
               className="mt-1 w-full rounded-xl border p-3"
               type="tel"
               inputMode="tel"
-              value={s.phone ?? ""}
+              value={s.phone}
               onChange={(e) =>
                 setS((prev) => ({ ...prev, phone: e.target.value }))
               }
@@ -226,11 +231,11 @@ export default function LeadFormWizard({
             <input
               className="mt-1 w-full rounded-xl border p-3"
               type="number"
-              value={s.budget ?? ""}
+              value={s.budget}
               onChange={(e) =>
                 setS((prev) => ({
                   ...prev,
-                  budget: e.target.value ? Number(e.target.value) : undefined,
+                  budget: e.target.value,
                 }))
               }
               placeholder="e.g. 1600"
@@ -243,7 +248,7 @@ export default function LeadFormWizard({
             <span className="text-sm text-gray-700">Areas / ZIPs</span>
             <input
               className="mt-1 w-full rounded-xl border p-3"
-              value={s.areas ?? ""}
+              value={s.areas}
               onChange={(e) =>
                 setS((prev) => ({ ...prev, areas: e.target.value }))
               }
@@ -262,7 +267,7 @@ export default function LeadFormWizard({
             <input
               className="mt-1 w-full rounded-xl border p-3"
               type="date"
-              value={s.moveInDate ?? ""}
+              value={s.moveInDate}
               onChange={(e) =>
                 setS((prev) => ({ ...prev, moveInDate: e.target.value }))
               }
@@ -277,7 +282,9 @@ export default function LeadFormWizard({
               onChange={(e) =>
                 setS((prev) => ({
                   ...prev,
-                  creditScoreBand: (e.target.value || undefined) as CreditBand | undefined,
+                  creditScoreBand: (e.target.value || undefined) as
+                    | CreditBand
+                    | undefined,
                 }))
               }
             >
@@ -295,13 +302,11 @@ export default function LeadFormWizard({
             <input
               className="mt-1 w-full rounded-xl border p-3"
               type="number"
-              value={s.incomeMonthly ?? ""}
+              value={s.incomeMonthly}
               onChange={(e) =>
                 setS((prev) => ({
                   ...prev,
-                  incomeMonthly: e.target.value
-                    ? Number(e.target.value)
-                    : undefined,
+                  incomeMonthly: e.target.value,
                 }))
               }
               placeholder="e.g. 5200"
@@ -395,7 +400,7 @@ export default function LeadFormWizard({
             </span>
             <textarea
               className="mt-1 w-full rounded-xl border p-3"
-              value={s.message ?? ""}
+              value={s.message}
               onChange={(e) =>
                 setS((prev) => ({ ...prev, message: e.target.value }))
               }

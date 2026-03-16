@@ -93,8 +93,8 @@ export async function POST(req: Request) {
 
     const { error: eventError } = await supabase.from("lead_events").insert({
       lead_id: id,
-      event_type: "follow_up_scheduled",
-      event_label: follow-upAt
+      event_type: followUpAt ? "follow_up_scheduled" : "follow_up_cleared",
+      event_label: followUpAt
         ? "Follow-up scheduled"
         : "Follow-up cleared",
       event_data: {

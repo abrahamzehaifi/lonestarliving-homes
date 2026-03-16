@@ -72,3 +72,5 @@ Thumbs.db
 * 2.json
 *.bak
 *.swp
+.vercel
+.env*.local

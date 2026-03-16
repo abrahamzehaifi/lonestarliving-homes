@@ -36,3 +36,34 @@ export type RentalFormInput = {
   screeningAck: boolean;
   contactConsent: boolean;
 };
+
+/**
+ * Normalized rental lead shape after cleaning / coercion.
+ */
+export type NormalizedRentalLead = {
+  name: string;
+  email: string;
+  phone: string | null;
+
+  budget: number | null;
+  areas: string;
+  moveInDate: string | null;
+  creditScoreBand?: CreditScoreBand;
+  creditScore: number | null;
+  incomeMonthly: number | null;
+
+  eviction: boolean | null;
+  brokenLease: boolean | null;
+
+  pets: PetsStatus;
+
+  message: string;
+
+  screeningAck: boolean;
+  contactConsent: boolean;
+};
+
+/**
+ * Backwards compatibility alias
+ */
+export type RentalFormState = RentalFormInput;

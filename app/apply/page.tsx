@@ -1,9 +1,9 @@
 "use client";
 
-import { FormEvent, ReactNode, useMemo, useState } from "react";
+import { FormEvent, ReactNode, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
-import { getLanguage, translations } from "../../lib/i18n/translations";
+import { getLanguage } from "../../lib/i18n/translations";
 
 type FormDataState = {
   name: string;
@@ -13,6 +13,7 @@ type FormDataState = {
   budget: string;
   areas: string;
   screeningProfile: string;
+  pets: string;
   message: string;
   consent: boolean;
 };
@@ -25,6 +26,7 @@ const initialState: FormDataState = {
   budget: "",
   areas: "",
   screeningProfile: "",
+  pets: "",
   message: "",
   consent: false,
 };
@@ -50,7 +52,6 @@ export default function ApplyPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const lang = getLanguage(searchParams.get("lang") ?? "en");
-  const t = useMemo(() => translations[lang].apply, [lang]);
 
   const [form, setForm] = useState<FormDataState>(initialState);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -87,7 +88,7 @@ export default function ApplyPage() {
           budget: form.budget,
           areas: form.areas,
           screeningProfile: form.screeningProfile,
-          message: form.message,
+          message: [form.pets, form.message].filter(Boolean).join("\n\n"),
           contactConsent: form.consent,
           preferredLanguage: lang,
           leadType: "rent",
@@ -142,23 +143,27 @@ export default function ApplyPage() {
 
       <section className="mx-auto max-w-3xl px-6 py-12">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-neutral-500">
-          {t.eyebrow}
+          Application
         </p>
 
         <h1 className="mt-4 text-4xl font-semibold tracking-tight md:text-5xl">
-          {t.title}
+          Begin rental assistance
         </h1>
 
         <p className="mt-5 max-w-2xl text-base leading-8 text-neutral-600">
-          {t.intro}
+          Submit your rental criteria so the search can begin with your budget,
+          move-in timing, target areas, and screening profile.
         </p>
 
         {submitSuccess ? (
           <div className="mt-10 rounded-3xl border border-neutral-200 bg-neutral-50 p-6">
             <h2 className="text-2xl font-semibold tracking-tight">
-              {t.successTitle}
+              Request received
             </h2>
-            <p className="mt-3 text-neutral-700">{t.successText}</p>
+            <p className="mt-3 text-neutral-700">
+              Your information has been submitted successfully. You will be
+              redirected shortly.
+            </p>
           </div>
         ) : (
           <form
@@ -174,14 +179,14 @@ export default function ApplyPage() {
 
             <div className="grid gap-6 md:grid-cols-2">
               <Field
-                label={t.fullName}
+                label="Full name"
                 required
                 input={
                   <input
                     type="text"
                     value={form.name}
                     onChange={(e) => updateField("name", e.target.value)}
-                    placeholder={t.placeholders.fullName}
+                    placeholder="Your full name"
                     className={inputClass}
                     required
                   />
@@ -189,14 +194,14 @@ export default function ApplyPage() {
               />
 
               <Field
-                label={t.email}
+                label="Email"
                 required
                 input={
                   <input
                     type="email"
                     value={form.email}
                     onChange={(e) => updateField("email", e.target.value)}
-                    placeholder={t.placeholders.email}
+                    placeholder="you@example.com"
                     className={inputClass}
                     required
                   />
@@ -204,14 +209,14 @@ export default function ApplyPage() {
               />
 
               <Field
-                label={t.phone}
+                label="Phone"
                 required
                 input={
                   <input
                     type="tel"
                     value={form.phone}
                     onChange={(e) => updateField("phone", e.target.value)}
-                    placeholder={t.placeholders.phone}
+                    placeholder="Phone number"
                     className={inputClass}
                     required
                   />
@@ -219,7 +224,7 @@ export default function ApplyPage() {
               />
 
               <Field
-                label={t.moveInDate}
+                label="Move-in date"
                 required
                 input={
                   <input
@@ -233,7 +238,7 @@ export default function ApplyPage() {
               />
 
               <Field
-                label={t.monthlyBudget}
+                label="Monthly budget"
                 required
                 input={
                   <input
@@ -241,7 +246,7 @@ export default function ApplyPage() {
                     min="500"
                     value={form.budget}
                     onChange={(e) => updateField("budget", e.target.value)}
-                    placeholder={t.placeholders.monthlyBudget}
+                    placeholder="Monthly budget"
                     className={inputClass}
                     required
                   />
@@ -249,14 +254,14 @@ export default function ApplyPage() {
               />
 
               <Field
-                label={t.preferredAreas}
+                label="Preferred areas"
                 required
                 input={
                   <input
                     type="text"
                     value={form.areas}
                     onChange={(e) => updateField("areas", e.target.value)}
-                    placeholder={t.placeholders.preferredAreas}
+                    placeholder="Preferred neighborhoods or areas"
                     className={inputClass}
                     required
                   />
@@ -264,7 +269,7 @@ export default function ApplyPage() {
               />
 
               <Field
-                label={t.creditRange}
+                label="Screening profile"
                 required
                 input={
                   <select
@@ -275,8 +280,8 @@ export default function ApplyPage() {
                     className={inputClass}
                     required
                   >
-                    <option value="">{t.selectOption}</option>
-                    <option value="clean">{t.reasons.apartment}</option>
+                    <option value="">Select one</option>
+                    <option value="clean">Clean screening</option>
                     <option value="no_us_credit">No U.S. credit</option>
                     <option value="credit_concern">Credit concern</option>
                     <option value="broken_lease">Broken lease</option>
@@ -286,13 +291,13 @@ export default function ApplyPage() {
               />
 
               <Field
-                label={t.pets}
+                label="Pets"
                 input={
                   <input
                     type="text"
-                    value={form.message}
-                    onChange={(e) => updateField("message", e.target.value)}
-                    placeholder={t.placeholders.message}
+                    value={form.pets}
+                    onChange={(e) => updateField("pets", e.target.value)}
+                    placeholder="Pets, breed, weight, or none"
                     className={inputClass}
                   />
                 }
@@ -301,12 +306,12 @@ export default function ApplyPage() {
 
             <div className="mt-6 grid gap-6">
               <Field
-                label={t.message}
+                label="Additional details"
                 input={
                   <textarea
                     value={form.message}
                     onChange={(e) => updateField("message", e.target.value)}
-                    placeholder={t.placeholders.message}
+                    placeholder="Anything else that would help narrow the search"
                     rows={6}
                     className={inputClass}
                   />
@@ -321,7 +326,9 @@ export default function ApplyPage() {
                   className="mt-1 h-4 w-4 rounded border-neutral-300"
                   required
                 />
-                <span>{t.consent}</span>
+                <span>
+                  I consent to be contacted regarding my housing request.
+                </span>
               </label>
             </div>
 
@@ -334,7 +341,7 @@ export default function ApplyPage() {
               disabled={isSubmitting}
               className="mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-neutral-950 px-6 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSubmitting ? t.submitting : t.submit}
+              {isSubmitting ? "Submitting..." : "Submit Request"}
             </button>
           </form>
         )}

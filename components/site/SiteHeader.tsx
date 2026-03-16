@@ -88,10 +88,7 @@ export default function SiteHeader() {
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#5f616a]/95 backdrop-blur">
       <div className="mx-auto max-w-7xl px-4 py-3 md:px-6">
         <div className="flex flex-col gap-4">
-
-          {/* Top Row */}
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-
             <div className="flex min-w-0 items-center gap-3">
               <BrokerLogo />
 
@@ -121,12 +118,9 @@ export default function SiteHeader() {
               <LanguageLink lang="es">ES</LanguageLink>
               <LanguageLink lang="ar">AR</LanguageLink>
             </div>
-
           </div>
 
-          {/* Navigation Row */}
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-
             <nav
               aria-label="Primary navigation"
               className="flex flex-wrap items-center gap-4 lg:gap-6"
@@ -154,13 +148,11 @@ export default function SiteHeader() {
               </NavLink>
 
               <NavLink href={`/intake?type=tenant&lang=${lang}`}>
-                {copy.nav.apply}
+                Apply
               </NavLink>
             </nav>
 
-            {/* Contact Section */}
             <div className="flex flex-wrap items-center gap-3">
-
               <div className="hidden text-right md:block">
                 <p className="text-sm font-medium leading-tight text-white">
                   {copy.header.name}
@@ -175,9 +167,7 @@ export default function SiteHeader() {
               <HeaderButton href="mailto:zehaifirealty@gmail.com" filled>
                 {copy.header.email}
               </HeaderButton>
-
             </div>
-
           </div>
         </div>
       </div>
