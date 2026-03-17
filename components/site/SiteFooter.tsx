@@ -47,6 +47,8 @@ export default function SiteFooter() {
     <footer className="border-t border-black/5 bg-[#efefec]">
       <div className="mx-auto max-w-7xl px-6 py-14">
         <div className="grid gap-10 md:grid-cols-3">
+          
+          {/* Brand */}
           <div>
             <div className="flex items-center gap-3">
               <BrokerLogo />
@@ -64,24 +66,33 @@ export default function SiteFooter() {
               <FooterLanguageLink href="/?lang=en">
                 {copy.footer.english}
               </FooterLanguageLink>
+
               <FooterLanguageLink href="/?lang=es">
                 {copy.footer.spanish}
               </FooterLanguageLink>
+
               <FooterLanguageLink href="/?lang=ar">
                 {copy.footer.arabic}
               </FooterLanguageLink>
             </div>
           </div>
 
+          {/* Contact */}
           <div>
             <h3 className="text-base font-semibold">{copy.footer.contact}</h3>
+
             <div className="mt-3 space-y-2 text-sm text-neutral-600">
               <p>Abraham Zehaifi, Texas REALTOR®</p>
+
               <p>
-                <a href="tel:+17135053888" className="transition hover:text-black">
+                <a
+                  href="tel:+17135053888"
+                  className="transition hover:text-black"
+                >
                   +1 (713) 505-3888
                 </a>
               </p>
+
               <p>
                 <a
                   href="mailto:zehaifirealty@gmail.com"
@@ -90,21 +101,27 @@ export default function SiteFooter() {
                   zehaifirealty@gmail.com
                 </a>
               </p>
+
               <p>Houston, Texas</p>
             </div>
           </div>
 
+          {/* Legal Notices */}
           <div>
             <h3 className="text-base font-semibold">{copy.footer.notices}</h3>
+
             <div className="mt-3 space-y-2 text-sm text-neutral-600">
+
+              {/* Correct IABS Link */}
               <a
-                href="/legal/iabs-2025.pdf"
+                href="/legal/IABS.pdf"
                 target="_blank"
                 rel="noreferrer"
                 className="block transition hover:text-black"
               >
                 Information About Brokerage Services (IABS)
               </a>
+
               <a
                 href="/legal/consumer-protection-notice.pdf"
                 target="_blank"
@@ -113,6 +130,7 @@ export default function SiteFooter() {
               >
                 TREC Consumer Protection Notice
               </a>
+
               <p>Equal Housing Opportunity</p>
             </div>
 
@@ -120,12 +138,14 @@ export default function SiteFooter() {
               <p className="font-medium text-neutral-600">
                 {copy.footer.brokerInfo}
               </p>
+
               <p>5th Stream Realty LLC</p>
               <p>(214) 868-0707</p>
               <p>https://5thstream.com</p>
               <p>7941 Katy Fwy #787, Houston, TX 77024</p>
             </div>
           </div>
+
         </div>
 
         <div className="mt-10 border-t border-black/5 pt-6 text-sm text-neutral-500">
