@@ -1,354 +1,182 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import {
-  getHoustonAreaBySlug,
-  houstonAreaPages,
-} from "@/lib/houston-neighborhoods";
-
-type PageProps = {
-  params: Promise<{ slug: string }>;
+export type HoustonAreaPage = {
+  slug: string;
+  title: string;
+  metaTitle: string;
+  metaDescription: string;
+  h1: string;
+  intro: string;
+  overview: string[];
+  bestFor: string[];
+  zipCodes: string[];
+  housing: string[];
+  lifestyle: string[];
+  pricingNote: string;
+  commute: string[];
+  seoFaqs: {
+    question: string;
+    answer: string;
+  }[];
 };
 
-export async function generateStaticParams() {
-  return houstonAreaPages.map((page) => ({
-    slug: page.slug,
-  }));
-}
-
-export async function generateMetadata({
-  params,
-}: PageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const page = getHoustonAreaBySlug(slug);
-
-  if (!page) {
-    return {
-      title: "Houston Neighborhood Guidance",
-      description: "Houston neighborhood guidance.",
-    };
-  }
-
-  return {
-    title: page.metaTitle,
-    description: page.metaDescription,
-    alternates: {
-      canonical: `/houston/${page.slug}`,
-    },
-  };
-}
-
-function getCompareLinks(currentSlug: string) {
-  const priorityOrder = [
-    "katy",
-    "cypress",
-    "the-heights",
-    "memorial-energy-corridor",
-    "spring-branch",
-    "river-oaks-upper-kirby",
-    "west-university-rice-museum-district",
-    "downtown-midtown-montrose-river-oaks-adjacent",
-    "baytown-east-houston-corridor",
-  ];
-
-  return priorityOrder
-    .filter((slug) => slug !== currentSlug)
-    .map((slug) => getHoustonAreaBySlug(slug))
-    .filter(Boolean)
-    .slice(0, 5);
-}
-
-export default async function HoustonAreaPage({ params }: PageProps) {
-  const { slug } = await params;
-  const page = getHoustonAreaBySlug(slug);
-
-  if (!page) {
-    notFound();
-  }
-
-  const compareLinks = getCompareLinks(page.slug);
-
-  const faqJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: page.seoFaqs.map((faq) => ({
-      "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: faq.answer,
+export const houstonAreaPages: HoustonAreaPage[] = [
+  {
+    slug: "cypress",
+    title: "Cypress, TX",
+    metaTitle: "Cypress Houston Rentals, Homes & Relocation Guidance",
+    metaDescription:
+      "Explore Cypress area rentals, homes, neighborhoods, commute considerations, and relocation guidance for Houston-area clients seeking more space and newer communities.",
+    h1: "Houston housing guidance for Cypress clients.",
+    intro:
+      "Cypress remains one of the strongest northwest Houston residential corridors for clients seeking more space, newer housing stock, and neighborhood-oriented living.",
+    overview: [
+      "Cypress attracts families, relocating professionals, and renters looking for stronger value per square foot than many inner-loop options.",
+      "The area offers a broad mix of apartments, townhomes, and single-family homes, with many communities built around parks, schools, trails, and neighborhood amenities.",
+      "For clients comparing suburban options in Houston, Cypress often makes sense when space, school access, and newer inventory matter more than inner-loop proximity.",
+    ],
+    bestFor: [
+      "Families prioritizing neighborhood stability and school access",
+      "Renters seeking larger homes or townhomes",
+      "Buyers comparing value against Katy and Memorial-adjacent pricing",
+      "Clients comfortable with a more suburban commute pattern",
+    ],
+    zipCodes: [],
+    housing: [
+      "Newer single-family homes in master-planned communities",
+      "Townhomes with attached garages",
+      "Conventional and luxury apartment communities",
+      "Lease and purchase options across a wide price band",
+    ],
+    lifestyle: [
+      "Community amenities, trails, and neighborhood parks",
+      "Retail growth and daily-use convenience",
+      "More residential and family-oriented than urban lifestyle districts",
+    ],
+    pricingNote:
+      "Pricing in Cypress varies materially by school zoning, age of construction, and neighborhood quality. The main strategic decision is usually space and school tradeoff versus commute time.",
+    commute: [
+      "Strongest fit for clients working northwest or with flexible commute patterns",
+      "Important to evaluate Highway 290 access, daily timing, and employment center alignment",
+    ],
+    seoFaqs: [
+      {
+        question: "Is Cypress a good area for renters in Houston?",
+        answer:
+          "Cypress is a strong option for renters who want more space, newer communities, and neighborhood-style living in the northwest Houston market.",
       },
-    })),
-  };
+      {
+        question: "Who is Cypress best suited for?",
+        answer:
+          "Cypress is often best for families, relocating professionals, and clients who prioritize value, schools, and larger housing over inner-loop proximity.",
+      },
+    ],
+  },
 
-  return (
-    <main className="min-h-screen bg-[#f5f5f3] text-neutral-950">
-      <section className="mx-auto max-w-6xl px-6 py-16 md:py-20">
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-neutral-900 transition hover:border-black/20"
-          >
-            Home
-          </Link>
+  {
+    slug: "katy",
+    title: "Katy, TX",
+    metaTitle: "Katy Houston Rentals, Homes & Relocation Guidance",
+    metaDescription:
+      "Compare Katy rentals and homes with practical guidance on neighborhoods, commute, school-driven demand, and relocation strategy in the greater Houston market.",
+    h1: "Houston housing guidance for Katy clients.",
+    intro:
+      "Katy is one of the most active relocation and family-oriented housing markets in the Houston area, driven by school demand, master-planned communities, and large-volume residential inventory.",
+    overview: [
+      "Katy performs well for clients who want structured suburban living, more space, and strong market depth across leases and purchases.",
+      "It is especially relevant for families and professionals tied to west Houston employment centers, including the Energy Corridor.",
+      "The area offers broad inventory, but not every part of Katy feels the same, so zoning, commute, and property age matter.",
+    ],
+    bestFor: [
+      "Families prioritizing suburban structure and school access",
+      "Corporate relocations to west Houston",
+      "Renters moving from apartments to single-family homes",
+      "Clients who want broad inventory and newer communities",
+    ],
+    zipCodes: [],
+    housing: [
+      "Master-planned communities with strong amenity packages",
+      "Single-family lease inventory",
+      "Apartments and townhomes near major corridors",
+      "Mix of newer construction and more established neighborhoods",
+    ],
+    lifestyle: [
+      "Family-oriented community design",
+      "Retail, services, and neighborhood amenities",
+      "Less urban and less walkable than inner-loop districts",
+    ],
+    pricingNote:
+      "Katy pricing is heavily influenced by neighborhood reputation, school alignment, and property age. The strongest decisions here are usually driven by commute and household priorities.",
+    commute: [
+      "Strong fit for west Houston and Energy Corridor access",
+      "Less attractive for clients needing frequent Downtown access",
+    ],
+    seoFaqs: [
+      {
+        question: "Is Katy a good place to rent near Houston?",
+        answer:
+          "Katy is a strong market for renters who want more space, newer communities, and access to west Houston employment areas.",
+      },
+      {
+        question: "What makes Katy attractive to relocating families?",
+        answer:
+          "Katy offers broad housing inventory, community amenities, and a suburban environment that many relocating families prefer.",
+      },
+    ],
+  },
 
-          <Link
-            href="/houston"
-            className="inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-neutral-900 transition hover:border-black/20"
-          >
-            Houston Areas
-          </Link>
-        </div>
+  {
+    slug: "the-heights",
+    title: "The Heights",
+    metaTitle: "The Heights Houston Rentals, Townhomes and Homes",
+    metaDescription:
+      "Explore Houston Heights housing guidance for renters and buyers seeking inner-loop lifestyle, strong neighborhood identity, and premium central access.",
+    h1: "Houston housing guidance for Heights clients.",
+    intro:
+      "The Heights remains one of Houston’s most desirable inner-loop neighborhoods, blending strong neighborhood identity, central access, and durable residential demand.",
+    overview: [
+      "The Heights attracts professionals, buyers focused on long-term desirability, and renters seeking more character than a generic apartment corridor.",
+      "It offers a strong mix of local retail, established streets, and premium inner-loop positioning.",
+      "Clients usually choose the Heights for lifestyle and location first, then sort for inventory fit and pricing discipline.",
+    ],
+    bestFor: [
+      "Professionals working in central Houston",
+      "Clients seeking inner-loop lifestyle with neighborhood character",
+      "Buyers focused on strong long-term location quality",
+      "Renters comparing walkability and central access against purely luxury tower living",
+    ],
+    zipCodes: ["77008"],
+    housing: [
+      "Townhomes and premium lease inventory",
+      "Established homes and newer infill product",
+      "Apartments and boutique-style rental options",
+    ],
+    lifestyle: [
+      "Strong neighborhood identity",
+      "Retail, restaurants, and local destination appeal",
+      "Inner-loop access without a purely downtown feel",
+    ],
+    pricingNote:
+      "The Heights typically commands a premium because of neighborhood quality and central access.",
+    commute: [
+      "Strong for Downtown and central Houston access",
+      "Useful for clients balancing commute, lifestyle, and neighborhood feel",
+    ],
+    seoFaqs: [
+      {
+        question: "Is the Heights a good Houston neighborhood for renters?",
+        answer:
+          "The Heights is a strong option for renters who want central access and neighborhood character.",
+      },
+    ],
+  },
+];
 
-        <p className="mt-6 text-sm font-medium uppercase tracking-[0.18em] text-neutral-500">
-          Houston neighborhood guidance
-        </p>
+/**
+ * FIXED: robust slug matcher
+ */
+export function getHoustonAreaBySlug(slug: string) {
+  const normalized = slug.trim().toLowerCase();
 
-        <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight md:text-5xl">
-          {page.h1}
-        </h1>
-
-        <p className="mt-6 max-w-3xl text-base leading-8 text-neutral-600">
-          {page.intro}
-        </p>
-
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link
-            href={`/intake?type=tenant&segment=general&area=${page.slug}`}
-            className="inline-flex items-center justify-center rounded-full bg-neutral-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-neutral-800"
-          >
-            Begin intake
-          </Link>
-
-          <Link
-            href="/rent"
-            className="inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-medium text-neutral-900 transition hover:border-black/20"
-          >
-            Rental guidance
-          </Link>
-
-          <Link
-            href="/buy"
-            className="inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-medium text-neutral-900 transition hover:border-black/20"
-          >
-            Buyer guidance
-          </Link>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-6 pb-10">
-        <div className="rounded-[1.75rem] border border-black/5 bg-white p-6">
-          <h2 className="text-lg font-semibold tracking-tight">
-            Compare Houston areas
-          </h2>
-
-          <p className="mt-2 text-sm leading-7 text-neutral-600">
-            Clients rarely compare just one location. Use these area pages to
-            compare commute, housing style, pricing profile, and neighborhood
-            fit more efficiently.
-          </p>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            {compareLinks.map((item) => (
-              <Link
-                key={item!.slug}
-                href={`/houston/${item!.slug}`}
-                className="rounded-full border border-black/10 bg-neutral-50 px-3 py-1.5 text-sm font-medium text-neutral-800 transition hover:border-black/20 hover:bg-white"
-              >
-                {item!.title}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto grid max-w-6xl gap-6 px-6 pb-16 md:grid-cols-2">
-        <div className="rounded-[1.75rem] border border-black/5 bg-white p-6">
-          <h2 className="text-xl font-semibold tracking-tight">Area overview</h2>
-
-          <div className="mt-4 space-y-4 text-sm leading-7 text-neutral-600">
-            {page.overview.map((item) => (
-              <p key={item}>
-                {item}{" "}
-                <Link
-                  href="/rent"
-                  className="underline underline-offset-4 transition hover:text-neutral-900"
-                >
-                  Explore rental strategy
-                </Link>
-                .
-              </p>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-[1.75rem] border border-black/5 bg-white p-6">
-          <h2 className="text-xl font-semibold tracking-tight">Best fit for</h2>
-
-          <ul className="mt-4 space-y-3 text-sm leading-7 text-neutral-600">
-            {page.bestFor.map((item) => (
-              <li key={item}>• {item}</li>
-            ))}
-          </ul>
-
-          <div className="mt-5">
-            <Link
-              href={`/intake?type=tenant&segment=general&area=${page.slug}`}
-              className="text-sm font-medium underline underline-offset-4 transition hover:text-neutral-900"
-            >
-              Start a guided search
-            </Link>
-          </div>
-        </div>
-
-        <div className="rounded-[1.75rem] border border-black/5 bg-white p-6">
-          <h2 className="text-xl font-semibold tracking-tight">Housing profile</h2>
-
-          <ul className="mt-4 space-y-3 text-sm leading-7 text-neutral-600">
-            {page.housing.map((item) => (
-              <li key={item}>• {item}</li>
-            ))}
-          </ul>
-
-          <div className="mt-5">
-            <Link
-              href="/buy"
-              className="text-sm font-medium underline underline-offset-4 transition hover:text-neutral-900"
-            >
-              Explore buyer guidance
-            </Link>
-          </div>
-        </div>
-
-        <div className="rounded-[1.75rem] border border-black/5 bg-white p-6">
-          <h2 className="text-xl font-semibold tracking-tight">
-            Lifestyle and positioning
-          </h2>
-
-          <ul className="mt-4 space-y-3 text-sm leading-7 text-neutral-600">
-            {page.lifestyle.map((item) => (
-              <li key={item}>• {item}</li>
-            ))}
-          </ul>
-
-          <div className="mt-5">
-            <Link
-              href="/houston"
-              className="text-sm font-medium underline underline-offset-4 transition hover:text-neutral-900"
-            >
-              Compare more Houston neighborhoods
-            </Link>
-          </div>
-        </div>
-
-        <div className="rounded-[1.75rem] border border-black/5 bg-white p-6 md:col-span-2">
-          <h2 className="text-xl font-semibold tracking-tight">
-            Pricing and decision considerations
-          </h2>
-
-          <p className="mt-4 text-sm leading-7 text-neutral-600">
-            {page.pricingNote}{" "}
-            <Link
-              href={`/intake?type=tenant&segment=general&area=${page.slug}`}
-              className="underline underline-offset-4 transition hover:text-neutral-900"
-            >
-              Start a guided search
-            </Link>
-            .
-          </p>
-
-          <h3 className="mt-6 text-lg font-semibold tracking-tight">
-            Commute considerations
-          </h3>
-
-          <ul className="mt-3 space-y-3 text-sm leading-7 text-neutral-600">
-            {page.commute.map((item) => (
-              <li key={item}>• {item}</li>
-            ))}
-          </ul>
-
-          {page.zipCodes.length > 0 && (
-            <>
-              <h3 className="mt-6 text-lg font-semibold tracking-tight">
-                Relevant ZIP codes
-              </h3>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                {page.zipCodes.map((zip) => (
-                  <span
-                    key={zip}
-                    className="rounded-full border border-black/10 bg-neutral-50 px-3 py-1 text-xs font-medium tracking-[0.12em] text-neutral-700"
-                  >
-                    {zip}
-                  </span>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      </section>
-
-      {page.seoFaqs.length > 0 && (
-        <section className="mx-auto max-w-6xl px-6 pb-16">
-          <div className="rounded-[1.75rem] border border-black/5 bg-white p-8 md:p-10">
-            <h2 className="text-2xl font-semibold tracking-tight">
-              Frequently asked questions
-            </h2>
-
-            <div className="mt-6 space-y-6">
-              {page.seoFaqs.map((faq) => (
-                <div key={faq.question}>
-                  <h3 className="text-base font-semibold tracking-tight text-neutral-900">
-                    {faq.question}
-                  </h3>
-                  <p className="mt-2 text-sm leading-7 text-neutral-600">
-                    {faq.answer}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      <section className="mx-auto max-w-6xl px-6 pb-20">
-        <div className="rounded-[1.75rem] border border-black/5 bg-white p-8 md:p-10">
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-neutral-500">
-            Next step
-          </p>
-
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight">
-            Stop guessing. Choose the right Houston area with structure.
-          </h2>
-
-          <p className="mt-4 max-w-3xl text-sm leading-7 text-neutral-600">
-            Most clients waste time looking across too many areas without a
-            clear framework. Structured intake aligns budget, commute,
-            lifestyle, and property type so the search becomes more efficient.
-          </p>
-
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href={`/intake?type=tenant&segment=general&area=${page.slug}`}
-              className="inline-flex items-center justify-center rounded-full bg-neutral-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-neutral-800"
-            >
-              Begin intake
-            </Link>
-
-            <Link
-              href="/"
-              className="inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-medium text-neutral-900 transition hover:border-black/20"
-            >
-              Return home
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
-    </main>
+  return houstonAreaPages.find(
+    (page) => page.slug.trim().toLowerCase() === normalized
   );
 }
