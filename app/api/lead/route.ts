@@ -27,6 +27,7 @@ type NormalizedLead = {
   segment?: Segment;
   preferredLanguage?: string;
   lang?: string;
+  area?: string;
   sourcePage?: string;
   sourcePath?: string;
   contactConsent?: boolean;
@@ -204,6 +205,7 @@ function normalizeLead(raw: unknown): NormalizeLeadResult {
     preferredLanguage:
       cleanString(body.preferredLanguage, 12).toLowerCase() || normalizedLang,
     lang: normalizedLang,
+    area: cleanString(body.area, 120).toLowerCase() || undefined,
     sourcePage: cleanString(body.source_page, 500) || undefined,
     sourcePath: cleanString(body.source_path, 1000) || undefined,
     contactConsent: toBool(body.contactConsent),
@@ -289,6 +291,10 @@ function routeLead(lead: NormalizedLead): { reasons: string[] } {
 
   if (lead.lang) {
     reasons.push(`lang_${lead.lang}`);
+  }
+
+  if (lead.area) {
+    reasons.push(`area_${lead.area}`);
   }
 
   if (lead.leadType === "rent") {
@@ -414,6 +420,10 @@ function scoreLeadQuality(
     qualityReasons.push(`lang_${lead.lang}`);
   }
 
+  if (lead.area) {
+    qualityReasons.push(`area_${lead.area}`);
+  }
+
   if (score >= 5) {
     return { leadQuality: "priority_a", qualityReasons };
   }
@@ -451,6 +461,7 @@ function sanitizeRawForStorage(raw: unknown) {
     segment: cleanString(body.segment, 80) || null,
     preferredLanguage: cleanString(body.preferredLanguage, 12) || null,
     lang: cleanString(body.lang, 12) || null,
+    area: cleanString(body.area, 120) || null,
     source_page: cleanString(body.source_page, 500) || null,
     source_path: cleanString(body.source_path, 1000) || null,
     contactConsent: toBool(body.contactConsent) ?? null,
@@ -502,6 +513,7 @@ async function persistLeadToSupabase(
       source: lead.source ?? "website",
       preferred_language: lead.preferredLanguage ?? null,
       lang: lead.lang ?? null,
+      area: lead.area ?? null,
       source_page: lead.sourcePage ?? null,
       source_path: lead.sourcePath ?? null,
       contact_consent: lead.contactConsent ?? null,
@@ -556,6 +568,7 @@ async function insertLeadCreatedEvent(
       source: params.lead.source ?? "website",
       timeline: params.lead.timeline ?? null,
       lang: params.lead.lang ?? null,
+      area: params.lead.area ?? null,
       source_page: params.lead.sourcePage ?? null,
       source_path: params.lead.sourcePath ?? null,
     },
@@ -594,6 +607,7 @@ function formatLeadSummary(
     lines.push(`Language: ${lead.preferredLanguage}`);
   }
   if (lead.lang) lines.push(`Lang: ${lead.lang}`);
+  if (lead.area) lines.push(`Area: ${lead.area}`);
   if (lead.sourcePage) lines.push(`Source page: ${lead.sourcePage}`);
   if (lead.sourcePath) lines.push(`Source path: ${lead.sourcePath}`);
 
@@ -826,8 +840,8 @@ export async function POST(req: Request) {
 
     const smsBody =
       lead.leadType === "rent"
-        ? `New RENT lead: ${lead.name} | $${lead.budget ?? "?"}/mo | Move-in ${lead.moveInDate ?? "?"} | ${lead.phone} | ${leadQuality}`
-        : `New ${lead.leadType.toUpperCase()} lead: ${lead.name} | ${lead.phone} | ${leadQuality}`;
+        ? `New RENT lead: ${lead.name} | $${lead.budget ?? "?"}/mo | Move-in ${lead.moveInDate ?? "?"} | ${lead.phone} | ${leadQuality}${lead.area ? ` | ${lead.area}` : ""}`
+        : `New ${lead.leadType.toUpperCase()} lead: ${lead.name} | ${lead.phone} | ${leadQuality}${lead.area ? ` | ${lead.area}` : ""}`;
 
     const smsRes = await sendSmsNotification({ body: smsBody });
 

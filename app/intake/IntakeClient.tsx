@@ -21,6 +21,7 @@ type Props = {
   lang: Language;
   intent: Intent;
   segment: Segment;
+  area: string;
 };
 
 function intentToLeadType(intent: Intent): LeadType {
@@ -44,6 +45,14 @@ function coerceLeadType(v: string): LeadType {
   return "other";
 }
 
+function formatAreaLabel(area: string) {
+  if (!area) return "";
+  return area
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 function SectionCard({
   children,
   className = "",
@@ -60,7 +69,12 @@ function SectionCard({
   );
 }
 
-export default function IntakeClient({ lang, intent, segment }: Props) {
+export default function IntakeClient({
+  lang,
+  intent,
+  segment,
+  area,
+}: Props) {
   const router = useRouter();
 
   const t = translations[lang].intake;
@@ -143,6 +157,7 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
           ...payload,
           intent,
           segment,
+          area,
           source: "website",
           preferredLanguage: lang,
           lang,
@@ -175,6 +190,7 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
 
   const heading = getHeading(leadType);
   const subtext = getSubtext(leadType);
+  const areaLabel = formatAreaLabel(area);
 
   return (
     <main
@@ -207,6 +223,12 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
             {subtext}
           </p>
 
+          {areaLabel ? (
+            <p className="mt-4 rounded-2xl border border-black/5 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">
+              Preferred area context: <span className="font-medium">{areaLabel}</span>
+            </p>
+          ) : null}
+
           <p className="mt-4 text-sm leading-7 text-neutral-500">
             {t.requestSubtext}
           </p>
@@ -217,6 +239,7 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
           <input type="hidden" name="preferredLanguage" value={lang} />
           <input type="hidden" name="segment" value={segment} />
           <input type="hidden" name="source" value="website" />
+          <input type="hidden" name="area" value={area} />
 
           <SectionCard className="bg-white">
             <div className="mb-5">
@@ -380,7 +403,8 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
                     <input
                       name="areas"
                       className={`${inputClass} md:col-span-2`}
-                      placeholder={t.fields.preferredArea}
+                      placeholder={areaLabel ? `${t.fields.preferredArea} (${areaLabel})` : t.fields.preferredArea}
+                      defaultValue={areaLabel}
                       required
                     />
 
@@ -438,7 +462,8 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
                 <input
                   name="areas"
                   className={`${inputClass} md:col-span-2`}
-                  placeholder={t.fields.preferredArea}
+                  placeholder={areaLabel ? `${t.fields.preferredArea} (${areaLabel})` : t.fields.preferredArea}
+                  defaultValue={areaLabel}
                   required
                 />
 
@@ -588,9 +613,7 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
                 {status === "sending" ? t.sending : t.submit}
               </button>
 
-              <p className="text-xs text-neutral-500">
-                {t.structuredHelp}
-              </p>
+              <p className="text-xs text-neutral-500">{t.structuredHelp}</p>
             </div>
 
             {msg ? <p className="mt-4 text-sm text-red-600">{msg}</p> : null}
@@ -605,7 +628,6 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
       <footer className="border-t border-black/5">
         <div className="mx-auto flex max-w-5xl flex-col gap-4 px-6 py-8 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-neutral-500">{brand}</p>
-
           <LanguageSwitcher />
         </div>
       </footer>

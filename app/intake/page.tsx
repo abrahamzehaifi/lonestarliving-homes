@@ -40,6 +40,11 @@ function coerceSegment(v?: string): Segment {
   return "other";
 }
 
+function cleanArea(v?: string) {
+  const value = (v ?? "").trim().toLowerCase();
+  return value || "";
+}
+
 export default async function IntakePage({
   searchParams,
 }: {
@@ -47,12 +52,21 @@ export default async function IntakePage({
     lang?: string;
     type?: string;
     segment?: string;
+    area?: string;
   }>;
 }) {
   const sp = (await searchParams) ?? {};
   const lang: Language = await getPreferredSiteLang(sp.lang);
   const intent = coerceIntent(sp.type);
   const segment = coerceSegment(sp.segment);
+  const area = cleanArea(sp.area);
 
-  return <IntakeClient lang={lang} intent={intent} segment={segment} />;
+  return (
+    <IntakeClient
+      lang={lang}
+      intent={intent}
+      segment={segment}
+      area={area}
+    />
+  );
 }
