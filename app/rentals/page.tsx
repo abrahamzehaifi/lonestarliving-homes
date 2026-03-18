@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getPreferredSiteLang } from "@/lib/i18n/getLang";
 
 type Language = "en" | "es" | "ar";
 
@@ -7,11 +8,6 @@ type RentalsPageProps = {
     lang?: string;
   }>;
 };
-
-function getLanguage(value?: string): Language {
-  if (value === "es" || value === "ar") return value;
-  return "en";
-}
 
 const copy = {
   en: {
@@ -261,7 +257,7 @@ export default async function RentalsPage({
   searchParams,
 }: RentalsPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
-  const lang = getLanguage(resolvedSearchParams.lang);
+  const lang: Language = await getPreferredSiteLang(resolvedSearchParams.lang);
   const t = copy[lang];
   const isArabic = lang === "ar";
 

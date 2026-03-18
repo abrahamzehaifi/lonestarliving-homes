@@ -1,4 +1,5 @@
 import IntakeClient from "./IntakeClient";
+import { getPreferredSiteLang } from "@/lib/i18n/getLang";
 
 type Language = "en" | "es" | "ar";
 type Intent = "tenant" | "buyer" | "seller" | "landlord" | "other";
@@ -9,11 +10,6 @@ type Segment =
   | "apartment_locator"
   | "general"
   | "other";
-
-function getLanguage(value?: string): Language {
-  if (value === "es" || value === "ar") return value;
-  return "en";
-}
 
 function coerceIntent(v?: string): Intent {
   const x = (v ?? "").toLowerCase();
@@ -54,7 +50,7 @@ export default async function IntakePage({
   }>;
 }) {
   const sp = (await searchParams) ?? {};
-  const lang = getLanguage(sp.lang);
+  const lang: Language = await getPreferredSiteLang(sp.lang);
   const intent = coerceIntent(sp.type);
   const segment = coerceSegment(sp.segment);
 

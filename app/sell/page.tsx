@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { getPreferredSiteLang } from "@/lib/i18n/getLang";
 
 export const metadata: Metadata = {
   title: "Sell Your Houston Home | Abraham Zehaifi | 5th Stream Realty LLC",
@@ -15,16 +16,10 @@ type SellPageProps = {
   }>;
 };
 
-function getLanguage(value?: string): Language {
-  if (value === "es" || value === "ar") return value;
-  return "en";
-}
-
 const copy = {
   en: {
     eyebrow: "Sell",
-    title:
-      "Sell with pricing discipline and clear market positioning.",
+    title: "Sell with pricing discipline and clear market positioning.",
     p1:
       "Serious sellers need realistic pricing, strong presentation, and a negotiation strategy grounded in actual buyer behavior. Vanity pricing wastes time, weakens momentum, and can damage the final outcome.",
     p2:
@@ -39,8 +34,7 @@ const copy = {
 
   es: {
     eyebrow: "Vender",
-    title:
-      "Venda con disciplina de precio y posicionamiento claro en el mercado.",
+    title: "Venda con disciplina de precio y posicionamiento claro en el mercado.",
     p1:
       "Los vendedores serios necesitan precios realistas, buena presentación y una estrategia de negociación basada en el comportamiento real de los compradores. Los precios inflados desperdician tiempo y debilitan el resultado final.",
     p2:
@@ -55,8 +49,7 @@ const copy = {
 
   ar: {
     eyebrow: "بيع",
-    title:
-      "بعقارك بانضباط في التسعير وتموضع واضح في السوق.",
+    title: "بعقارك بانضباط في التسعير وتموضع واضح في السوق.",
     p1:
       "البائعون الجادون يحتاجون إلى تسعير واقعي وعرض قوي واستراتيجية تفاوض مبنية على سلوك المشترين الحقيقي. التسعير غير الواقعي يضيع الوقت ويضعف النتيجة النهائية.",
     p2:
@@ -72,7 +65,7 @@ const copy = {
 
 export default async function SellPage({ searchParams }: SellPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
-  const lang = getLanguage(resolvedSearchParams.lang);
+  const lang: Language = await getPreferredSiteLang(resolvedSearchParams.lang);
   const t = copy[lang];
   const isArabic = lang === "ar";
 
@@ -117,9 +110,7 @@ export default async function SellPage({ searchParams }: SellPageProps) {
         </Link>
       </div>
 
-      <p className="mt-6 text-sm text-neutral-500">
-        {t.legal}
-      </p>
+      <p className="mt-6 text-sm text-neutral-500">{t.legal}</p>
     </section>
   );
 }
