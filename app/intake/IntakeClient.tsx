@@ -145,6 +145,9 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
           segment,
           source: "website",
           preferredLanguage: lang,
+          lang,
+          source_page: window.location.pathname,
+          source_path: window.location.pathname + window.location.search,
         }),
       });
 
@@ -186,11 +189,7 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
             </p>
           </div>
 
-          <LanguageSwitcher
-            currentPath="/intake"
-            currentLang={lang}
-            extraQuery={{ type: intent, segment }}
-          />
+          <LanguageSwitcher />
         </div>
       </section>
 
@@ -448,10 +447,10 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
                 />
 
                 <textarea
-                      name="message"
-                      className={`min-h-[140px] ${inputClass} md:col-span-2`}
-                      placeholder={t.fields.message}
-                    />
+                  name="message"
+                  className={`min-h-[140px] ${inputClass} md:col-span-2`}
+                  placeholder={t.fields.message}
+                />
               </div>
             </SectionCard>
           ) : null}
@@ -609,15 +608,11 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
         </form>
       </section>
 
-            <footer className="border-t border-black/5">
+      <footer className="border-t border-black/5">
         <div className="mx-auto flex max-w-5xl flex-col gap-4 px-6 py-8 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-neutral-500">{brand}</p>
 
-          <LanguageSwitcher
-            currentPath="/intake"
-            currentLang={lang}
-            extraQuery={{ type: intent, segment }}
-          />
+          <LanguageSwitcher />
         </div>
       </footer>
     </main>

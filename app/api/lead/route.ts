@@ -26,6 +26,9 @@ type NormalizedLead = {
   source?: string;
   segment?: Segment;
   preferredLanguage?: string;
+  lang?: string;
+  sourcePage?: string;
+  sourcePath?: string;
   contactConsent?: boolean;
 
   budget?: number;
@@ -143,6 +146,12 @@ function coerceSegment(v: unknown): Segment | undefined {
   return undefined;
 }
 
+function coerceLang(v: unknown): string | undefined {
+  const x = cleanString(v, 12).toLowerCase();
+  if (x === "en" || x === "es" || x === "ar") return x;
+  return undefined;
+}
+
 function normalizeLead(raw: unknown): NormalizeLeadResult {
   if (!raw || typeof raw !== "object") {
     return { ok: false, error: "Invalid request body." };
@@ -177,6 +186,11 @@ function normalizeLead(raw: unknown): NormalizeLeadResult {
 
   const leadType: LeadType = leadTypeRaw;
 
+  const normalizedLang =
+    coerceLang(body.lang) ??
+    coerceLang(body.preferredLanguage) ??
+    "en";
+
   const lead: NormalizedLead = {
     leadType,
     name,
@@ -188,7 +202,10 @@ function normalizeLead(raw: unknown): NormalizeLeadResult {
     source: cleanString(body.source, 80).toLowerCase() || "website",
     segment: coerceSegment(body.segment) ?? "general",
     preferredLanguage:
-      cleanString(body.preferredLanguage, 12).toLowerCase() || undefined,
+      cleanString(body.preferredLanguage, 12).toLowerCase() || normalizedLang,
+    lang: normalizedLang,
+    sourcePage: cleanString(body.source_page, 500) || undefined,
+    sourcePath: cleanString(body.source_path, 1000) || undefined,
     contactConsent: toBool(body.contactConsent),
   };
 
@@ -268,6 +285,10 @@ function routeLead(lead: NormalizedLead): { reasons: string[] } {
 
   if (lead.segment) {
     reasons.push(`segment_${lead.segment}`);
+  }
+
+  if (lead.lang) {
+    reasons.push(`lang_${lead.lang}`);
   }
 
   if (lead.leadType === "rent") {
@@ -389,6 +410,10 @@ function scoreLeadQuality(
     qualityReasons.push("niche_relocation");
   }
 
+  if (lead.lang) {
+    qualityReasons.push(`lang_${lead.lang}`);
+  }
+
   if (score >= 5) {
     return { leadQuality: "priority_a", qualityReasons };
   }
@@ -425,6 +450,9 @@ function sanitizeRawForStorage(raw: unknown) {
     source: cleanString(body.source, 80) || null,
     segment: cleanString(body.segment, 80) || null,
     preferredLanguage: cleanString(body.preferredLanguage, 12) || null,
+    lang: cleanString(body.lang, 12) || null,
+    source_page: cleanString(body.source_page, 500) || null,
+    source_path: cleanString(body.source_path, 1000) || null,
     contactConsent: toBool(body.contactConsent) ?? null,
 
     budget: toNumber(body.budget) ?? null,
@@ -473,6 +501,9 @@ async function persistLeadToSupabase(
       timeline: lead.timeline ?? null,
       source: lead.source ?? "website",
       preferred_language: lead.preferredLanguage ?? null,
+      lang: lead.lang ?? null,
+      source_page: lead.sourcePage ?? null,
+      source_path: lead.sourcePath ?? null,
       contact_consent: lead.contactConsent ?? null,
 
       budget: lead.budget ?? null,
@@ -524,6 +555,9 @@ async function insertLeadCreatedEvent(
       quality_reasons: params.qualityReasons,
       source: params.lead.source ?? "website",
       timeline: params.lead.timeline ?? null,
+      lang: params.lead.lang ?? null,
+      source_page: params.lead.sourcePage ?? null,
+      source_path: params.lead.sourcePath ?? null,
     },
   });
 
@@ -559,6 +593,9 @@ function formatLeadSummary(
   if (lead.preferredLanguage) {
     lines.push(`Language: ${lead.preferredLanguage}`);
   }
+  if (lead.lang) lines.push(`Lang: ${lead.lang}`);
+  if (lead.sourcePage) lines.push(`Source page: ${lead.sourcePage}`);
+  if (lead.sourcePath) lines.push(`Source path: ${lead.sourcePath}`);
 
   if (lead.leadType === "rent") {
     if (lead.budget !== undefined) lines.push(`Budget: $${lead.budget}`);
