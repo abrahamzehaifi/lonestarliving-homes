@@ -1,3 +1,4 @@
+cat > ~/Desktop/Lonestarliving.homes/lib/houston-neighborhoods.ts << 'ENDOFFILE'
 export type HoustonAreaPage = {
   slug: string;
   title: string;
@@ -23,11 +24,9 @@ export const houstonAreaPages: HoustonAreaPage[] = [
     slug: "cypress",
     title: "Cypress, TX",
     metaTitle: "Cypress Houston Rentals, Homes & Relocation Guidance",
-    metaDescription:
-      "Explore Cypress area rentals, homes, neighborhoods, commute considerations, and relocation guidance for Houston-area clients seeking more space and newer communities.",
+    metaDescription: "Explore Cypress area rentals, homes, neighborhoods, commute considerations, and relocation guidance for Houston-area clients seeking more space and newer communities.",
     h1: "Houston housing guidance for Cypress clients.",
-    intro:
-      "Cypress remains one of the strongest northwest Houston residential corridors for clients seeking more space, newer housing stock, and neighborhood-oriented living.",
+    intro: "Cypress remains one of the strongest northwest Houston residential corridors for clients seeking more space, newer housing stock, and neighborhood-oriented living.",
     overview: [
       "Cypress attracts families, relocating professionals, and renters looking for stronger value per square foot than many inner-loop options.",
       "The area offers a broad mix of apartments, townhomes, and single-family homes, with many communities built around parks, schools, trails, and neighborhood amenities.",
@@ -51,8 +50,7 @@ export const houstonAreaPages: HoustonAreaPage[] = [
       "Retail growth and daily-use convenience",
       "More residential and family-oriented than urban lifestyle districts",
     ],
-    pricingNote:
-      "Pricing in Cypress varies materially by school zoning, age of construction, and neighborhood quality. The main strategic decision is usually space and school tradeoff versus commute time.",
+    pricingNote: "Pricing in Cypress varies materially by school zoning, age of construction, and neighborhood quality. The main strategic decision is usually space and school tradeoff versus commute time.",
     commute: [
       "Strongest fit for clients working northwest or with flexible commute patterns",
       "Important to evaluate Highway 290 access, daily timing, and employment center alignment",
@@ -60,26 +58,21 @@ export const houstonAreaPages: HoustonAreaPage[] = [
     seoFaqs: [
       {
         question: "Is Cypress a good area for renters in Houston?",
-        answer:
-          "Cypress is a strong option for renters who want more space, newer communities, and neighborhood-style living in the northwest Houston market.",
+        answer: "Cypress is a strong option for renters who want more space, newer communities, and neighborhood-style living in the northwest Houston market.",
       },
       {
         question: "Who is Cypress best suited for?",
-        answer:
-          "Cypress is often best for families, relocating professionals, and clients who prioritize value, schools, and larger housing over inner-loop proximity.",
+        answer: "Cypress is often best for families, relocating professionals, and clients who prioritize value, schools, and larger housing over inner-loop proximity.",
       },
     ],
   },
-
   {
     slug: "katy",
     title: "Katy, TX",
     metaTitle: "Katy Houston Rentals, Homes & Relocation Guidance",
-    metaDescription:
-      "Compare Katy rentals and homes with practical guidance on neighborhoods, commute, school-driven demand, and relocation strategy in the greater Houston market.",
+    metaDescription: "Compare Katy rentals and homes with practical guidance on neighborhoods, commute, school-driven demand, and relocation strategy in the greater Houston market.",
     h1: "Houston housing guidance for Katy clients.",
-    intro:
-      "Katy is one of the most active relocation and family-oriented housing markets in the Houston area, driven by school demand, master-planned communities, and large-volume residential inventory.",
+    intro: "Katy is one of the most active relocation and family-oriented housing markets in the Houston area, driven by school demand, master-planned communities, and large-volume residential inventory.",
     overview: [
       "Katy performs well for clients who want structured suburban living, more space, and strong market depth across leases and purchases.",
       "It is especially relevant for families and professionals tied to west Houston employment centers, including the Energy Corridor.",
@@ -103,8 +96,7 @@ export const houstonAreaPages: HoustonAreaPage[] = [
       "Retail, services, and neighborhood amenities",
       "Less urban and less walkable than inner-loop districts",
     ],
-    pricingNote:
-      "Katy pricing is heavily influenced by neighborhood reputation, school alignment, and property age. The strongest decisions here are usually driven by commute and household priorities.",
+    pricingNote: "Katy pricing is heavily influenced by neighborhood reputation, school alignment, and property age. The strongest decisions here are usually driven by commute and household priorities.",
     commute: [
       "Strong fit for west Houston and Energy Corridor access",
       "Less attractive for clients needing frequent Downtown access",
@@ -112,26 +104,21 @@ export const houstonAreaPages: HoustonAreaPage[] = [
     seoFaqs: [
       {
         question: "Is Katy a good place to rent near Houston?",
-        answer:
-          "Katy is a strong market for renters who want more space, newer communities, and access to west Houston employment areas.",
+        answer: "Katy is a strong market for renters who want more space, newer communities, and access to west Houston employment areas.",
       },
       {
         question: "What makes Katy attractive to relocating families?",
-        answer:
-          "Katy offers broad housing inventory, community amenities, and a suburban environment that many relocating families prefer.",
+        answer: "Katy offers broad housing inventory, community amenities, and a suburban environment that many relocating families prefer.",
       },
     ],
   },
-
   {
     slug: "the-heights",
     title: "The Heights",
     metaTitle: "The Heights Houston Rentals, Townhomes and Homes",
-    metaDescription:
-      "Explore Houston Heights housing guidance for renters and buyers seeking inner-loop lifestyle, strong neighborhood identity, and premium central access.",
+    metaDescription: "Explore Houston Heights housing guidance for renters and buyers seeking inner-loop lifestyle, strong neighborhood identity, and premium central access.",
     h1: "Houston housing guidance for Heights clients.",
-    intro:
-      "The Heights remains one of Houston’s most desirable inner-loop neighborhoods, blending strong neighborhood identity, central access, and durable residential demand.",
+    intro: "The Heights remains one of Houston's most desirable inner-loop neighborhoods, blending strong neighborhood identity, central access, and durable residential demand.",
     overview: [
       "The Heights attracts professionals, buyers focused on long-term desirability, and renters seeking more character than a generic apartment corridor.",
       "It offers a strong mix of local retail, established streets, and premium inner-loop positioning.",
@@ -154,8 +141,7 @@ export const houstonAreaPages: HoustonAreaPage[] = [
       "Retail, restaurants, and local destination appeal",
       "Inner-loop access without a purely downtown feel",
     ],
-    pricingNote:
-      "The Heights typically commands a premium because of neighborhood quality and central access.",
+    pricingNote: "The Heights typically commands a premium because of neighborhood quality and central access.",
     commute: [
       "Strong for Downtown and central Houston access",
       "Useful for clients balancing commute, lifestyle, and neighborhood feel",
@@ -163,20 +149,16 @@ export const houstonAreaPages: HoustonAreaPage[] = [
     seoFaqs: [
       {
         question: "Is the Heights a good Houston neighborhood for renters?",
-        answer:
-          "The Heights is a strong option for renters who want central access and neighborhood character.",
+        answer: "The Heights is a strong option for renters who want central access and neighborhood character.",
       },
     ],
   },
 ];
 
-/**
- * FIXED: robust slug matcher
- */
 export function getHoustonAreaBySlug(slug: string) {
   const normalized = slug.trim().toLowerCase();
-
   return houstonAreaPages.find(
     (page) => page.slug.trim().toLowerCase() === normalized
   );
 }
+ENDOFFILE

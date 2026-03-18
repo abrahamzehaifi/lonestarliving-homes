@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getPreferredSiteLang } from "@/lib/i18n/getLang";
+import { getPreferredSiteLang } from "@/lib/i18n/getLangServer";
 
 export const metadata: Metadata = {
   title: "Houston Rentals | 5th Stream Realty LLC",

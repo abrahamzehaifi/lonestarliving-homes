@@ -1,5 +1,5 @@
 import IntakeClient from "./IntakeClient";
-import { getPreferredSiteLang } from "@/lib/i18n/getLang";
+import { getPreferredSiteLang } from "@/lib/i18n/getLangServer";
 
 type Language = "en" | "es" | "ar";
 type Intent = "tenant" | "buyer" | "seller" | "landlord" | "other";

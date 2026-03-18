@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { getPreferredSiteLang } from "@/lib/i18n/getLang";
+import { getPreferredSiteLang } from "@/lib/i18n/getLangServer";
 
 type Language = "en" | "es" | "ar";
 

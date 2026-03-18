@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getPreferredSiteLang } from "@/lib/i18n/getLang";
+import { getPreferredSiteLang } from "@/lib/i18n/getLangServer";
 
 export const metadata: Metadata = {
   title: "Sell Your Houston Home | Abraham Zehaifi | 5th Stream Realty LLC",

@@ -63,6 +63,12 @@ export default async function HoustonAreaPage({ params }: PageProps) {
   const page = getHoustonAreaBySlug(slug);
 
   if (!page) {
+    console.log(
+      "SLUG RECEIVED:",
+      slug,
+      "| AVAILABLE:",
+      houstonAreaPages.map((p) => p.slug)
+    );
     notFound();
   }
 

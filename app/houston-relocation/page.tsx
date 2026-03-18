@@ -1,5 +1,5 @@
 import HoustonRelocationClient from "./HoustonRelocationClient";
-import { getPreferredSiteLang } from "@/lib/i18n/getLang";
+import { getPreferredSiteLang } from "@/lib/i18n/getLangServer";
 
 type Language = "en" | "es" | "ar";
 
