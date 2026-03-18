@@ -14,6 +14,15 @@ export const translations = {
   en: {
     brand: "LonestarLiving.homes",
     intake: {
+      requestLabel: "Request guidance",
+      requestSubtext:
+        "Submit the details that matter most so the next step can be more focused and practical.",
+      structuredHelp:
+        "Structured requests help route the next step more efficiently.",
+      messages: {
+        submitError: "Something went wrong. Please try again.",
+        networkError: "Network error. Please try again.",
+      },
       headings: {
         rent: "Begin rental assistance",
         buy: "Begin buyer consultation",
@@ -29,6 +38,28 @@ export const translations = {
           "Share a few details so your landlord request can be reviewed and routed to the most appropriate next step.",
         other:
           "Share a few details so your request can be reviewed and routed to the most appropriate next step.",
+      },
+      sections: {
+        contact: {
+          title: "Contact details",
+          text: "Start with the basics so a response can be routed correctly.",
+        },
+        searchDetails: {
+          title: "Search details",
+          text: "Add the practical details that help narrow the search more efficiently.",
+        },
+        buyerDetails: {
+          title: "Buyer details",
+          text: "Provide enough context to assess timing, price range, and next steps.",
+        },
+        sellerDetails: {
+          title: "Seller details",
+          text: "Provide the property details and sale priority so the response can be more useful.",
+        },
+        landlordDetails: {
+          title: "Landlord details",
+          text: "Share the property basics and leasing readiness so the request can be evaluated properly.",
+        },
       },
       fields: {
         fullName: "Full name",
@@ -103,6 +134,9 @@ export const translations = {
         title: "Quick rental screen",
         text: "Start with these three fields so the rental request can be routed correctly.",
         continue: "Continue",
+        continueHelp: "Complete these fields first to continue.",
+        completeMessage:
+          "Rental basics captured. Continue with area preferences and any additional notes.",
         error:
           "Please complete monthly budget, move-in date, and screening profile.",
       },
@@ -118,8 +152,7 @@ export const translations = {
         propertyArea: "Property area or ZIP",
         otherMessage: "Describe what you need",
       },
-      otherBox:
-        "Use the details box below to describe what you need.",
+      otherBox: "Use the details box below to describe what you need.",
       submit: "Submit",
       sending: "Sending...",
       disclaimer:
@@ -130,6 +163,15 @@ export const translations = {
   es: {
     brand: "LonestarLiving.homes",
     intake: {
+      requestLabel: "Solicitar orientación",
+      requestSubtext:
+        "Comparta los detalles más importantes para que el siguiente paso sea más claro y práctico.",
+      structuredHelp:
+        "Las solicitudes estructuradas ayudan a dirigir el siguiente paso de forma más eficiente.",
+      messages: {
+        submitError: "Ocurrió un error. Inténtelo de nuevo.",
+        networkError: "Error de red. Inténtelo de nuevo.",
+      },
       headings: {
         rent: "Comenzar asistencia de renta",
         buy: "Comenzar consulta para comprar",
@@ -145,6 +187,28 @@ export const translations = {
           "Comparta algunos detalles para que su solicitud como propietario sea revisada y dirigida al siguiente paso más adecuado.",
         other:
           "Comparta algunos detalles para que su solicitud sea revisada y dirigida al siguiente paso más adecuado.",
+      },
+      sections: {
+        contact: {
+          title: "Datos de contacto",
+          text: "Comience con lo básico para que la respuesta pueda dirigirse correctamente.",
+        },
+        searchDetails: {
+          title: "Detalles de búsqueda",
+          text: "Agregue los detalles prácticos que ayuden a reducir la búsqueda de manera más eficiente.",
+        },
+        buyerDetails: {
+          title: "Detalles del comprador",
+          text: "Proporcione suficiente contexto para evaluar tiempos, rango de precio y siguientes pasos.",
+        },
+        sellerDetails: {
+          title: "Detalles del vendedor",
+          text: "Proporcione los detalles de la propiedad y la prioridad de venta para que la respuesta sea más útil.",
+        },
+        landlordDetails: {
+          title: "Detalles del propietario",
+          text: "Comparta los datos básicos de la propiedad y su nivel de preparación para rentarse.",
+        },
       },
       fields: {
         fullName: "Nombre completo",
@@ -165,7 +229,8 @@ export const translations = {
         propertyArea: "Zona o código postal",
         propertyType: "Tipo de propiedad",
         readyToLease: "¿Lista para rentarse ahora?",
-        consent: "Doy mi consentimiento para ser contactado con respecto a mi consulta.",
+        consent:
+          "Doy mi consentimiento para ser contactado con respecto a mi consulta.",
       },
       options: {
         leadType: {
@@ -219,6 +284,9 @@ export const translations = {
         title: "Filtro rápido de renta",
         text: "Comience con estos tres campos para que la solicitud de renta sea dirigida correctamente.",
         continue: "Continuar",
+        continueHelp: "Complete estos campos primero para continuar.",
+        completeMessage:
+          "Los datos básicos de renta ya fueron capturados. Continúe con las zonas preferidas y cualquier nota adicional.",
         error:
           "Complete el presupuesto mensual, la fecha de mudanza y el perfil de evaluación.",
       },
@@ -246,6 +314,15 @@ export const translations = {
   ar: {
     brand: "LonestarLiving.homes",
     intake: {
+      requestLabel: "طلب استشارة",
+      requestSubtext:
+        "أرسل التفاصيل الأساسية حتى تكون الخطوة التالية أكثر دقة وتنظيمًا.",
+      structuredHelp:
+        "الطلبات المنظمة تساعد في توجيه الخطوة التالية بشكل أكثر كفاءة.",
+      messages: {
+        submitError: "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+        networkError: "خطأ في الاتصال. يرجى المحاولة مرة أخرى.",
+      },
       headings: {
         rent: "ابدأ طلب المساعدة في الإيجار",
         buy: "ابدأ استشارة الشراء",
@@ -261,6 +338,28 @@ export const translations = {
           "شارك بعض التفاصيل حتى تتم مراجعة طلب المالك وتوجيهه إلى الخطوة التالية المناسبة.",
         other:
           "شارك بعض التفاصيل حتى تتم مراجعة طلبك وتوجيهه إلى الخطوة التالية المناسبة.",
+      },
+      sections: {
+        contact: {
+          title: "بيانات التواصل",
+          text: "ابدأ بالأساسيات حتى يتم توجيه الرد بشكل صحيح.",
+        },
+        searchDetails: {
+          title: "تفاصيل البحث",
+          text: "أضف التفاصيل العملية التي تساعد على تضييق البحث بشكل أكثر كفاءة.",
+        },
+        buyerDetails: {
+          title: "تفاصيل المشتري",
+          text: "أدخل معلومات كافية لتقييم التوقيت والنطاق السعري والخطوات التالية.",
+        },
+        sellerDetails: {
+          title: "تفاصيل البائع",
+          text: "أدخل تفاصيل العقار وأولوية البيع حتى يكون الرد أكثر فائدة.",
+        },
+        landlordDetails: {
+          title: "تفاصيل المالك",
+          text: "أدخل أساسيات العقار ومدى جاهزيته للتأجير حتى يتم تقييم الطلب بشكل صحيح.",
+        },
       },
       fields: {
         fullName: "الاسم الكامل",
@@ -332,11 +431,14 @@ export const translations = {
         },
       },
       rentalGate: {
-        title: "فرز سريع لطلبات الإيجار",
-        text: "ابدأ بهذه الحقول الثلاثة حتى يتم توجيه طلب الإيجار بشكل صحيح.",
+        title: "أساسيات طلب الإيجار",
+        text: "أكمل هذه المعلومات أولًا قبل متابعة بقية الطلب.",
         continue: "متابعة",
+        continueHelp: "أكمل هذه الحقول أولًا للمتابعة.",
+        completeMessage:
+          "تم حفظ أساسيات طلب الإيجار. يمكنك الآن متابعة المناطق المفضلة وأي ملاحظات إضافية.",
         error:
-          "يرجى إكمال الميزانية الشهرية وتاريخ الانتقال وملف التقييم.",
+          "يرجى إدخال الميزانية وتاريخ الانتقال وحالة الفحص قبل المتابعة.",
       },
       placeholders: {
         fullName: "الاسم الكامل",
@@ -350,8 +452,7 @@ export const translations = {
         propertyArea: "منطقة العقار أو الرمز البريدي",
         otherMessage: "اشرح ما الذي تحتاجه",
       },
-      otherBox:
-        "استخدم مربع التفاصيل أدناه لشرح ما تحتاجه.",
+      otherBox: "استخدم مربع التفاصيل أدناه لشرح ما تحتاجه.",
       submit: "إرسال",
       sending: "جارٍ الإرسال...",
       disclaimer:

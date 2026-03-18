@@ -158,7 +158,7 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
         setMsg(
           typeof data?.error === "string"
             ? data.error
-            : "Something went wrong. Please try again."
+            : t.messages.submitError
         );
         return;
       }
@@ -167,7 +167,7 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
       router.push(dest);
     } catch {
       setStatus("error");
-      setMsg("Network error. Please try again.");
+      setMsg(t.messages.networkError);
     } finally {
       setStatus((s) => (s === "sending" ? "idle" : s));
     }
@@ -196,7 +196,7 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
       <section className="mx-auto max-w-3xl px-6 py-12">
         <div className="max-w-2xl">
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-neutral-500">
-            Request guidance
+            {t.requestLabel}
           </p>
 
           <h1 className="mt-4 text-3xl font-semibold tracking-tight text-neutral-950 md:text-4xl">
@@ -208,8 +208,7 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
           </p>
 
           <p className="mt-4 text-sm leading-7 text-neutral-500">
-            Submit the details that matter most so the next step can be more
-            focused and practical.
+            {t.requestSubtext}
           </p>
         </div>
 
@@ -222,10 +221,10 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
           <SectionCard className="bg-white">
             <div className="mb-5">
               <p className="text-sm font-semibold text-neutral-950">
-                Contact details
+                {t.sections.contact.title}
               </p>
               <p className="mt-1 text-sm text-neutral-600">
-                Start with the basics so a response can be routed correctly.
+                {t.sections.contact.text}
               </p>
             </div>
 
@@ -356,13 +355,12 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
                     </button>
 
                     <p className="text-xs text-neutral-500">
-                      Complete these fields first to continue.
+                      {t.rentalGate.continueHelp}
                     </p>
                   </div>
                 ) : (
                   <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                    Rental basics captured. Continue with area preferences and
-                    any additional notes.
+                    {t.rentalGate.completeMessage}
                   </div>
                 )}
               </SectionCard>
@@ -371,11 +369,10 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
                 <SectionCard>
                   <div className="mb-5">
                     <p className="text-sm font-semibold text-neutral-950">
-                      Search details
+                      {t.sections.searchDetails.title}
                     </p>
                     <p className="mt-1 text-sm text-neutral-600">
-                      Add the practical details that help narrow the search more
-                      efficiently.
+                      {t.sections.searchDetails.text}
                     </p>
                   </div>
 
@@ -402,11 +399,10 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
             <SectionCard>
               <div className="mb-5">
                 <p className="text-sm font-semibold text-neutral-950">
-                  Buyer details
+                  {t.sections.buyerDetails.title}
                 </p>
                 <p className="mt-1 text-sm text-neutral-600">
-                  Provide enough context to assess timing, price range, and next
-                  steps.
+                  {t.sections.buyerDetails.text}
                 </p>
               </div>
 
@@ -459,11 +455,10 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
             <SectionCard>
               <div className="mb-5">
                 <p className="text-sm font-semibold text-neutral-950">
-                  Seller details
+                  {t.sections.sellerDetails.title}
                 </p>
                 <p className="mt-1 text-sm text-neutral-600">
-                  Provide the property details and sale priority so the response
-                  can be more useful.
+                  {t.sections.sellerDetails.text}
                 </p>
               </div>
 
@@ -502,11 +497,10 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
             <SectionCard>
               <div className="mb-5">
                 <p className="text-sm font-semibold text-neutral-950">
-                  Landlord details
+                  {t.sections.landlordDetails.title}
                 </p>
                 <p className="mt-1 text-sm text-neutral-600">
-                  Share the property basics and leasing readiness so the request
-                  can be evaluated properly.
+                  {t.sections.landlordDetails.text}
                 </p>
               </div>
 
@@ -595,7 +589,7 @@ export default function IntakeClient({ lang, intent, segment }: Props) {
               </button>
 
               <p className="text-xs text-neutral-500">
-                Structured requests help route the next step more efficiently.
+                {t.structuredHelp}
               </p>
             </div>
 
