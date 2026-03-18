@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { getSiteLang } from "@/lib/i18n/getLang";
 import { siteCopy } from "@/lib/i18n/siteCopy";
 
@@ -19,6 +19,17 @@ function BrokerLogo() {
       />
     </div>
   );
+}
+
+function buildHref(
+  pathname: string,
+  searchParams: URLSearchParams,
+  nextLang: "en" | "es" | "ar"
+) {
+  const params = new URLSearchParams(searchParams.toString());
+  params.set("lang", nextLang);
+  const query = params.toString();
+  return query ? `${pathname}?${query}` : pathname;
 }
 
 function FooterLanguageLink({
@@ -39,16 +50,17 @@ function FooterLanguageLink({
 }
 
 export default function SiteFooter() {
-  const searchParams = useSearchParams();
-  const lang = getSiteLang(searchParams.get("lang"));
+  const pathname = usePathname();
+  const rawSearchParams = useSearchParams();
+  const searchParams = new URLSearchParams(rawSearchParams.toString());
+
+  const lang = getSiteLang(rawSearchParams.get("lang"));
   const copy = siteCopy[lang];
 
   return (
     <footer className="border-t border-black/5 bg-[#efefec]">
       <div className="mx-auto max-w-7xl px-6 py-14">
         <div className="grid gap-10 md:grid-cols-3">
-          
-          {/* Brand */}
           <div>
             <div className="flex items-center gap-3">
               <BrokerLogo />
@@ -63,21 +75,26 @@ export default function SiteFooter() {
             </p>
 
             <div className="mt-5 flex flex-wrap items-center gap-2">
-              <FooterLanguageLink href="/?lang=en">
+              <FooterLanguageLink
+                href={buildHref(pathname, searchParams, "en")}
+              >
                 {copy.footer.english}
               </FooterLanguageLink>
 
-              <FooterLanguageLink href="/?lang=es">
+              <FooterLanguageLink
+                href={buildHref(pathname, searchParams, "es")}
+              >
                 {copy.footer.spanish}
               </FooterLanguageLink>
 
-              <FooterLanguageLink href="/?lang=ar">
+              <FooterLanguageLink
+                href={buildHref(pathname, searchParams, "ar")}
+              >
                 {copy.footer.arabic}
               </FooterLanguageLink>
             </div>
           </div>
 
-          {/* Contact */}
           <div>
             <h3 className="text-base font-semibold">{copy.footer.contact}</h3>
 
@@ -106,13 +123,10 @@ export default function SiteFooter() {
             </div>
           </div>
 
-          {/* Legal Notices */}
           <div>
             <h3 className="text-base font-semibold">{copy.footer.notices}</h3>
 
             <div className="mt-3 space-y-2 text-sm text-neutral-600">
-
-              {/* Correct IABS Link */}
               <a
                 href="/legal/IABS.pdf"
                 target="_blank"
@@ -145,7 +159,6 @@ export default function SiteFooter() {
               <p>7941 Katy Fwy #787, Houston, TX 77024</p>
             </div>
           </div>
-
         </div>
 
         <div className="mt-10 border-t border-black/5 pt-6 text-sm text-neutral-500">

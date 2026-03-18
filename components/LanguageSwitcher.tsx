@@ -1,17 +1,14 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { getLanguage, languages } from "../lib/i18n/translations";
 
-type Props = {
-  currentPath: string;
-  currentLang?: string | null;
-  extraQuery?: Record<string, string | undefined>;
-};
+export default function LanguageSwitcher() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-export default function LanguageSwitcher({
-  currentPath,
-  currentLang,
-  extraQuery = {},
-}: Props) {
+  const currentLang = searchParams.get("lang");
   const activeLang = getLanguage(currentLang);
 
   return (
@@ -19,19 +16,15 @@ export default function LanguageSwitcher({
       {languages.map((item) => {
         const isActive = item.code === activeLang;
 
-        const params = new URLSearchParams();
+        const params = new URLSearchParams(searchParams.toString());
         params.set("lang", item.code);
 
-        Object.entries(extraQuery).forEach(([key, value]) => {
-          if (typeof value === "string" && value.trim()) {
-            params.set(key, value);
-          }
-        });
+        const href = `${pathname}?${params.toString()}`;
 
         return (
           <Link
             key={item.code}
-            href={`${currentPath}?${params.toString()}`}
+            href={href}
             className={[
               "inline-flex items-center rounded-full border px-3 py-1.5 transition",
               isActive

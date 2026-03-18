@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { getSiteLang } from "@/lib/i18n/getLang";
 import { siteCopy } from "@/lib/i18n/siteCopy";
 
@@ -62,16 +62,31 @@ function BrokerLogo() {
   );
 }
 
+function buildHref(
+  pathname: string,
+  searchParams: URLSearchParams,
+  nextLang: "en" | "es" | "ar"
+) {
+  const params = new URLSearchParams(searchParams.toString());
+  params.set("lang", nextLang);
+  const query = params.toString();
+  return query ? `${pathname}?${query}` : pathname;
+}
+
 function LanguageLink({
   lang,
+  pathname,
+  searchParams,
   children,
 }: {
   lang: "en" | "es" | "ar";
+  pathname: string;
+  searchParams: URLSearchParams;
   children: ReactNode;
 }) {
   return (
     <Link
-      href={`/?lang=${lang}`}
+      href={buildHref(pathname, searchParams, lang)}
       className="inline-flex items-center rounded-full border border-white/20 px-3 py-1.5 text-xs font-medium text-white/85 transition hover:border-white/35 hover:bg-white/5 hover:text-white"
     >
       {children}
@@ -80,8 +95,11 @@ function LanguageLink({
 }
 
 export default function SiteHeader() {
-  const searchParams = useSearchParams();
-  const lang = getSiteLang(searchParams.get("lang"));
+  const pathname = usePathname();
+  const rawSearchParams = useSearchParams();
+  const searchParams = new URLSearchParams(rawSearchParams.toString());
+
+  const lang = getSiteLang(rawSearchParams.get("lang"));
   const copy = siteCopy[lang];
 
   return (
@@ -94,7 +112,7 @@ export default function SiteHeader() {
 
               <div className="min-w-0">
                 <Link
-                  href={`/?lang=${lang}`}
+                  href={buildHref(pathname, searchParams, lang)}
                   className="block truncate text-base font-semibold tracking-tight text-white md:text-lg"
                 >
                   {copy.header.name}
@@ -114,9 +132,29 @@ export default function SiteHeader() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <LanguageLink lang="en">EN</LanguageLink>
-              <LanguageLink lang="es">ES</LanguageLink>
-              <LanguageLink lang="ar">AR</LanguageLink>
+              <LanguageLink
+                lang="en"
+                pathname={pathname}
+                searchParams={searchParams}
+              >
+                EN
+              </LanguageLink>
+
+              <LanguageLink
+                lang="es"
+                pathname={pathname}
+                searchParams={searchParams}
+              >
+                ES
+              </LanguageLink>
+
+              <LanguageLink
+                lang="ar"
+                pathname={pathname}
+                searchParams={searchParams}
+              >
+                AR
+              </LanguageLink>
             </div>
           </div>
 
