@@ -1,7 +1,13 @@
-// components/site/Hero.tsx
+"use client";
+
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { buildHref } from "@/lib/i18n/buildHref";
 
 export default function Hero() {
+  const searchParams = useSearchParams();
+  const lang = searchParams.get("lang") || "en";
+
   return (
     <section className="relative overflow-hidden bg-slate-950 text-white">
       <div className="absolute inset-0 bg-[url('/images/hero-houston.jpg')] bg-cover bg-center" />
@@ -10,7 +16,10 @@ export default function Hero() {
 
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.03] mix-blend-overlay"
-        style={{ backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')" }}
+        style={{
+          backgroundImage:
+            "url('https://grainy-gradients.vercel.app/noise.svg')",
+        }}
       />
 
       <div className="relative mx-auto max-w-6xl px-6 py-24 md:py-32">
@@ -30,26 +39,27 @@ export default function Hero() {
         </p>
 
         <p className="mt-4 text-sm text-white/55">
-          Serving Houston • Buying, selling, leasing, relocation • Arabic, English, Español
+          Serving Houston • Buying, selling, leasing, relocation • Arabic,
+          English, Español
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-4">
           <Link
-            href="/contact"
+            href={buildHref("/contact", {}, lang)}
             className="inline-flex h-11 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-white/90 active:scale-[0.99]"
           >
             Request a Strategy Call
           </Link>
 
           <Link
-            href="/buy"
+            href={buildHref("/buy", {}, lang)}
             className="inline-flex h-11 items-center justify-center rounded-xl border border-white/25 bg-white/5 px-6 text-sm font-semibold text-white backdrop-blur transition hover:border-white/35 hover:bg-white/10 active:scale-[0.99]"
           >
             Buy a Home
           </Link>
 
           <Link
-            href="/sell"
+            href={buildHref("/sell", {}, lang)}
             className="inline-flex h-11 items-center justify-center rounded-xl border border-white/25 bg-white/5 px-6 text-sm font-semibold text-white backdrop-blur transition hover:border-white/35 hover:bg-white/10 active:scale-[0.99]"
           >
             Sell Your Home

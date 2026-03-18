@@ -1,33 +1,39 @@
+"use client";
+
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 const services = [
   {
     title: "Buyer Representation",
     desc: "Search strategy, showings, negotiation, and closing coordination through formal buyer representation.",
     cta: "Buyer Consultation",
-    href: "/intake?type=buyer",
+    type: "buyer",
   },
   {
     title: "Seller Representation",
     desc: "Pricing strategy, marketing guidance, offer evaluation, and transaction execution.",
     cta: "Seller Consultation",
-    href: "/intake?type=seller",
+    type: "seller",
   },
   {
     title: "Tenant Representation",
     desc: "Structured rental search support and lease coordination for qualified applicants.",
     cta: "Rental Consultation",
-    href: "/intake?type=tenant",
+    type: "tenant",
   },
   {
     title: "Landlord Representation",
     desc: "Leasing-focused support, including marketing coordination, tenant placement process, and lease execution.",
     cta: "Leasing Consultation",
-    href: "/intake?type=landlord",
+    type: "landlord",
   },
 ];
 
 export default function ServicesSection() {
+  const searchParams = useSearchParams();
+  const lang = searchParams.get("lang") || "en";
+
   return (
     <section id="services" className="bg-slate-50 py-24">
       <div className="mx-auto max-w-6xl px-6">
@@ -47,30 +53,34 @@ export default function ServicesSection() {
         </div>
 
         <div className="mt-14 grid gap-8 md:grid-cols-2">
-          {services.map((s) => (
-            <div
-              key={s.title}
-              className="group rounded-xl border border-slate-200 bg-white p-8 shadow-sm transition hover:shadow-md"
-            >
-              <h3 className="text-xl font-semibold text-slate-950">
-                {s.title}
-              </h3>
+          {services.map((s) => {
+            const href = `/intake?type=${s.type}&lang=${lang}`;
 
-              <p className="mt-4 text-base leading-relaxed text-slate-600">
-                {s.desc}
-              </p>
+            return (
+              <div
+                key={s.title}
+                className="group rounded-xl border border-slate-200 bg-white p-8 shadow-sm transition hover:shadow-md"
+              >
+                <h3 className="text-xl font-semibold text-slate-950">
+                  {s.title}
+                </h3>
 
-              <div className="mt-8">
-                <Link
-                  href={s.href}
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 transition group-hover:translate-x-1"
-                >
-                  {s.cta}
-                  <span aria-hidden="true">→</span>
-                </Link>
+                <p className="mt-4 text-base leading-relaxed text-slate-600">
+                  {s.desc}
+                </p>
+
+                <div className="mt-8">
+                  <Link
+                    href={href}
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 transition group-hover:translate-x-1"
+                  >
+                    {s.cta}
+                    <span aria-hidden="true">→</span>
+                  </Link>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <p className="mt-14 text-xs text-slate-500">
