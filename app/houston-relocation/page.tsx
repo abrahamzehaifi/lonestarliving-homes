@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import HoustonRelocationClient from "./HoustonRelocationClient";
 
 type Language = "en" | "es" | "ar";
@@ -15,9 +14,5 @@ export default function HoustonRelocationPage({
 }) {
   const lang = getLanguage(searchParams?.lang);
 
-  return (
-    <Suspense fallback={null}>
-      <HoustonRelocationClient lang={lang} />
-    </Suspense>
-  );
+  return <HoustonRelocationClient lang={lang} />;
 }
