@@ -26,6 +26,8 @@ export default function VisitTracker() {
         path,
         referrer: document.referrer || null,
         visitSource: "website",
+        lang: searchParams.get("lang") || "en",
+        timestamp: new Date().toISOString(),
       }),
     }).catch(() => {
       // fail silently
