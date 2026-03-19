@@ -43,11 +43,16 @@ function getCompareLinks(currentSlug: string) {
     "katy",
     "cypress",
     "the-heights",
-    "memorial-energy-corridor",
     "spring-branch",
+    "memorial-energy-corridor",
     "river-oaks-upper-kirby",
     "west-university-rice-museum-district",
+    "galleria-tanglewood",
+    "bellaire",
     "downtown-midtown-montrose-river-oaks-adjacent",
+    "spring",
+    "the-woodlands",
+    "clear-lake-webster",
     "baytown-east-houston-corridor",
   ];
 
@@ -63,12 +68,6 @@ export default async function HoustonAreaPage({ params }: PageProps) {
   const page = getHoustonAreaBySlug(slug);
 
   if (!page) {
-    console.log(
-      "SLUG RECEIVED:",
-      slug,
-      "| AVAILABLE:",
-      houstonAreaPages.map((p) => p.slug)
-    );
     notFound();
   }
 
@@ -291,63 +290,6 @@ export default async function HoustonAreaPage({ params }: PageProps) {
               </div>
             </>
           )}
-        </div>
-      </section>
-
-      {page.seoFaqs.length > 0 && (
-        <section className="mx-auto max-w-6xl px-6 pb-16">
-          <div className="rounded-[1.75rem] border border-black/5 bg-white p-8 md:p-10">
-            <h2 className="text-2xl font-semibold tracking-tight">
-              Frequently asked questions
-            </h2>
-
-            <div className="mt-6 space-y-6">
-              {page.seoFaqs.map((faq) => (
-                <div key={faq.question}>
-                  <h3 className="text-base font-semibold tracking-tight text-neutral-900">
-                    {faq.question}
-                  </h3>
-                  <p className="mt-2 text-sm leading-7 text-neutral-600">
-                    {faq.answer}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      <section className="mx-auto max-w-6xl px-6 pb-20">
-        <div className="rounded-[1.75rem] border border-black/5 bg-white p-8 md:p-10">
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-neutral-500">
-            Next step
-          </p>
-
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight">
-            Stop guessing. Choose the right Houston area with structure.
-          </h2>
-
-          <p className="mt-4 max-w-3xl text-sm leading-7 text-neutral-600">
-            Most clients waste time looking across too many areas without a
-            clear framework. Structured intake aligns budget, commute,
-            lifestyle, and property type so the search becomes more efficient.
-          </p>
-
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href={`/intake?type=tenant&segment=general&area=${page.slug}`}
-              className="inline-flex items-center justify-center rounded-full bg-neutral-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-neutral-800"
-            >
-              Begin intake
-            </Link>
-
-            <Link
-              href="/"
-              className="inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-medium text-neutral-900 transition hover:border-black/20"
-            >
-              Return home
-            </Link>
-          </div>
         </div>
       </section>
 
