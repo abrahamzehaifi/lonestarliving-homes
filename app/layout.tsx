@@ -7,9 +7,9 @@ import VisitTracker from "@/components/site/VisitTracker";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Houston Real Estate | Abraham Zehaifi | 5th Stream Realty LLC",
+  title: "LonestarLiving.homes | Houston Real Estate",
   description:
-    "Houston real estate guidance for rentals, relocation, buyers, sellers, landlords, Texas Medical Center housing, and Rice University student housing. Abraham Zehaifi, Texas REALTOR®, brokered by 5th Stream Realty LLC.",
+    "Houston real estate services for renting, buying, selling, and leasing through LonestarLiving.homes.",
 };
 
 function HeaderFallback() {
@@ -17,7 +17,9 @@ function HeaderFallback() {
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#5f616a]/95 backdrop-blur">
       <div className="mx-auto max-w-7xl px-4 py-3 md:px-6">
         <div className="flex min-h-[72px] items-center justify-between">
-          <div className="text-sm font-medium text-white">Abraham Zehaifi</div>
+          <div className="text-sm font-medium text-white">
+            LonestarLiving.homes
+          </div>
           <div className="text-xs text-white/70">Loading...</div>
         </div>
       </div>
