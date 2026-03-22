@@ -26,23 +26,25 @@ export default function InlineStatusSelect({
     const prev = value;
     setValue(nextValue);
 
-    startTransition(async () => {
-      try {
-        const res = await fetch("/api/leads/update", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: leadId,
-            status: nextValue,
-          }),
-        });
+    startTransition(() => {
+      void (async () => {
+        try {
+          const res = await fetch("/api/leads/update", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: leadId,
+              status: nextValue,
+            }),
+          });
 
-        if (!res.ok) {
+          if (!res.ok) {
+            setValue(prev);
+          }
+        } catch {
           setValue(prev);
         }
-      } catch {
-        setValue(prev);
-      }
+      })();
     });
   }
 
