@@ -1,20 +1,30 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 export default function VisitTracker() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
-    const query = searchParams.toString();
-    const path = query ? `${pathname}?${query}` : pathname;
-    const key = `visit:${path}`;
-
     if (typeof window === "undefined") return;
-    if (sessionStorage.getItem(key)) return;
 
+    // Only track high-value pages
+    const trackablePaths = [
+      "/intake",
+      "/buy",
+      "/sell",
+      "/rent",
+      "/landlords",
+    ];
+
+    if (!trackablePaths.some((p) => pathname.startsWith(p))) {
+      return;
+    }
+
+    const key = `visit:${pathname}`;
+
+    if (sessionStorage.getItem(key)) return;
     sessionStorage.setItem(key, "1");
 
     fetch("/api/visit", {
@@ -23,16 +33,14 @@ export default function VisitTracker() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        path,
-        referrer: document.referrer || null,
+        path: pathname, // no query string
         visitSource: "website",
-        lang: searchParams.get("lang") || "en",
         timestamp: new Date().toISOString(),
       }),
     }).catch(() => {
-      // fail silently
+      // silent fail
     });
-  }, [pathname, searchParams]);
+  }, [pathname]);
 
   return null;
 }
