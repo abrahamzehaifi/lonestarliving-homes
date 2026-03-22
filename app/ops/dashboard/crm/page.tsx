@@ -5,6 +5,7 @@ import { CRM_STAGES } from "@/lib/crm/stages";
 import LeadCreateForm from "@/components/crm/LeadCreateForm";
 import PipelineColumn from "@/components/crm/PipelineColumn";
 import LeadDetailPanel from "@/components/crm/LeadDetailPanel";
+import RunFollowUpsButton from "@/components/crm/RunFollowUpsButton";
 
 type SearchParams = Promise<{ lead?: string }>;
 
@@ -84,18 +85,22 @@ export default async function CrmPage({
           <p className="text-sm text-neutral-500">New Leads</p>
           <p className="text-2xl font-semibold">{kpis.newLeads}</p>
         </div>
+
         <div className="rounded-2xl border p-4">
           <p className="text-sm text-neutral-500">Follow-Ups Due</p>
           <p className="text-2xl font-semibold">{kpis.followUpsDue}</p>
         </div>
+
         <div className="rounded-2xl border p-4">
           <p className="text-sm text-neutral-500">Appointments</p>
           <p className="text-2xl font-semibold">{kpis.appointments}</p>
         </div>
+
         <div className="rounded-2xl border p-4">
           <p className="text-sm text-neutral-500">Listings Signed</p>
           <p className="text-2xl font-semibold">{kpis.signed}</p>
         </div>
+
         <div className="rounded-2xl border p-4">
           <p className="text-sm text-neutral-500">Closed</p>
           <p className="text-2xl font-semibold">{kpis.closed}</p>
@@ -103,6 +108,8 @@ export default async function CrmPage({
       </section>
 
       <LeadCreateForm />
+
+      <RunFollowUpsButton />
 
       <section className="grid gap-6 xl:grid-cols-[1.6fr_.9fr]">
         <div className="overflow-x-auto">
