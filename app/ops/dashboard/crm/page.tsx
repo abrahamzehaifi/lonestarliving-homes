@@ -42,15 +42,20 @@ function priorityWeight(priority?: string | null) {
 
 function sortLeadsForExecution(leads: CrmLead[]) {
   return [...leads].sort((a, b) => {
-    const priorityDiff = priorityWeight(b.priority) - priorityWeight(a.priority);
+    const priorityDiff =
+      priorityWeight(b.priority) - priorityWeight(a.priority);
     if (priorityDiff !== 0) return priorityDiff;
 
     const scoreA = typeof a.lead_score === "number" ? a.lead_score : -1;
     const scoreB = typeof b.lead_score === "number" ? b.lead_score : -1;
     if (scoreB !== scoreA) return scoreB - scoreA;
 
-    const followUpA = a.next_follow_up_at ? new Date(a.next_follow_up_at).getTime() : Number.MAX_SAFE_INTEGER;
-    const followUpB = b.next_follow_up_at ? new Date(b.next_follow_up_at).getTime() : Number.MAX_SAFE_INTEGER;
+    const followUpA = a.next_follow_up_at
+      ? new Date(a.next_follow_up_at).getTime()
+      : Number.MAX_SAFE_INTEGER;
+    const followUpB = b.next_follow_up_at
+      ? new Date(b.next_follow_up_at).getTime()
+      : Number.MAX_SAFE_INTEGER;
     if (followUpA !== followUpB) return followUpA - followUpB;
 
     const createdA = a.created_at ? new Date(a.created_at).getTime() : 0;
@@ -83,7 +88,6 @@ export default async function CrmPage({
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
-
     supabase
       .from("crm_activities")
       .select("*")
@@ -112,7 +116,8 @@ export default async function CrmPage({
     followUpsDue: sortedLeads.filter(
       (l) => l.next_follow_up_at && l.next_follow_up_at <= today
     ).length,
-    appointments: sortedLeads.filter((l) => l.stage === "appointment_set").length,
+    appointments: sortedLeads.filter((l) => l.stage === "appointment_set")
+      .length,
     signed: sortedLeads.filter((l) => l.stage === "listing_signed").length,
     closed: sortedLeads.filter((l) => l.stage === "closed").length,
     highPriority: sortedLeads.filter((l) => l.priority === "high").length,
