@@ -8,25 +8,29 @@ const services = [
     title: "Buyer Representation",
     desc: "Support for clients purchasing a home, from the early search through contract and closing.",
     cta: "Buyer Request",
-    service: "buyer",
+    type: "buyer",
+    src: "services_buyer",
   },
   {
     title: "Seller Representation",
     desc: "Support for owners preparing, pricing, marketing, and selling a property in Houston.",
     cta: "Seller Request",
-    service: "seller",
+    type: "seller",
+    src: "services_seller",
   },
   {
     title: "Rental Guidance",
     desc: "Help for clients searching for a rental home, apartment, or lease opportunity that fits their needs.",
     cta: "Rental Request",
-    service: "tenant",
+    type: "tenant",
+    src: "services_tenant",
   },
   {
     title: "Leasing Support",
     desc: "Help for property owners who want assistance bringing a rental to market and moving toward lease execution.",
     cta: "Owner Request",
-    service: "landlord",
+    type: "landlord",
+    src: "services_landlord",
   },
 ];
 
@@ -55,7 +59,7 @@ export default function ServicesSection() {
 
         <div className="mt-14 grid gap-8 md:grid-cols-2">
           {services.map((service) => {
-            const href = `/intake?service=${service.service}&lang=${lang}`;
+            const href = `/intake?type=${service.type}&src=${service.src}&channel=organic&lang=${lang}`;
 
             return (
               <div
