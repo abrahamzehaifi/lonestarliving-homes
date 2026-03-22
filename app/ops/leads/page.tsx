@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
-import LeadStatusInline from "@/components/dashboard/LeadStatusInline";
+import InlineStatusSelect from "./InlineStatusSelect";
 
 function formatArea(area?: string | null) {
   if (!area) return "Unknown";
@@ -13,11 +13,6 @@ function formatArea(area?: string | null) {
 function formatCurrency(value?: number | null) {
   if (!value) return "-";
   return `$${value.toLocaleString()}`;
-}
-
-function formatLabel(value?: string | null) {
-  if (!value) return "-";
-  return value.replace(/_/g, " ");
 }
 
 function isToday(dateStr?: string | null) {
@@ -60,19 +55,6 @@ function buildFilterHref(filters: {
   return query ? `/ops/leads?${query}` : "/ops/leads";
 }
 
-type LeadRow = {
-  id: string;
-  created_at: string | null;
-  name: string | null;
-  lead_type: string | null;
-  area: string | null;
-  budget: number | null;
-  status: string | null;
-  lead_quality: string | null;
-  timeline: string | null;
-  follow_up_at: string | null;
-};
-
 export default async function LeadsPage({
   searchParams,
 }: {
@@ -102,9 +84,7 @@ export default async function LeadsPage({
 
   let query = supabase
     .from("leads")
-    .select(
-      "id, created_at, name, lead_type, area, budget, status, lead_quality, timeline, follow_up_at"
-    )
+    .select("*")
     .order("created_at", { ascending: false })
     .limit(100);
 
@@ -122,7 +102,7 @@ export default async function LeadsPage({
 
   const { data } = await query;
 
-  const leads: LeadRow[] = ((data || []) as LeadRow[]).filter((lead) => {
+  const leads = (data || []).filter((lead) => {
     if (selectedFollowup === "today") {
       return isToday(lead.follow_up_at);
     }
@@ -282,7 +262,7 @@ export default async function LeadsPage({
                   : "border-black/10 bg-neutral-50 text-neutral-700 hover:bg-white"
               }`}
             >
-              {formatLabel(status)} ({count})
+              {status.replace(/_/g, " ")} ({count})
             </Link>
           ))}
         </div>
@@ -322,7 +302,7 @@ export default async function LeadsPage({
                   : "border-black/10 bg-neutral-50 text-neutral-700 hover:bg-white"
               }`}
             >
-              {formatLabel(quality)} ({count})
+              {quality.replace(/_/g, " ")} ({count})
             </Link>
           ))}
         </div>
@@ -388,13 +368,13 @@ export default async function LeadsPage({
           <thead>
             <tr className="border-b text-left text-xs uppercase tracking-[0.12em] text-neutral-500">
               <th className="px-4 py-3">Name</th>
-              <th className="px-4 py-3">Type</th>
-              <th className="px-4 py-3">Area</th>
-              <th className="px-4 py-3">Budget</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Quality</th>
-              <th className="px-4 py-3">Timeline</th>
-              <th className="px-4 py-3">Created</th>
+              <th>Type</th>
+              <th>Area</th>
+              <th>Budget</th>
+              <th>Status</th>
+              <th>Quality</th>
+              <th>Timeline</th>
+              <th>Created</th>
             </tr>
           </thead>
 
@@ -406,32 +386,32 @@ export default async function LeadsPage({
                     href={`/ops/leads/${lead.id}`}
                     className="hover:underline"
                   >
-                    {lead.name || "Unnamed lead"}
+                    {lead.name}
                   </Link>
                 </td>
 
-                <td className="px-4 py-3">{lead.lead_type || "-"}</td>
+                <td>{lead.lead_type || "-"}</td>
 
-                <td className="px-4 py-3">
+                <td>
                   <span className="rounded-full bg-neutral-100 px-2 py-1 text-xs font-medium">
                     {formatArea(lead.area)}
                   </span>
                 </td>
 
-                <td className="px-4 py-3">{formatCurrency(lead.budget)}</td>
+                <td>{formatCurrency(lead.budget)}</td>
 
-                <td className="px-4 py-3">
-                  <LeadStatusInline
+                <td>
+                  <InlineStatusSelect
                     leadId={lead.id}
-                    initialStatus={lead.status}
+                    currentStatus={lead.status}
                   />
                 </td>
 
-                <td className="px-4 py-3">{formatLabel(lead.lead_quality)}</td>
+                <td>{lead.lead_quality || "-"}</td>
 
-                <td className="px-4 py-3">{lead.timeline || "-"}</td>
+                <td>{lead.timeline || "-"}</td>
 
-                <td className="px-4 py-3">
+                <td>
                   {lead.created_at
                     ? new Date(lead.created_at).toLocaleDateString()
                     : "-"}
