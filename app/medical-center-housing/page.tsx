@@ -2,9 +2,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Medical Center Housing | 5th Stream Realty LLC",
+  title: "Apartments Near Texas Medical Center Houston | Housing Guide",
   description:
-    "Houston Medical Center rental guidance for qualified renters seeking housing near hospitals, clinics, and major healthcare employers.",
+    "Find apartments and housing near Texas Medical Center in Houston. Compare nearby areas, commute times, and rental options near major hospitals and medical employers.",
 };
 
 type Language = "en" | "es" | "ar";
@@ -22,93 +22,129 @@ function getLanguage(value?: string): Language {
 
 const copy = {
   en: {
-    eyebrow: "Medical Center Housing",
-    title: "Houston housing guidance near the Texas Medical Center.",
+    eyebrow: "Houston housing",
+    title: "Housing near the Texas Medical Center in Houston.",
     body:
-      "Structured rental guidance for qualified clients seeking housing near the Texas Medical Center, hospitals, clinics, and surrounding neighborhoods with more practical commute and screening alignment.",
-    primaryCta: "Start housing request",
+      "Housing near the Texas Medical Center is a common priority for renters who want better access to hospitals, clinics, research facilities, and major healthcare employers. Rental options can vary widely by neighborhood, commute pattern, pricing, and building style.",
+    bodyTwo:
+      "Apartments near Texas Medical Center, Houston Methodist, MD Anderson, Baylor College of Medicine, and nearby hospitals may offer different tradeoffs depending on budget, timing, and preferred living environment. Comparing nearby Houston areas can help narrow the strongest options more efficiently.",
+    primaryCta: "Explore options",
     secondaryCta: "Contact",
 
     cards: [
       {
-        title: "Commute-focused search",
+        title: "Access and commute",
         description:
-          "Useful for clients who need better access to hospitals, clinics, training programs, or medical employment centers.",
+          "Commute time to hospitals, clinics, and medical employers can vary significantly depending on traffic patterns and neighborhood location.",
       },
       {
-        title: "Screening-aware intake",
+        title: "Housing mix",
         description:
-          "Budget, timing, and practical rental criteria are captured early so the next step can be more efficient.",
+          "Options may include apartments, townhomes, and nearby residential neighborhoods depending on budget, availability, and preferred building style.",
       },
       {
-        title: "Structured next step",
+        title: "Area selection",
         description:
-          "The intake path is designed to reduce scattered communication and move qualified requests into a clearer review flow.",
+          "Choosing the right nearby area often depends on commute tolerance, lifestyle preferences, and overall pricing.",
       },
     ],
 
+    areaTitle: "Nearby Houston areas to compare",
+    areaLinks: [
+      { href: "/houston/west-university-rice-museum-district", label: "West University, Rice & Museum District" },
+      { href: "/houston/downtown-midtown-montrose-river-oaks-adjacent", label: "Downtown, Midtown & Montrose" },
+      { href: "/houston/the-heights", label: "The Heights" },
+      { href: "/houston/galleria-tanglewood", label: "Galleria & Tanglewood" },
+      { href: "/houston/spring-branch", label: "Spring Branch" },
+      { href: "/houston/bellaire", label: "Bellaire" },
+    ],
+
     legal:
-      "Brokered by 5th Stream Realty LLC. Submitting a request does not create an agency relationship. Representation, availability, and next steps depend on review, fit, and applicable written agreement.",
+      "Brokered by 5th Stream Realty LLC. Representation services are provided in accordance with Texas law and applicable written agreements.",
   },
 
   es: {
-    eyebrow: "Vivienda Medical Center",
-    title: "Guía de vivienda en Houston cerca del Texas Medical Center.",
+    eyebrow: "Vivienda en Houston",
+    title: "Vivienda cerca del Texas Medical Center en Houston.",
     body:
-      "Guía estructurada de renta para clientes calificados que buscan vivienda cerca del Texas Medical Center, hospitales, clínicas y vecindarios cercanos con mejor alineación de trayecto y perfil de evaluación.",
-    primaryCta: "Comenzar solicitud de vivienda",
+      "La vivienda cerca del Texas Medical Center es una prioridad común para inquilinos que desean mejor acceso a hospitales, clínicas, centros de investigación y grandes empleadores del sector salud. Las opciones de renta pueden variar mucho según el vecindario, el trayecto, el nivel de precios y el tipo de edificio.",
+    bodyTwo:
+      "Los apartamentos cerca del Texas Medical Center, Houston Methodist, MD Anderson, Baylor College of Medicine y hospitales cercanos pueden ofrecer diferentes ventajas según presupuesto, tiempo y estilo de vida preferido. Comparar zonas cercanas de Houston puede ayudar a reducir las opciones más fuertes con mayor claridad.",
+    primaryCta: "Explorar opciones",
     secondaryCta: "Contacto",
 
     cards: [
       {
-        title: "Búsqueda orientada al trayecto",
+        title: "Acceso y trayecto",
         description:
-          "Útil para clientes que necesitan mejor acceso a hospitales, clínicas, programas de formación o centros de empleo médico.",
+          "El tiempo de trayecto hacia hospitales, clínicas y empleadores médicos puede variar bastante según el tráfico y la ubicación del vecindario.",
       },
       {
-        title: "Solicitud alineada con evaluación",
+        title: "Tipos de vivienda",
         description:
-          "El presupuesto, el tiempo y los criterios prácticos de renta se capturan desde el inicio para que el siguiente paso sea más eficiente.",
+          "Las opciones pueden incluir apartamentos, townhomes y vecindarios residenciales cercanos según presupuesto, disponibilidad y estilo de edificio preferido.",
       },
       {
-        title: "Siguiente paso estructurado",
+        title: "Selección de zona",
         description:
-          "La ruta de solicitud está diseñada para reducir la comunicación dispersa y mover solicitudes calificadas hacia un proceso de revisión más claro.",
+          "Elegir la zona adecuada suele depender de la tolerancia al trayecto, preferencias de estilo de vida y nivel general de precios.",
       },
     ],
 
+    areaTitle: "Zonas cercanas de Houston para comparar",
+    areaLinks: [
+      { href: "/houston/west-university-rice-museum-district", label: "West University, Rice y Museum District" },
+      { href: "/houston/downtown-midtown-montrose-river-oaks-adjacent", label: "Downtown, Midtown y Montrose" },
+      { href: "/houston/the-heights", label: "The Heights" },
+      { href: "/houston/galleria-tanglewood", label: "Galleria y Tanglewood" },
+      { href: "/houston/spring-branch", label: "Spring Branch" },
+      { href: "/houston/bellaire", label: "Bellaire" },
+    ],
+
     legal:
-      "Intermediado por 5th Stream Realty LLC. Enviar una solicitud no crea una relación de agencia. La representación, disponibilidad y los siguientes pasos dependen de revisión, ajuste y acuerdo escrito aplicable.",
+      "Intermediado por 5th Stream Realty LLC. Los servicios de representación se prestan conforme a la ley de Texas y los acuerdos escritos aplicables.",
   },
 
   ar: {
-    eyebrow: "سكن Medical Center",
-    title: "إرشاد سكني في هيوستن بالقرب من Texas Medical Center.",
+    eyebrow: "سكن في هيوستن",
+    title: "السكن بالقرب من Texas Medical Center في هيوستن.",
     body:
-      "إرشاد منظم للإيجار للعملاء المؤهلين الباحثين عن سكن بالقرب من Texas Medical Center والمستشفيات والعيادات والأحياء المحيطة مع توافق أفضل من ناحية التنقل وجاهزية التقديم.",
-    primaryCta: "ابدأ طلب السكن",
+      "السكن بالقرب من Texas Medical Center يُعد من الأولويات الشائعة للمستأجرين الذين يريدون وصولًا أفضل إلى المستشفيات والعيادات ومراكز الأبحاث وجهات العمل الطبية الكبرى. تختلف خيارات الإيجار بشكل كبير حسب الحي وطبيعة التنقل ومستوى الأسعار ونوع المبنى.",
+    bodyTwo:
+      "قد توفر الشقق القريبة من Texas Medical Center وHouston Methodist وMD Anderson وBaylor College of Medicine والمستشفيات المجاورة مزايا مختلفة حسب الميزانية والتوقيت ونمط السكن المفضل. مقارنة المناطق القريبة في هيوستن تساعد على تضييق الخيارات الأقوى بشكل أوضح.",
+    primaryCta: "استكشف الخيارات",
     secondaryCta: "تواصل",
 
     cards: [
       {
-        title: "بحث يركز على التنقل",
+        title: "الوصول والتنقل",
         description:
-          "مفيد للعملاء الذين يحتاجون إلى وصول أفضل إلى المستشفيات والعيادات وبرامج التدريب أو جهات العمل الطبية.",
+          "مدة التنقل إلى المستشفيات والعيادات وجهات العمل الطبية قد تختلف بشكل واضح حسب الحي وحركة المرور.",
       },
       {
-        title: "استقبال يراعي الجاهزية",
+        title: "أنواع السكن",
         description:
-          "يتم جمع الميزانية والتوقيت ومعايير الإيجار العملية مبكرًا حتى تصبح الخطوة التالية أكثر كفاءة.",
+          "قد تشمل الخيارات شققًا وتاون هاوس وأحياء سكنية قريبة حسب الميزانية والتوفر ونمط المبنى المفضل.",
       },
       {
-        title: "خطوة تالية أكثر تنظيمًا",
+        title: "اختيار المنطقة",
         description:
-          "تم تصميم مسار الطلب لتقليل التواصل المتفرق ونقل الطلبات المؤهلة إلى مسار مراجعة أوضح.",
+          "اختيار المنطقة المناسبة يعتمد غالبًا على تحمل التنقل وتفضيلات نمط الحياة ومستوى الأسعار العام.",
       },
     ],
 
+    areaTitle: "مناطق قريبة في هيوستن للمقارنة",
+    areaLinks: [
+      { href: "/houston/west-university-rice-museum-district", label: "وست يونيفرسيتي ورايس وميوزيوم ديستركت" },
+      { href: "/houston/downtown-midtown-montrose-river-oaks-adjacent", label: "داونتاون وميدتاون ومونتروز" },
+      { href: "/houston/the-heights", label: "ذا هايتس" },
+      { href: "/houston/galleria-tanglewood", label: "غاليريا وتانلوود" },
+      { href: "/houston/spring-branch", label: "سبرينغ برانش" },
+      { href: "/houston/bellaire", label: "بيلير" },
+    ],
+
     legal:
-      "يتم التوسط من خلال 5th Stream Realty LLC. لا يؤدي إرسال الطلب إلى إنشاء علاقة وكالة. تعتمد التمثيل والتوفر والخطوات التالية على المراجعة والملاءمة والاتفاق الكتابي المعمول به.",
+      "يتم التوسط من خلال 5th Stream Realty LLC. تُقدَّم خدمات التمثيل وفقًا لقانون تكساس والاتفاقيات الكتابية المعمول بها.",
   },
 } as const;
 
@@ -155,9 +191,13 @@ export default async function MedicalCenterHousingPage({
           {t.body}
         </p>
 
+        <p className="mt-4 max-w-3xl text-base leading-8 text-neutral-600">
+          {t.bodyTwo}
+        </p>
+
         <div className="mt-10 flex flex-wrap gap-4">
           <Link
-            href={`/intake?type=tenant&segment=medical_center&lang=${lang}`}
+            href={`/intake?service=tenant&area=medical-center&src=tmc-seo&lang=${lang}`}
             className="inline-flex h-12 items-center justify-center rounded-full bg-neutral-950 px-6 text-sm font-medium text-white transition hover:bg-neutral-800"
           >
             {t.primaryCta}
@@ -182,7 +222,23 @@ export default async function MedicalCenterHousingPage({
         </div>
 
         <div className="mt-14 rounded-[1.75rem] border border-black/5 bg-white p-6 md:p-8">
-          <p className="text-sm leading-7 text-neutral-600">{t.legal}</p>
+          <h2 className="text-2xl font-semibold tracking-tight">
+            {t.areaTitle}
+          </h2>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {t.areaLinks.map((item) => (
+              <Link
+                key={item.href}
+                href={`${item.href}?lang=${lang}`}
+                className="rounded-2xl border border-black/5 bg-neutral-50 p-4 text-sm font-medium text-neutral-900 transition hover:border-black/10 hover:bg-white"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+
+          <p className="mt-8 text-sm leading-7 text-neutral-600">{t.legal}</p>
         </div>
       </section>
     </main>
