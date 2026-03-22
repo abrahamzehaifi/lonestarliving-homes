@@ -106,24 +106,19 @@ export default function IntakeClient({
         },
         body: JSON.stringify({
           ...payload,
-
           leadType,
           intent,
           area,
-
           source: "website",
           source_detail: src || "unknown",
           channel: channel || "direct",
-
           lead_score: leadScore,
           priority: leadScore >= 70 ? "high" : "normal",
-
           lang,
           preferredLanguage: lang,
           ref: "web_intake",
           source_page: window.location.pathname,
           source_path: window.location.pathname + window.location.search,
-
           requestContext: {
             intent,
             area,
@@ -167,8 +162,12 @@ export default function IntakeClient({
 
         <div className="max-w-2xl">
           <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-            {t.title}
+            {t.requestLabel}
           </h1>
+
+          <p className="mt-4 text-base leading-7 text-neutral-600">
+            {t.requestSubtext}
+          </p>
 
           {areaLabel ? (
             <p className="mt-4 rounded-2xl border border-black/5 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">
@@ -249,7 +248,11 @@ export default function IntakeClient({
               />
               <input
                 name="areas"
-                placeholder={areaLabel ? `Preferred Areas (${areaLabel})` : "Preferred Areas"}
+                placeholder={
+                  areaLabel
+                    ? `Preferred Areas (${areaLabel})`
+                    : "Preferred Areas"
+                }
                 defaultValue={areaLabel}
                 className={inputClass}
               />
@@ -279,7 +282,11 @@ export default function IntakeClient({
               </select>
               <input
                 name="areas"
-                placeholder={areaLabel ? `Preferred Areas (${areaLabel})` : "Preferred Areas"}
+                placeholder={
+                  areaLabel
+                    ? `Preferred Areas (${areaLabel})`
+                    : "Preferred Areas"
+                }
                 defaultValue={areaLabel}
                 className={inputClass}
               />
