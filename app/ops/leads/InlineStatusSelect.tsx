@@ -24,7 +24,7 @@ export default function InlineStatusSelect({
   const [isPending, startTransition] = useTransition();
 
   function handleChange(nextValue: string) {
-    const previousValue = value;
+    const prev = value;
     setValue(nextValue);
     setError("");
 
@@ -32,48 +32,42 @@ export default function InlineStatusSelect({
       try {
         const res = await fetch("/api/leads/update", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             id: leadId,
             status: nextValue,
           }),
         });
 
-        const data = await res.json().catch(() => ({}));
-
         if (!res.ok) {
-          setValue(previousValue);
-          setError(
-            typeof data?.error === "string"
-              ? data.error
-              : "Failed to update status."
-          );
+          setValue(prev);
+          setError("Update failed");
         }
       } catch {
-        setValue(previousValue);
-        setError("Failed to update status.");
+        setValue(prev);
+        setError("Network error");
       }
     });
   }
 
   return (
-    <div className="min-w-[170px]">
+    <div className="min-w-[160px]">
       <select
         value={value}
         onChange={(e) => handleChange(e.target.value)}
         disabled={isPending}
-        className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 disabled:opacity-60"
+        className="w-full rounded-lg border px-3 py-2 text-sm"
       >
-        {STATUS_OPTIONS.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
+        {STATUS_OPTIONS.map((s) => (
+          <option key={s.value} value={s.value}>
+            {s.label}
           </option>
         ))}
       </select>
 
-      {error ? <p className="mt-1 text-xs text-red-600">{error}</p> : null}
+      {error && (
+        <p className="mt-1 text-xs text-red-500">{error}</p>
+      )}
     </div>
   );
 }
