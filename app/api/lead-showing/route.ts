@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import Twilio from "twilio";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 function normalizeIsoDate(value: unknown) {
@@ -28,30 +27,48 @@ function formatShowingDateTime(value: string | null) {
   }
 }
 
-async function sendShowingSmsNotification(opts: { body: string }) {
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_FROM_NUMBER;
-  const to = process.env.TWILIO_TO_NUMBER;
+async function sendTelegramNotification(message: string) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
 
-  if (!sid || !token || !from || !to) {
+  if (!token || !chatId) {
     return {
       ok: false as const,
       skipped: true as const,
-      error: "Missing Twilio env vars",
+      error: "Missing Telegram env vars",
     };
   }
 
-  const client = Twilio(sid, token);
-
   try {
-    const msg = await client.messages.create({ from, to, body: opts.body });
-    return { ok: true as const, sid: msg.sid };
+    const res = await fetch(
+      `https://api.telegram.org/bot${token}/sendMessage`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message,
+        }),
+      }
+    );
+
+    if (!res.ok) {
+      const text = await res.text();
+      return {
+        ok: false as const,
+        skipped: false as const,
+        error: text,
+      };
+    }
+
+    return { ok: true as const };
   } catch (e: unknown) {
     return {
       ok: false as const,
       skipped: false as const,
-      error: e instanceof Error ? e.message : "Twilio error",
+      error: e instanceof Error ? e.message : "Telegram error",
     };
   }
 }
@@ -111,11 +128,8 @@ export async function POST(req: Request) {
           showing_at: showingAt,
           updated_at: null,
         },
-        timeline: {
-          showing_scheduled: false,
-        },
         notifications: {
-          sms: {
+          telegram: {
             ok: false,
             skipped: true,
             error: "No showing change detected.",
@@ -149,29 +163,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const { error: eventError } = await supabase.from("lead_events").insert({
-      lead_id: id,
-      event_type: showingAt ? "showing_scheduled" : "showing_cleared",
-      event_label: showingAt ? "Showing scheduled" : "Showing cleared",
-      event_data: {
-        from: previousShowingAt,
-        to: showingAt,
-      },
-    });
+    const message = showingAt
+      ? `Showing scheduled\nLead: ${leadName}\nTime: ${formatShowingDateTime(
+          showingAt
+        )}`
+      : `Showing cleared\nLead: ${leadName}`;
 
-    if (eventError) {
-      console.error("lead-showing event insert failed:", eventError);
-    }
-
-    const smsRes = showingAt
-      ? await sendShowingSmsNotification({
-          body: `Showing scheduled\nLead: ${leadName}\nTime: ${formatShowingDateTime(
-            showingAt
-          )}`,
-        })
-      : await sendShowingSmsNotification({
-          body: `Showing cleared\nLead: ${leadName}`,
-        });
+    const telegramRes = await sendTelegramNotification(message);
 
     return NextResponse.json({
       ok: true,
@@ -180,11 +178,8 @@ export async function POST(req: Request) {
         showing_at: updatedLead.showing_at ?? null,
         updated_at: updatedLead.updated_at ?? null,
       },
-      timeline: {
-        showing_scheduled: !eventError,
-      },
       notifications: {
-        sms: smsRes,
+        telegram: telegramRes,
       },
     });
   } catch (error) {
