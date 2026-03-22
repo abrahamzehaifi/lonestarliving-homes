@@ -24,7 +24,7 @@ export default function PipelineColumn({
     <div className="w-[320px] rounded-2xl border bg-neutral-50 p-3">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-semibold">{stage.label}</h2>
-        <span className="rounded-full bg-white px-2 py-1 text-xs border">
+        <span className="rounded-full border bg-white px-2 py-1 text-xs">
           {leads.length}
         </span>
       </div>
@@ -35,14 +35,26 @@ export default function PipelineColumn({
           return (
             <div
               key={lead.id}
-              className={`rounded-2xl border bg-white p-3 ${selected ? "ring-2 ring-black" : ""}`}
+              className={`rounded-2xl border bg-white p-3 ${
+                selected ? "ring-2 ring-black" : ""
+              }`}
             >
-              <Link href={`/ops/dashboard/crm?lead=${lead.id}`} className="block space-y-1">
+              <Link
+                href={`/ops/dashboard/crm?lead=${lead.id}`}
+                className="block space-y-1"
+              >
                 <p className="font-medium">{lead.full_name}</p>
-                <p className="text-sm text-neutral-600">{lead.property_address}</p>
-                <p className="text-xs text-neutral-500">Motivation: {lead.motivation}</p>
+                <p className="text-sm text-neutral-600">
+                  {lead.property_address}
+                </p>
                 <p className="text-xs text-neutral-500">
-                  Follow-up: {lead.next_follow_up_at ? new Date(lead.next_follow_up_at).toLocaleString() : "Not set"}
+                  Motivation: {lead.motivation}
+                </p>
+                <p className="text-xs text-neutral-500">
+                  Follow-up:{" "}
+                  {lead.next_follow_up_at
+                    ? new Date(lead.next_follow_up_at).toLocaleString()
+                    : "Not set"}
                 </p>
               </Link>
 
