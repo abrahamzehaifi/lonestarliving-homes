@@ -13,7 +13,6 @@ type HomePageProps = {
 
 const copy = {
   en: {
-    brand: "5th Stream Realty LLC",
     eyebrow: "Houston real estate",
     title:
       "Helping clients move forward in Houston real estate with clarity and confidence.",
@@ -21,13 +20,12 @@ const copy = {
       "Whether you are renting, buying, selling, or leasing a property, the focus is simple: clear communication, practical guidance, and steady support from start to finish.",
     primaryCta: "Get started",
     secondaryCta: "View rentals",
-    tertiaryCta: "Contact",
-    buyerServices: "Buyer services",
+    buyerCta: "Buy a home",
 
     servicesEyebrow: "Services",
     servicesTitle: "Support across the key real estate paths.",
     servicesBody:
-      "Each service is designed to help you move forward with better information and fewer unknowns.",
+      "Clear information and a steady next step for renting, buying, selling, and leasing in Houston.",
 
     services: [
       {
@@ -40,7 +38,7 @@ const copy = {
       {
         title: "Buy",
         description:
-          "Guidance for clients purchasing a home, from search through closing.",
+          "Support for clients purchasing a home, from search through closing.",
         href: "/buy",
         cta: "View buyer services",
       },
@@ -64,8 +62,8 @@ const copy = {
     sectionOneTitle: "For clients preparing for their next move.",
     sectionOneBody: [
       "Some clients are moving quickly, while others are planning ahead.",
-      "Clear communication and the right information early help make the process smoother.",
-      "Each situation is handled based on what is actually needed, not a one-size-fits-all approach.",
+      "Clear communication and the right information early can make the process smoother.",
+      "Each situation should be handled based on actual needs, timing, and budget.",
     ],
     sectionOneCta: "Start request",
 
@@ -74,7 +72,7 @@ const copy = {
     sectionTwoBody: [
       "Buying or selling a property requires clarity, timing, and careful coordination.",
       "The goal is to keep decisions grounded and the process steady from start to finish.",
-      "Each step is handled with attention to detail and clear communication.",
+      "Strong communication and attention to detail matter at every step.",
     ],
     sectionTwoCta: "Request consultation",
 
@@ -83,13 +81,11 @@ const copy = {
     finalBody:
       "Share a few details and the next step will be outlined clearly based on your situation.",
     finalPrimary: "Get started",
-    finalSecondary: "Email office",
     legal:
       "Brokered by 5th Stream Realty LLC. Representation services are provided in accordance with Texas law and applicable written agreements.",
   },
 
   es: {
-    brand: "5th Stream Realty LLC",
     eyebrow: "Bienes raíces en Houston",
     title:
       "Ayudando a los clientes a avanzar en bienes raíces en Houston con claridad y confianza.",
@@ -97,13 +93,12 @@ const copy = {
       "Ya sea para rentar, comprar, vender o arrendar una propiedad, el enfoque es simple: comunicación clara, orientación práctica y apoyo constante de principio a fin.",
     primaryCta: "Comenzar",
     secondaryCta: "Ver rentas",
-    tertiaryCta: "Contacto",
-    buyerServices: "Servicios para compradores",
+    buyerCta: "Comprar vivienda",
 
     servicesEyebrow: "Servicios",
     servicesTitle: "Apoyo en los principales caminos inmobiliarios.",
     servicesBody:
-      "Cada servicio está diseñado para ayudarle a avanzar con mejor información y menos incertidumbre.",
+      "Información clara y un siguiente paso firme para rentar, comprar, vender o arrendar en Houston.",
 
     services: [
       {
@@ -116,7 +111,7 @@ const copy = {
       {
         title: "Comprar",
         description:
-          "Orientación para clientes que desean comprar una vivienda, desde la búsqueda hasta el cierre.",
+          "Apoyo para clientes que desean comprar una vivienda, desde la búsqueda hasta el cierre.",
         href: "/buy",
         cta: "Ver servicios para compradores",
       },
@@ -140,8 +135,8 @@ const copy = {
     sectionOneTitle: "Para clientes que se preparan para su próxima mudanza.",
     sectionOneBody: [
       "Algunos clientes se mueven rápidamente, mientras que otros planean con más tiempo.",
-      "Una comunicación clara y la información correcta desde el inicio ayudan a que el proceso sea más fluido.",
-      "Cada situación se maneja según lo que realmente se necesita, no con un enfoque genérico.",
+      "La comunicación clara y la información correcta desde el inicio pueden hacer el proceso más fluido.",
+      "Cada situación debe manejarse según necesidades reales, tiempo y presupuesto.",
     ],
     sectionOneCta: "Iniciar solicitud",
 
@@ -149,8 +144,8 @@ const copy = {
     sectionTwoTitle: "Para decisiones inmobiliarias de mayor valor.",
     sectionTwoBody: [
       "Comprar o vender una propiedad requiere claridad, buen momento y coordinación cuidadosa.",
-      "El objetivo es mantener las decisiones bien fundamentadas y el proceso estable de principio a fin.",
-      "Cada paso se maneja con atención al detalle y comunicación clara.",
+      "El objetivo es mantener decisiones bien fundamentadas y un proceso estable de principio a fin.",
+      "La buena comunicación y la atención al detalle importan en cada paso.",
     ],
     sectionTwoCta: "Solicitar consulta",
 
@@ -159,26 +154,23 @@ const copy = {
     finalBody:
       "Comparta algunos detalles y el siguiente paso se definirá claramente según su situación.",
     finalPrimary: "Comenzar",
-    finalSecondary: "Correo de la oficina",
     legal:
       "Intermediado por 5th Stream Realty LLC. Los servicios de representación se prestan conforme a la ley de Texas y los acuerdos escritos aplicables.",
   },
 
   ar: {
-    brand: "5th Stream Realty LLC",
     eyebrow: "العقار في هيوستن",
     title: "مساعدة العملاء على التقدم في عقارات هيوستن بوضوح وثقة.",
     body:
       "سواء كنت ترغب في الاستئجار أو الشراء أو البيع أو تأجير عقار، فالفكرة بسيطة: تواصل واضح، وإرشاد عملي، ودعم ثابت من البداية إلى النهاية.",
     primaryCta: "ابدأ",
     secondaryCta: "عرض الإيجارات",
-    tertiaryCta: "تواصل",
-    buyerServices: "خدمات المشترين",
+    buyerCta: "شراء منزل",
 
     servicesEyebrow: "الخدمات",
     servicesTitle: "دعم عبر المسارات العقارية الأساسية.",
     servicesBody:
-      "تم تصميم كل خدمة لمساعدتك على التقدم بمعلومات أوضح وحالة أقل من عدم اليقين.",
+      "معلومات أوضح وخطوة تالية ثابتة للاستئجار أو الشراء أو البيع أو التأجير في هيوستن.",
 
     services: [
       {
@@ -191,7 +183,7 @@ const copy = {
       {
         title: "شراء",
         description:
-          "إرشاد للعملاء الراغبين في شراء منزل، من البحث حتى الإغلاق.",
+          "دعم للعملاء الراغبين في شراء منزل، من البحث حتى الإغلاق.",
         href: "/buy",
         cta: "عرض خدمات المشترين",
       },
@@ -215,8 +207,8 @@ const copy = {
     sectionOneTitle: "للعملاء الذين يستعدون لخطوتهم القادمة.",
     sectionOneBody: [
       "بعض العملاء يتحركون بسرعة، بينما يخطط آخرون مسبقًا.",
-      "التواصل الواضح والمعلومات الصحيحة في البداية يساعدان على جعل العملية أكثر سلاسة.",
-      "يتم التعامل مع كل حالة بناءً على ما تحتاجه فعليًا، وليس بأسلوب واحد للجميع.",
+      "التواصل الواضح والمعلومات الصحيحة في البداية قد يجعل العملية أكثر سلاسة.",
+      "كل حالة يجب أن تُدار حسب الاحتياج الفعلي والتوقيت والميزانية.",
     ],
     sectionOneCta: "ابدأ الطلب",
 
@@ -225,7 +217,7 @@ const copy = {
     sectionTwoBody: [
       "شراء أو بيع عقار يتطلب وضوحًا وتوقيتًا وتنسيقًا دقيقًا.",
       "الهدف هو إبقاء القرارات منضبطة والعملية مستقرة من البداية إلى النهاية.",
-      "يتم التعامل مع كل خطوة بعناية وبتواصل واضح.",
+      "التواصل الجيد والانتباه للتفاصيل مهمان في كل خطوة.",
     ],
     sectionTwoCta: "اطلب استشارة",
 
@@ -234,7 +226,6 @@ const copy = {
     finalBody:
       "شارك بعض التفاصيل وسيتم توضيح الخطوة التالية بشكل واضح بناءً على حالتك.",
     finalPrimary: "ابدأ",
-    finalSecondary: "بريد المكتب",
     legal:
       "يتم التوسط من خلال 5th Stream Realty LLC. تُقدَّم خدمات التمثيل وفقًا لقانون تكساس والاتفاقيات الكتابية المعمول بها.",
   },
@@ -319,14 +310,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </p>
 
             <div className="mt-10 flex flex-wrap gap-3">
-              <DarkButton href={`/intake?service=tenant&lang=${lang}`}>
+              <DarkButton href={`/intake?service=tenant&src=home_hero&lang=${lang}`}>
                 {t.primaryCta}
               </DarkButton>
               <DarkButton href={`/rent?lang=${lang}`} secondary>
                 {t.secondaryCta}
               </DarkButton>
-              <DarkButton href={`mailto:info@lonestarliving.homes`} secondary>
-                {t.tertiaryCta}
+              <DarkButton href={`/intake?service=buyer&src=home_hero_buyer&lang=${lang}`} secondary>
+                {t.buyerCta}
               </DarkButton>
             </div>
           </div>
@@ -368,18 +359,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </div>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <LightButton href={`/intake?service=tenant&lang=${lang}`}>
+            <LightButton href={`/intake?service=tenant&src=home_services&lang=${lang}`}>
               {t.primaryCta}
             </LightButton>
-            <LightButton href={`/buy?lang=${lang}`}>
-              {t.buyerServices}
+            <LightButton href={`/intake?service=buyer&src=home_services_buyer&lang=${lang}`}>
+              {t.buyerCta}
             </LightButton>
-            <a
-              href="mailto:info@lonestarliving.homes"
-              className="inline-flex items-center justify-center rounded-full border border-black/10 px-5 py-3 text-sm font-medium text-neutral-800 transition hover:border-black/20 hover:bg-neutral-50"
-            >
-              {t.finalSecondary}
-            </a>
           </div>
         </div>
       </section>
@@ -400,7 +385,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 ))}
               </div>
               <div className="mt-6">
-                <LightButton href={`/intake?service=tenant&lang=${lang}`}>
+                <LightButton href={`/intake?service=tenant&src=home_move&lang=${lang}`}>
                   {t.sectionOneCta}
                 </LightButton>
               </div>
@@ -419,7 +404,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 ))}
               </div>
               <div className="mt-6">
-                <LightButton href={`/intake?service=buyer&lang=${lang}`}>
+                <LightButton href={`/intake?service=buyer&src=home_buy_sell&lang=${lang}`}>
                   {t.sectionTwoCta}
                 </LightButton>
               </div>
@@ -442,15 +427,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <LightButton href={`/intake?service=tenant&lang=${lang}`}>
+              <LightButton href={`/intake?service=tenant&src=home_final&lang=${lang}`}>
                 {t.finalPrimary}
               </LightButton>
-              <a
-                href="mailto:info@lonestarliving.homes"
-                className="inline-flex items-center justify-center rounded-full border border-black/10 px-5 py-3 text-sm font-medium text-neutral-800 transition hover:border-black/20 hover:bg-neutral-50"
-              >
-                {t.finalSecondary}
-              </a>
             </div>
 
             <p className="mt-8 text-sm text-neutral-500">{t.legal}</p>
