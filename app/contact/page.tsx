@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 type Language = "en" | "es" | "ar";
 
 type ContactPageProps = {
@@ -18,7 +16,7 @@ const copy = {
     eyebrow: "Contact",
     title: "Contact Abraham Zehaifi",
     body:
-      "Reach out to discuss buying, selling, leasing, landlord representation, or relocation in Houston. Clear communication, realistic strategy, and structured execution matter from the start. Initial conversations are focused on goals, timing, budget, and next steps.",
+      "Reach out to discuss buying, selling, renting, or leasing in Houston. Early conversations focus on your goals, timing, budget, and the next step that makes the most sense for your situation.",
     agent: "Agent",
     email: "Email",
     phone: "Phone",
@@ -31,7 +29,7 @@ const copy = {
     eyebrow: "Contacto",
     title: "Contactar a Abraham Zehaifi",
     body:
-      "Comuníquese para hablar sobre compra, venta, renta, representación de propietarios o reubicación en Houston. La comunicación clara, la estrategia realista y la ejecución estructurada son importantes desde el principio. Las conversaciones iniciales se centran en objetivos, tiempo, presupuesto y próximos pasos.",
+      "Comuníquese para hablar sobre compra, venta, renta o arrendamiento en Houston. Las conversaciones iniciales se centran en sus objetivos, tiempo, presupuesto y el siguiente paso más adecuado para su situación.",
     agent: "Agente",
     email: "Correo electrónico",
     phone: "Teléfono",
@@ -44,7 +42,7 @@ const copy = {
     eyebrow: "اتصال",
     title: "التواصل مع Abraham Zehaifi",
     body:
-      "تواصل لمناقشة شراء أو بيع أو استئجار أو تمثيل الملاك أو الانتقال إلى هيوستن. التواصل الواضح والاستراتيجية الواقعية والتنفيذ المنظم مهمان منذ البداية. تركز المحادثات الأولية على الأهداف والتوقيت والميزانية والخطوات التالية.",
+      "تواصل لمناقشة الشراء أو البيع أو الاستئجار أو التأجير في هيوستن. تركز المحادثات الأولية على الأهداف والتوقيت والميزانية والخطوة التالية الأنسب لحالتك.",
     agent: "الوكيل",
     email: "البريد الإلكتروني",
     phone: "الهاتف",
@@ -87,10 +85,10 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
           <p className="mt-6 text-sm text-neutral-600">{t.email}</p>
           <p className="mt-1 text-lg font-medium">
             <a
-              href="mailto:zehaifirealty@gmail.com"
+              href="mailto:info@lonestarliving.homes"
               className="transition hover:text-black hover:underline"
             >
-              zehaifirealty@gmail.com
+              info@lonestarliving.homes
             </a>
           </p>
 

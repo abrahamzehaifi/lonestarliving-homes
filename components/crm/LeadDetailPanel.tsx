@@ -10,6 +10,7 @@ type Lead = {
   stage: string;
   motivation: string;
   timeline: string | null;
+
   price_expectation: number | null;
   pain_point: string | null;
   market_low: number | null;
@@ -17,6 +18,12 @@ type Lead = {
   recommended_price: number | null;
   cma_notes: string | null;
   next_follow_up_at: string | null;
+
+  // NEW (from intake system)
+  priority?: string | null;
+  lead_score?: number | null;
+  source_detail?: string | null;
+  channel?: string | null;
 };
 
 type Activity = {
@@ -25,6 +32,33 @@ type Activity = {
   content: string;
   created_at: string;
 };
+
+function PriorityBadge({ priority }: { priority?: string | null }) {
+  if (!priority) return null;
+
+  const isHigh = priority === "high";
+
+  return (
+    <span
+      className={`rounded-full px-2 py-1 text-xs font-medium ${
+        isHigh
+          ? "bg-black text-white"
+          : "border border-neutral-200 bg-white text-neutral-700"
+      }`}
+    >
+      {isHigh ? "High Priority" : priority}
+    </span>
+  );
+}
+
+function formatDate(value: string | null) {
+  if (!value) return "—";
+  try {
+    return new Date(value).toLocaleString();
+  } catch {
+    return value;
+  }
+}
 
 export default function LeadDetailPanel({
   lead,
@@ -36,24 +70,67 @@ export default function LeadDetailPanel({
   if (!lead) {
     return (
       <aside className="rounded-2xl border p-4">
-        <p className="text-sm text-neutral-500">Select a lead to view details.</p>
+        <p className="text-sm text-neutral-500">
+          Select a lead to view details.
+        </p>
       </aside>
     );
   }
 
   return (
     <aside className="space-y-4">
+      {/* TOP CARD — IDENTITY + PRIORITY */}
       <section className="rounded-2xl border p-4">
-        <h2 className="text-lg font-semibold">{lead.full_name}</h2>
-        <p className="text-sm text-neutral-600">{lead.property_address}</p>
-        <p className="mt-2 text-sm">Phone: {lead.phone || "—"}</p>
-        <p className="text-sm">Email: {lead.email || "—"}</p>
-        <p className="text-sm">Source: {lead.source}</p>
-        <p className="text-sm">Stage: {lead.stage}</p>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">{lead.full_name}</h2>
+          <PriorityBadge priority={lead.priority} />
+        </div>
+
+        <p className="text-sm text-neutral-600">
+          {lead.property_address || "—"}
+        </p>
+
+        <div className="mt-3 space-y-1 text-sm">
+          <p>Phone: {lead.phone || "—"}</p>
+          <p>Email: {lead.email || "—"}</p>
+          <p>Stage: {lead.stage}</p>
+        </div>
+
+        {/* ATTRIBUTION (CRITICAL) */}
+        <div className="mt-4 rounded-xl bg-neutral-50 p-3 text-sm">
+          <p className="font-medium">Lead Source</p>
+          <p className="text-neutral-600">
+            {lead.source_detail || "—"} {lead.channel ? `· ${lead.channel}` : ""}
+          </p>
+
+          {typeof lead.lead_score === "number" && (
+            <p className="mt-1 text-neutral-600">
+              Score: {lead.lead_score}
+            </p>
+          )}
+        </div>
       </section>
 
+      {/* EXECUTION — FOLLOW UP */}
       <section className="rounded-2xl border p-4">
-        <h3 className="mb-3 font-semibold">Deal Details</h3>
+        <h3 className="mb-2 font-semibold">Next Action</h3>
+
+        <p className="text-sm text-neutral-600">
+          Follow-up: {formatDate(lead.next_follow_up_at)}
+        </p>
+
+        {lead.next_follow_up_at && (
+          <p className="mt-1 text-xs text-neutral-500">
+            {new Date(lead.next_follow_up_at) < new Date()
+              ? "⚠️ Overdue — act now"
+              : "Upcoming"}
+          </p>
+        )}
+      </section>
+
+      {/* DEAL STRATEGY */}
+      <section className="rounded-2xl border p-4">
+        <h3 className="mb-3 font-semibold">Deal Strategy</h3>
 
         <form action={updateLeadDetails} className="space-y-3">
           <input type="hidden" name="id" value={lead.id} />
@@ -68,7 +145,7 @@ export default function LeadDetailPanel({
           <input
             name="price_expectation"
             defaultValue={lead.price_expectation ?? ""}
-            placeholder="Price expectation"
+            placeholder="Client expectation"
             type="number"
             className="w-full rounded-xl border px-3 py-2"
           />
@@ -76,29 +153,29 @@ export default function LeadDetailPanel({
           <textarea
             name="pain_point"
             defaultValue={lead.pain_point || ""}
-            placeholder="Pain point"
-            className="min-h-[90px] w-full rounded-xl border px-3 py-2"
+            placeholder="Client pain point"
+            className="min-h-[80px] w-full rounded-xl border px-3 py-2"
           />
 
-          <div className="grid gap-3 grid-cols-3">
+          <div className="grid grid-cols-3 gap-3">
             <input
               name="market_low"
               defaultValue={lead.market_low ?? ""}
-              placeholder="Market low"
+              placeholder="Low"
               type="number"
               className="rounded-xl border px-3 py-2"
             />
             <input
               name="market_high"
               defaultValue={lead.market_high ?? ""}
-              placeholder="Market high"
+              placeholder="High"
               type="number"
               className="rounded-xl border px-3 py-2"
             />
             <input
               name="recommended_price"
               defaultValue={lead.recommended_price ?? ""}
-              placeholder="Recommended"
+              placeholder="Target"
               type="number"
               className="rounded-xl border px-3 py-2"
             />
@@ -107,8 +184,8 @@ export default function LeadDetailPanel({
           <textarea
             name="cma_notes"
             defaultValue={lead.cma_notes || ""}
-            placeholder="CMA notes"
-            className="min-h-[90px] w-full rounded-xl border px-3 py-2"
+            placeholder="Strategy / CMA notes"
+            className="min-h-[80px] w-full rounded-xl border px-3 py-2"
           />
 
           <input
@@ -122,36 +199,46 @@ export default function LeadDetailPanel({
             className="w-full rounded-xl border px-3 py-2"
           />
 
-          <button type="submit" className="rounded-xl bg-black px-4 py-2 text-white">
-            Save Details
+          <button className="rounded-xl bg-black px-4 py-2 text-white">
+            Save
           </button>
         </form>
       </section>
 
+      {/* ACTIVITY INPUT */}
       <section className="rounded-2xl border p-4">
-        <h3 className="mb-3 font-semibold">Add Activity</h3>
+        <h3 className="mb-3 font-semibold">Log Activity</h3>
+
         <form action={addActivity} className="space-y-3">
           <input type="hidden" name="lead_id" value={lead.id} />
-          <select name="activity_type" className="w-full rounded-xl border px-3 py-2">
+
+          <select
+            name="activity_type"
+            className="w-full rounded-xl border px-3 py-2"
+          >
             <option value="note">Note</option>
             <option value="call">Call</option>
             <option value="sms">SMS</option>
             <option value="email">Email</option>
             <option value="appointment">Appointment</option>
           </select>
+
           <textarea
             name="content"
             placeholder="What happened?"
-            className="min-h-[90px] w-full rounded-xl border px-3 py-2"
+            className="min-h-[80px] w-full rounded-xl border px-3 py-2"
           />
-          <button type="submit" className="rounded-xl border px-4 py-2">
+
+          <button className="rounded-xl border px-4 py-2">
             Add Activity
           </button>
         </form>
       </section>
 
+      {/* TIMELINE */}
       <section className="rounded-2xl border p-4">
         <h3 className="mb-3 font-semibold">Timeline</h3>
+
         <div className="space-y-3">
           {activities.length === 0 ? (
             <p className="text-sm text-neutral-500">No activity yet.</p>
@@ -159,14 +246,16 @@ export default function LeadDetailPanel({
             activities.map((activity) => (
               <div key={activity.id} className="rounded-xl border p-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium uppercase tracking-wide">
+                  <p className="text-xs font-medium uppercase">
                     {activity.activity_type}
                   </p>
                   <p className="text-xs text-neutral-500">
                     {new Date(activity.created_at).toLocaleString()}
                   </p>
                 </div>
-                <p className="mt-2 text-sm text-neutral-700">{activity.content}</p>
+                <p className="mt-2 text-sm text-neutral-700">
+                  {activity.content}
+                </p>
               </div>
             ))
           )}

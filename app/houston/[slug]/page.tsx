@@ -10,17 +10,52 @@ import { getSiteLang, type SiteLang } from "@/lib/i18n/getLang";
 type Params = { slug: string };
 type SearchParams = { lang?: string };
 
-function t(value: unknown, lang: SiteLang) {
+type LocalizedText =
+  | string
+  | {
+      en: string;
+      es?: string;
+      ar?: string;
+    };
+
+type LocalizedStringArray =
+  | string[]
+  | {
+      en: string[];
+      es?: string[];
+      ar?: string[];
+    };
+
+type LocalizedFaqArray =
+  | Array<{ question: string; answer: string }>
+  | {
+      en: Array<{ question: string; answer: string }>;
+      es?: Array<{ question: string; answer: string }>;
+      ar?: Array<{ question: string; answer: string }>;
+    };
+
+function pickText(value: LocalizedText | undefined, lang: SiteLang): string {
   if (!value) return "";
   if (typeof value === "string") return value;
+  return value[lang] || value.en || "";
+}
+
+function pickStringArray(
+  value: LocalizedStringArray | undefined,
+  lang: SiteLang
+): string[] {
+  if (!value) return [];
   if (Array.isArray(value)) return value;
+  return value[lang] || value.en || [];
+}
 
-  if (typeof value === "object") {
-    const localized = value as Record<string, unknown>;
-    return localized[lang] ?? localized.en ?? "";
-  }
-
-  return "";
+function pickFaqArray(
+  value: LocalizedFaqArray | undefined,
+  lang: SiteLang
+): Array<{ question: string; answer: string }> {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  return value[lang] || value.en || [];
 }
 
 export async function generateStaticParams() {
@@ -45,14 +80,14 @@ export async function generateMetadata({
 
   if (!page) {
     return {
-      title: "Houston Neighborhood Guidance",
-      description: "Houston neighborhood guidance.",
+      title: "Houston Areas",
+      description: "Houston area pages.",
     };
   }
 
   return {
-    title: String(t(page.metaTitle, lang)),
-    description: String(t(page.metaDescription, lang)),
+    title: pickText(page.metaTitle as LocalizedText, lang),
+    description: pickText(page.metaDescription as LocalizedText, lang),
     alternates: {
       canonical: `/houston/${page.slug}`,
     },
@@ -80,7 +115,11 @@ function getCompareLinks(currentSlug: string) {
   return priorityOrder
     .filter((slug) => slug !== currentSlug)
     .map((slug) => getHoustonAreaBySlug(slug))
-    .filter(Boolean);
+    .filter(
+      (
+        item
+      ): item is NonNullable<ReturnType<typeof getHoustonAreaBySlug>> => Boolean(item)
+    );
 }
 
 export default async function HoustonAreaPage({
@@ -102,9 +141,7 @@ export default async function HoustonAreaPage({
   }
 
   const compareLinks = getCompareLinks(page.slug).slice(0, 5);
-
-  const localizedFaqs =
-    (t(page.seoFaqs, lang) as Array<{ question: string; answer: string }>) || [];
+  const localizedFaqs = pickFaqArray(page.seoFaqs as LocalizedFaqArray, lang);
 
   const faqJsonLd = {
     "@context": "https://schema.org",
@@ -119,11 +156,11 @@ export default async function HoustonAreaPage({
     })),
   };
 
-  const overview = (t(page.overview, lang) as string[]) || [];
-  const bestFor = (t(page.bestFor, lang) as string[]) || [];
-  const housing = (t(page.housing, lang) as string[]) || [];
-  const lifestyle = (t(page.lifestyle, lang) as string[]) || [];
-  const commute = (t(page.commute, lang) as string[]) || [];
+  const overview = pickStringArray(page.overview as LocalizedStringArray, lang);
+  const bestFor = pickStringArray(page.bestFor as LocalizedStringArray, lang);
+  const housing = pickStringArray(page.housing as LocalizedStringArray, lang);
+  const lifestyle = pickStringArray(page.lifestyle as LocalizedStringArray, lang);
+  const commute = pickStringArray(page.commute as LocalizedStringArray, lang);
 
   const labels = {
     home: {
@@ -136,13 +173,13 @@ export default async function HoustonAreaPage({
       es: "Áreas de Houston",
       ar: "مناطق هيوستن",
     },
-    guidance: {
-      en: "Houston neighborhood guidance",
-      es: "Guía de vecindarios de Houston",
-      ar: "دليل أحياء هيوستن",
+    areas: {
+      en: "Houston areas",
+      es: "Áreas de Houston",
+      ar: "مناطق هيوستن",
     },
-    beginIntake: {
-      en: "Begin intake",
+    startRequest: {
+      en: "Start request",
       es: "Iniciar solicitud",
       ar: "ابدأ الطلب",
     },
@@ -153,7 +190,7 @@ export default async function HoustonAreaPage({
     },
     buyerGuidance: {
       en: "Buyer guidance",
-      es: "Guía de شراء",
+      es: "Guía para compradores",
       ar: "دليل الشراء",
     },
     compareTitle: {
@@ -162,9 +199,9 @@ export default async function HoustonAreaPage({
       ar: "قارن بين مناطق هيوستن",
     },
     compareText: {
-      en: "Clients rarely compare just one location. Use these area pages to compare commute, housing style, pricing profile, and neighborhood fit more efficiently.",
-      es: "Rara vez los clientes comparan una sola ubicación. Usa estas páginas para comparar trayecto, tipo de vivienda, nivel de precios y compatibilidad del vecindario con más claridad.",
-      ar: "نادرًا ما يقارن العملاء منطقة واحدة فقط. استخدم هذه الصفحات لمقارنة التنقل ونمط السكن ومستوى الأسعار ومدى ملاءمة الحي بشكل أوضح.",
+      en: "Use these pages to compare commute, housing style, pricing profile, and neighborhood fit more clearly.",
+      es: "Usa estas páginas para comparar trayecto, tipo de vivienda, nivel de precios y compatibilidad del vecindario con más claridad.",
+      ar: "استخدم هذه الصفحات لمقارنة التنقل ونمط السكن ومستوى الأسعار ومدى ملاءمة الحي بشكل أوضح.",
     },
     areaOverview: {
       en: "Area overview",
@@ -172,19 +209,19 @@ export default async function HoustonAreaPage({
       ar: "نظرة عامة على المنطقة",
     },
     exploreRental: {
-      en: "Explore rental strategy",
-      es: "Explorar estrategia de renta",
-      ar: "استكشف استراتيجية الاستئجار",
+      en: "Explore rentals",
+      es: "Explorar rentas",
+      ar: "استكشف الإيجارات",
     },
     bestFit: {
       en: "Best fit for",
       es: "Ideal para",
       ar: "الأنسب لـ",
     },
-    startGuidedSearch: {
-      en: "Start a guided search",
-      es: "Iniciar búsqueda guiada",
-      ar: "ابدأ بحثًا موجهًا",
+    startSearch: {
+      en: "Start search",
+      es: "Iniciar búsqueda",
+      ar: "ابدأ البحث",
     },
     housingProfile: {
       en: "Housing profile",
@@ -192,9 +229,9 @@ export default async function HoustonAreaPage({
       ar: "ملف السكن",
     },
     exploreBuyer: {
-      en: "Explore buyer guidance",
-      es: "Explorar guía para compradores",
-      ar: "استكشف دليل الشراء",
+      en: "Explore buyer services",
+      es: "Explorar servicios para compradores",
+      ar: "استكشف خدمات الشراء",
     },
     lifestyle: {
       en: "Lifestyle and positioning",
@@ -202,9 +239,9 @@ export default async function HoustonAreaPage({
       ar: "نمط الحياة والتمركز",
     },
     compareMore: {
-      en: "Compare more Houston neighborhoods",
-      es: "Comparar más vecindarios de Houston",
-      ar: "قارن المزيد من أحياء هيوستن",
+      en: "Compare more Houston areas",
+      es: "Comparar más áreas de Houston",
+      ar: "قارن المزيد من مناطق هيوستن",
     },
     pricing: {
       en: "Pricing and decision considerations",
@@ -238,7 +275,7 @@ export default async function HoustonAreaPage({
           </Link>
 
           <Link
-            href="/houston"
+            href={`/houston?lang=${lang}`}
             className="inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-neutral-900 transition hover:border-black/20"
           >
             {labels.houstonAreas[lang]}
@@ -246,23 +283,23 @@ export default async function HoustonAreaPage({
         </div>
 
         <p className="mt-6 text-sm font-medium uppercase tracking-[0.18em] text-neutral-500">
-          {labels.guidance[lang]}
+          {labels.areas[lang]}
         </p>
 
         <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight md:text-5xl">
-          {String(t(page.h1, lang))}
+          {pickText(page.h1 as LocalizedText, lang)}
         </h1>
 
         <p className="mt-6 max-w-3xl text-base leading-8 text-neutral-600">
-          {String(t(page.intro, lang))}
+          {pickText(page.intro as LocalizedText, lang)}
         </p>
 
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
-            href={`/intake?type=tenant&segment=general&area=${page.slug}&lang=${lang}`}
+            href={`/intake?service=tenant&area=${page.slug}&lang=${lang}`}
             className="inline-flex items-center justify-center rounded-full bg-neutral-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-neutral-800"
           >
-            {labels.beginIntake[lang]}
+            {labels.startRequest[lang]}
           </Link>
 
           <Link
@@ -294,11 +331,11 @@ export default async function HoustonAreaPage({
           <div className="mt-4 flex flex-wrap gap-2">
             {compareLinks.map((item) => (
               <Link
-                key={item!.slug}
-                href={`/houston/${item!.slug}?lang=${lang}`}
+                key={item.slug}
+                href={`/houston/${item.slug}?lang=${lang}`}
                 className="rounded-full border border-black/10 bg-neutral-50 px-3 py-1.5 text-sm font-medium text-neutral-800 transition hover:border-black/20 hover:bg-white"
               >
-                {String(t(item!.title, lang))}
+                {pickText(item.title as LocalizedText, lang)}
               </Link>
             ))}
           </div>
@@ -340,10 +377,10 @@ export default async function HoustonAreaPage({
 
           <div className="mt-5">
             <Link
-              href={`/intake?type=tenant&segment=general&area=${page.slug}&lang=${lang}`}
+              href={`/intake?service=tenant&area=${page.slug}&lang=${lang}`}
               className="text-sm font-medium underline underline-offset-4 transition hover:text-neutral-900"
             >
-              {labels.startGuidedSearch[lang]}
+              {labels.startSearch[lang]}
             </Link>
           </div>
         </div>
@@ -396,12 +433,12 @@ export default async function HoustonAreaPage({
           </h2>
 
           <p className="mt-4 text-sm leading-7 text-neutral-600">
-            {String(t(page.pricingNote, lang))}{" "}
+            {pickText(page.pricingNote as LocalizedText, lang)}{" "}
             <Link
-              href={`/intake?type=tenant&segment=general&area=${page.slug}&lang=${lang}`}
+              href={`/intake?service=tenant&area=${page.slug}&lang=${lang}`}
               className="underline underline-offset-4 transition hover:text-neutral-900"
             >
-              {labels.startGuidedSearch[lang]}
+              {labels.startSearch[lang]}
             </Link>
             .
           </p>
@@ -416,7 +453,7 @@ export default async function HoustonAreaPage({
             ))}
           </ul>
 
-          {page.zipCodes.length > 0 && (
+          {page.zipCodes.length > 0 ? (
             <>
               <h3 className="mt-6 text-lg font-semibold tracking-tight">
                 {labels.zipCodes[lang]}
@@ -433,7 +470,7 @@ export default async function HoustonAreaPage({
                 ))}
               </div>
             </>
-          )}
+          ) : null}
         </div>
       </section>
 

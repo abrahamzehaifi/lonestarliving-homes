@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "About | LonestarLiving.homes",
   description:
-    "Learn about Abraham Zehaifi and real estate representation in Houston through LonestarLiving.homes.",
+    "Learn about Abraham Zehaifi and real estate services in Houston through LonestarLiving.homes.",
 };
 
 type Language = "en" | "es" | "ar";
@@ -22,7 +22,7 @@ function getLanguage(value?: string): Language {
 const copy = {
   en: {
     eyebrow: "About",
-    title: "Houston real estate representation with a calm, clear approach.",
+    title: "Real estate representation in Houston with a calm, clear approach.",
     bodyOne:
       "I work with clients across Houston who want thoughtful guidance, clear communication, and dependable support throughout the buying, selling, or leasing process.",
     bodyTwo:

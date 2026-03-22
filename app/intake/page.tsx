@@ -29,6 +29,24 @@ function cleanArea(v?: string) {
   return value || "";
 }
 
+function cleanSource(v?: string) {
+  const value = (v ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, "");
+
+  return value || "";
+}
+
+function cleanChannel(v?: string) {
+  const value = (v ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, "");
+
+  return value || "";
+}
+
 export default async function IntakePage({
   searchParams,
 }: {
@@ -37,6 +55,8 @@ export default async function IntakePage({
     service?: string;
     type?: string;
     area?: string;
+    src?: string;
+    channel?: string;
   }>;
 }) {
   const sp = (await searchParams) ?? {};
@@ -44,6 +64,16 @@ export default async function IntakePage({
   const lang: Language = await getPreferredSiteLang(sp.lang);
   const intent = coerceIntent(sp.service ?? sp.type);
   const area = cleanArea(sp.area);
+  const src = cleanSource(sp.src);
+  const channel = cleanChannel(sp.channel);
 
-  return <IntakeClient lang={lang} intent={intent} area={area} />;
+  return (
+    <IntakeClient
+      lang={lang}
+      intent={intent}
+      area={area}
+      src={src}
+      channel={channel}
+    />
+  );
 }

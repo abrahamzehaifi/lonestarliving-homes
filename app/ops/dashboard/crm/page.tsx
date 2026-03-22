@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@supabase/ssr";
+
 import { CRM_STAGES } from "@/lib/crm/stages";
 import LeadCreateForm from "@/components/crm/LeadCreateForm";
 import PipelineColumn from "@/components/crm/PipelineColumn";
@@ -8,6 +9,15 @@ import LeadDetailPanel from "@/components/crm/LeadDetailPanel";
 import RunFollowUpsButton from "@/components/crm/RunFollowUpsButton";
 
 type SearchParams = Promise<{ lead?: string }>;
+
+type CrmLead = {
+  id: string;
+  stage: string;
+  created_at?: string | null;
+  next_follow_up_at?: string | null;
+  priority?: string | null;
+  lead_score?: number | null;
+};
 
 async function getSupabase() {
   const cookieStore = await cookies();
@@ -22,6 +32,31 @@ async function getSupabase() {
       },
     }
   );
+}
+
+function priorityWeight(priority?: string | null) {
+  if (priority === "high") return 2;
+  if (priority === "normal") return 1;
+  return 0;
+}
+
+function sortLeadsForExecution(leads: CrmLead[]) {
+  return [...leads].sort((a, b) => {
+    const priorityDiff = priorityWeight(b.priority) - priorityWeight(a.priority);
+    if (priorityDiff !== 0) return priorityDiff;
+
+    const scoreA = typeof a.lead_score === "number" ? a.lead_score : -1;
+    const scoreB = typeof b.lead_score === "number" ? b.lead_score : -1;
+    if (scoreB !== scoreA) return scoreB - scoreA;
+
+    const followUpA = a.next_follow_up_at ? new Date(a.next_follow_up_at).getTime() : Number.MAX_SAFE_INTEGER;
+    const followUpB = b.next_follow_up_at ? new Date(b.next_follow_up_at).getTime() : Number.MAX_SAFE_INTEGER;
+    if (followUpA !== followUpB) return followUpA - followUpB;
+
+    const createdA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const createdB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return createdB - createdA;
+  });
 }
 
 export default async function CrmPage({
@@ -48,6 +83,7 @@ export default async function CrmPage({
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
+
     supabase
       .from("crm_activities")
       .select("*")
@@ -58,8 +94,12 @@ export default async function CrmPage({
   if (leadsError) throw new Error(leadsError.message);
   if (activitiesError) throw new Error(activitiesError.message);
 
+  const sortedLeads = sortLeadsForExecution((leads ?? []) as CrmLead[]);
+
   const selectedLead =
-    leads?.find((lead) => lead.id === selectedLeadId) ?? leads?.[0] ?? null;
+    sortedLeads.find((lead) => lead.id === selectedLeadId) ??
+    sortedLeads[0] ??
+    null;
 
   const selectedActivities = selectedLead
     ? (activities ?? []).filter((a) => a.lead_id === selectedLead.id)
@@ -68,48 +108,51 @@ export default async function CrmPage({
   const today = new Date().toISOString();
 
   const kpis = {
-    newLeads: (leads ?? []).filter((l) => l.stage === "new_lead").length,
-    followUpsDue: (leads ?? []).filter(
+    newLeads: sortedLeads.filter((l) => l.stage === "new_lead").length,
+    followUpsDue: sortedLeads.filter(
       (l) => l.next_follow_up_at && l.next_follow_up_at <= today
     ).length,
-    appointments: (leads ?? []).filter((l) => l.stage === "appointment_set")
-      .length,
-    signed: (leads ?? []).filter((l) => l.stage === "listing_signed").length,
-    closed: (leads ?? []).filter((l) => l.stage === "closed").length,
+    appointments: sortedLeads.filter((l) => l.stage === "appointment_set").length,
+    signed: sortedLeads.filter((l) => l.stage === "listing_signed").length,
+    closed: sortedLeads.filter((l) => l.stage === "closed").length,
+    highPriority: sortedLeads.filter((l) => l.priority === "high").length,
   };
 
   return (
     <main className="space-y-6 p-6">
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <div className="rounded-2xl border p-4">
-          <p className="text-sm text-neutral-500">New Leads</p>
-          <p className="text-2xl font-semibold">{kpis.newLeads}</p>
-        </div>
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+        <KpiCard label="New Leads" value={kpis.newLeads} />
+        <KpiCard label="Follow-Ups Due" value={kpis.followUpsDue} />
+        <KpiCard label="Appointments" value={kpis.appointments} />
+        <KpiCard label="Listings Signed" value={kpis.signed} />
+        <KpiCard label="Closed" value={kpis.closed} />
+        <KpiCard label="High Priority" value={kpis.highPriority} />
+      </section>
 
-        <div className="rounded-2xl border p-4">
-          <p className="text-sm text-neutral-500">Follow-Ups Due</p>
-          <p className="text-2xl font-semibold">{kpis.followUpsDue}</p>
-        </div>
+      <section className="rounded-2xl border bg-white p-4">
+        <h2 className="text-lg font-semibold">Daily Execution</h2>
 
-        <div className="rounded-2xl border p-4">
-          <p className="text-sm text-neutral-500">Appointments</p>
-          <p className="text-2xl font-semibold">{kpis.appointments}</p>
-        </div>
-
-        <div className="rounded-2xl border p-4">
-          <p className="text-sm text-neutral-500">Listings Signed</p>
-          <p className="text-2xl font-semibold">{kpis.signed}</p>
-        </div>
-
-        <div className="rounded-2xl border p-4">
-          <p className="text-sm text-neutral-500">Closed</p>
-          <p className="text-2xl font-semibold">{kpis.closed}</p>
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
+          <ExecCard
+            title="Respond first"
+            desc="Call high-priority leads and active buyers before anything else."
+          />
+          <ExecCard
+            title="Clear follow-ups"
+            desc="Run follow-ups, clear overdue leads, and log every touch."
+          />
+          <ExecCard
+            title="Advance pipeline"
+            desc="Move pricing, showings, appointments, and contracts forward daily."
+          />
         </div>
       </section>
 
-      <LeadCreateForm />
+      <section className="flex flex-wrap items-center gap-3">
+        <RunFollowUpsButton />
+      </section>
 
-      <RunFollowUpsButton />
+      <LeadCreateForm />
 
       <section className="grid gap-6 xl:grid-cols-[1.6fr_.9fr]">
         <div className="overflow-x-auto">
@@ -118,15 +161,36 @@ export default async function CrmPage({
               <PipelineColumn
                 key={stage.key}
                 stage={stage}
-                leads={(leads ?? []).filter((lead) => lead.stage === stage.key)}
+                leads={sortedLeads.filter((lead) => lead.stage === stage.key)}
                 selectedLeadId={selectedLead?.id ?? null}
               />
             ))}
           </div>
         </div>
 
-        <LeadDetailPanel lead={selectedLead} activities={selectedActivities} />
+        <LeadDetailPanel
+          lead={selectedLead as any}
+          activities={selectedActivities}
+        />
       </section>
     </main>
+  );
+}
+
+function KpiCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-2xl border p-4">
+      <p className="text-sm text-neutral-500">{label}</p>
+      <p className="text-2xl font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function ExecCard({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div className="rounded-xl border bg-neutral-50 p-3">
+      <p className="text-sm text-neutral-500">{title}</p>
+      <p className="mt-1 text-sm text-neutral-800">{desc}</p>
+    </div>
   );
 }
