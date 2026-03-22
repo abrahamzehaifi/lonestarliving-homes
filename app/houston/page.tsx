@@ -4,8 +4,21 @@ import { houstonAreaPages } from "@/lib/houston-neighborhoods";
 export const metadata = {
   title: "Houston Neighborhood Guidance",
   description:
-    "Explore Houston neighborhood guidance for renters, buyers, relocations, and area comparisons.",
+    "Explore Houston neighborhood guidance for renters, buyers, and area comparisons.",
 };
+
+type LocalizedText =
+  | string
+  | {
+      en: string;
+      es?: string;
+      ar?: string;
+    };
+
+function pickText(value: LocalizedText) {
+  if (typeof value === "string") return value;
+  return value.en || value.es || value.ar || "";
+}
 
 export default function HoustonIndexPage() {
   return (
@@ -16,12 +29,12 @@ export default function HoustonIndexPage() {
         </p>
 
         <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight md:text-5xl">
-          Area guidance for Houston renters, buyers, and relocations.
+          Area guidance for Houston renters, buyers, and moving decisions.
         </h1>
 
         <p className="mt-6 max-w-3xl text-base leading-8 text-neutral-600">
           Explore Houston area pages built to help clients compare neighborhoods
-          more intelligently before touring, applying, or purchasing.
+          more clearly before touring, leasing, or purchasing.
         </p>
       </section>
 
@@ -34,14 +47,14 @@ export default function HoustonIndexPage() {
               className="rounded-[1.75rem] border border-black/5 bg-white p-6 transition hover:border-black/10"
             >
               <h2 className="text-xl font-semibold tracking-tight">
-                {page.title}
+                {pickText(page.title)}
               </h2>
 
               <p className="mt-3 text-sm leading-7 text-neutral-600">
-                {page.intro}
+                {pickText(page.intro)}
               </p>
 
-              {page.zipCodes.length > 0 && (
+              {Array.isArray(page.zipCodes) && page.zipCodes.length > 0 ? (
                 <div className="mt-4 flex flex-wrap gap-2">
                   {page.zipCodes.slice(0, 4).map((zip) => (
                     <span
@@ -52,7 +65,7 @@ export default function HoustonIndexPage() {
                     </span>
                   ))}
                 </div>
-              )}
+              ) : null}
             </Link>
           ))}
         </div>
