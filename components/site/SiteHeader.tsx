@@ -27,20 +27,14 @@ function NavLink({
 function HeaderButton({
   href,
   children,
-  filled = false,
 }: {
   href: string;
   children: ReactNode;
-  filled?: boolean;
 }) {
   return (
     <a
       href={href}
-      className={
-        filled
-          ? "inline-flex h-10 items-center justify-center rounded-full bg-white px-4 text-sm font-medium text-neutral-900 transition hover:bg-white/90"
-          : "inline-flex h-10 items-center justify-center rounded-full border border-white/20 px-4 text-sm font-medium text-white transition hover:border-white/35 hover:bg-white/5"
-      }
+      className="inline-flex h-10 items-center justify-center rounded-full border border-white/20 px-4 text-sm font-medium text-white transition hover:border-white/35 hover:bg-white/5"
     >
       {children}
     </a>
@@ -167,14 +161,23 @@ export default function SiteHeader() {
               aria-label="Primary navigation"
               className="flex flex-wrap items-center gap-4 lg:gap-6"
             >
-              <NavLink href={withLang("/rent", lang)}>{copy.nav.rent}</NavLink>
-              <NavLink href={withLang("/buy", lang)}>{copy.nav.buy}</NavLink>
-              <NavLink href={withLang("/sell", lang)}>{copy.nav.sell}</NavLink>
-              <NavLink href={withLang("/landlords", lang)}>
+              <NavLink href={`/intake?type=tenant&src=nav_rent&lang=${lang}`}>
+                {copy.nav.rent}
+              </NavLink>
+
+              <NavLink href={`/intake?type=buyer&src=nav_buy&lang=${lang}`}>
+                {copy.nav.buy}
+              </NavLink>
+
+              <NavLink href={`/intake?type=seller&src=nav_sell&lang=${lang}`}>
+                {copy.nav.sell}
+              </NavLink>
+
+              <NavLink href={`/intake?type=landlord&src=nav_landlord&lang=${lang}`}>
                 {copy.nav.landlords}
               </NavLink>
+
               <NavLink href={withLang("/about", lang)}>About</NavLink>
-              <NavLink href={withLang("/intake", lang)}>Get Started</NavLink>
             </nav>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -182,9 +185,19 @@ export default function SiteHeader() {
                 {copy.header.call}
               </HeaderButton>
 
-              <HeaderButton href="mailto:info@lonestarliving.homes" filled>
-                {copy.header.email}
-              </HeaderButton>
+              <Link
+                href={`/intake?type=buyer&src=header_priority&channel=organic&lang=${lang}`}
+                className="inline-flex h-10 items-center justify-center rounded-full border border-white/20 px-4 text-sm font-medium text-white transition hover:border-white/35 hover:bg-white/5"
+              >
+                Buy a Home
+              </Link>
+
+              <Link
+                href={`/intake?src=header_primary&channel=organic&lang=${lang}`}
+                className="inline-flex h-10 items-center justify-center rounded-full bg-white px-4 text-sm font-medium text-neutral-900 transition hover:bg-white/90"
+              >
+                Get Started
+              </Link>
             </div>
           </div>
         </div>
