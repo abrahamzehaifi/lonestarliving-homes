@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About | Abraham Zehaifi | 5th Stream Realty LLC",
+  title: "About | LonestarLiving.homes",
   description:
-    "Learn about Abraham Zehaifi, Houston real estate guidance, and multilingual support through 5th Stream Realty LLC.",
+    "Learn about Abraham Zehaifi and real estate representation in Houston through LonestarLiving.homes.",
 };
 
 type Language = "en" | "es" | "ar";
@@ -22,33 +22,32 @@ function getLanguage(value?: string): Language {
 const copy = {
   en: {
     eyebrow: "About",
-    title:
-      "Houston real estate guidance with clear strategy and steady execution.",
+    title: "Houston real estate representation with a calm, clear approach.",
     bodyOne:
-      "I work with buyers, sellers, landlords, and renters across Houston who want clear communication, realistic strategy, and a structured transaction process. The goal is straightforward: fewer surprises, stronger positioning, and a cleaner path to closing.",
+      "I work with clients across Houston who want thoughtful guidance, clear communication, and dependable support throughout the buying, selling, or leasing process.",
     bodyTwo:
-      "Many clients navigating Houston real estate prefer to communicate in the language they know best. Arabic, English, and Spanish communication are available when helpful for the transaction.",
+      "Arabic, English, and Spanish communication are available when helpful, making it easier for clients and families to move forward with clarity and confidence.",
     legal:
       "Real estate services are provided by Abraham Zehaifi, Texas REALTOR®, brokered by 5th Stream Realty LLC.",
   },
   es: {
     eyebrow: "Acerca de",
     title:
-      "Guía inmobiliaria en Houston con estrategia clara y ejecución constante.",
+      "Representación inmobiliaria en Houston con un enfoque tranquilo y claro.",
     bodyOne:
-      "Trabajo con compradores, vendedores, propietarios e inquilinos en Houston que desean comunicación clara, estrategia realista y un proceso de transacción estructurado. El objetivo es directo: menos sorpresas, mejor posicionamiento y un camino más limpio hacia el cierre.",
+      "Trabajo con clientes en todo Houston que desean orientación considerada, comunicación clara y apoyo confiable durante el proceso de compra, venta o arrendamiento.",
     bodyTwo:
-      "Muchos clientes que navegan el mercado inmobiliario de Houston prefieren comunicarse en el idioma que mejor dominan. La comunicación en árabe, inglés y español está disponible cuando sea útil para la transacción.",
+      "La comunicación en árabe, inglés y español está disponible cuando sea útil, lo que facilita que los clientes y sus familias avancen con claridad y confianza.",
     legal:
       "Los servicios inmobiliarios son proporcionados por Abraham Zehaifi, Texas REALTOR®, brokered by 5th Stream Realty LLC.",
   },
   ar: {
     eyebrow: "نبذة",
-    title: "إرشاد عقاري في هيوستن باستراتيجية واضحة وتنفيذ ثابت.",
+    title: "تمثيل عقاري في هيوستن بأسلوب هادئ وواضح.",
     bodyOne:
-      "أعمل مع المشترين والبائعين والمُلّاك والمستأجرين في هيوستن ممن يريدون تواصلًا واضحًا واستراتيجية واقعية وعملية صفقة منظمة. الهدف مباشر: مفاجآت أقل، وتموضع أقوى، ومسار أوضح نحو الإغلاق.",
+      "أعمل مع العملاء في أنحاء هيوستن ممن يريدون إرشادًا مدروسًا، وتواصلًا واضحًا، ودعمًا موثوقًا خلال عملية الشراء أو البيع أو التأجير.",
     bodyTwo:
-      "يفضل كثير من العملاء الذين يتعاملون مع سوق هيوستن العقاري التواصل باللغة التي يعرفونها بشكل أفضل. التواصل بالعربية والإنجليزية والإسبانية متاح عندما يكون ذلك مفيدًا للصفقة.",
+      "التواصل بالعربية والإنجليزية والإسبانية متاح عند الحاجة، مما يساعد العملاء وعائلاتهم على المضي قدمًا بوضوح وثقة.",
     legal:
       "تُقدَّم الخدمات العقارية من قبل Abraham Zehaifi, Texas REALTOR®, brokered by 5th Stream Realty LLC.",
   },

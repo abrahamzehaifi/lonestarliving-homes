@@ -24,45 +24,46 @@ export default function Hero() {
 
       <div className="relative mx-auto max-w-6xl px-6 py-24 md:py-32">
         <p className="text-xs uppercase tracking-[0.32em] text-white/70 md:text-sm">
-          Full-Service Real Estate Representation
+          Houston Real Estate
         </p>
 
         <h1 className="mt-6 max-w-[20ch] text-4xl font-medium leading-[1.08] tracking-[-0.02em] text-[#F2EFEA] md:text-6xl">
-          Houston real estate,
+          Clear guidance for buying,
           <br />
-          executed with precision.
+          selling, renting, and leasing in Houston.
         </h1>
 
         <p className="mt-7 max-w-2xl text-lg leading-relaxed text-white/70 md:text-xl">
-          Representation for buyers, sellers, landlords, and qualified renters
-          across Houston, with clear communication and disciplined execution.
+          Support for buyers, sellers, property owners, and renters with clear
+          communication, practical guidance, and steady support from start to
+          finish.
         </p>
 
         <p className="mt-4 text-sm text-white/55">
-          Serving Houston • Buying, selling, leasing, relocation • Arabic,
-          English, Español
+          Serving Houston • Buying, selling, renting, leasing • Arabic, English,
+          Español
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-4">
           <Link
-            href={buildHref("/contact", {}, lang)}
+            href={buildHref("/intake", { service: "tenant" }, lang)}
             className="inline-flex h-11 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-white/90 active:scale-[0.99]"
           >
-            Request a Strategy Call
+            Get Started
           </Link>
 
           <Link
             href={buildHref("/buy", {}, lang)}
             className="inline-flex h-11 items-center justify-center rounded-xl border border-white/25 bg-white/5 px-6 text-sm font-semibold text-white backdrop-blur transition hover:border-white/35 hover:bg-white/10 active:scale-[0.99]"
           >
-            Buy a Home
+            Buy
           </Link>
 
           <Link
             href={buildHref("/sell", {}, lang)}
             className="inline-flex h-11 items-center justify-center rounded-xl border border-white/25 bg-white/5 px-6 text-sm font-semibold text-white backdrop-blur transition hover:border-white/35 hover:bg-white/10 active:scale-[0.99]"
           >
-            Sell Your Home
+            Sell
           </Link>
 
           <span className="text-sm text-white/55">
@@ -72,9 +73,9 @@ export default function Hero() {
 
         <div className="mt-10 grid gap-3 md:grid-cols-3">
           {[
-            "Buyer and seller representation",
-            "Leasing and landlord support",
-            "Houston market expertise",
+            "Buyer and seller support",
+            "Leasing and rental guidance",
+            "Houston market knowledge",
           ].map((text) => (
             <div
               key={text}

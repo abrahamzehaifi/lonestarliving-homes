@@ -49,13 +49,13 @@ function HeaderButton({
 
 function BrokerLogo() {
   return (
-    <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white ring-1 ring-black/5">
+    <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white ring-1 ring-black/5">
       <Image
         src="/broker/5th-stream-logo.png"
         alt="5th Stream Realty LLC"
-        width={44}
-        height={44}
-        className="h-auto w-auto max-h-10 max-w-[44px] object-contain"
+        width={36}
+        height={36}
+        className="h-auto w-auto max-h-8 max-w-[36px] object-contain"
         priority
       />
     </div>
@@ -71,6 +71,10 @@ function buildHref(
   params.set("lang", nextLang);
   const query = params.toString();
   return query ? `${pathname}?${query}` : pathname;
+}
+
+function withLang(path: string, lang: "en" | "es" | "ar") {
+  return `${path}?lang=${lang}`;
 }
 
 function LanguageLink({
@@ -112,7 +116,7 @@ export default function SiteHeader() {
 
               <div className="min-w-0">
                 <Link
-                  href={buildHref(pathname, searchParams, lang)}
+                  href={withLang("/", lang)}
                   className="block truncate text-base font-semibold tracking-tight text-white md:text-lg"
                 >
                   {copy.header.name}
@@ -125,7 +129,7 @@ export default function SiteHeader() {
                       <span dir="ltr">5th Stream Realty LLC</span>
                     </>
                   ) : (
-                    copy.header.title
+                    "Texas REALTOR®"
                   )}
                 </p>
               </div>
@@ -163,46 +167,22 @@ export default function SiteHeader() {
               aria-label="Primary navigation"
               className="flex flex-wrap items-center gap-4 lg:gap-6"
             >
-              <NavLink href={`/rent?lang=${lang}`}>{copy.nav.rent}</NavLink>
-
-              <NavLink href={`/medical-center-housing?lang=${lang}`}>
-                {copy.nav.medical}
-              </NavLink>
-
-              <NavLink href={`/rice-student-housing?lang=${lang}`}>
-                {copy.nav.rice}
-              </NavLink>
-
-              <NavLink href={`/houston-relocation?lang=${lang}`}>
-                {copy.nav.relocation}
-              </NavLink>
-
-              <NavLink href={`/buy?lang=${lang}`}>{copy.nav.buy}</NavLink>
-
-              <NavLink href={`/sell?lang=${lang}`}>{copy.nav.sell}</NavLink>
-
-              <NavLink href={`/landlords?lang=${lang}`}>
+              <NavLink href={withLang("/rent", lang)}>{copy.nav.rent}</NavLink>
+              <NavLink href={withLang("/buy", lang)}>{copy.nav.buy}</NavLink>
+              <NavLink href={withLang("/sell", lang)}>{copy.nav.sell}</NavLink>
+              <NavLink href={withLang("/landlords", lang)}>
                 {copy.nav.landlords}
               </NavLink>
-
-              <NavLink href={`/intake?type=tenant&lang=${lang}`}>
-                Apply
-              </NavLink>
+              <NavLink href={withLang("/about", lang)}>About</NavLink>
+              <NavLink href={withLang("/intake", lang)}>Get Started</NavLink>
             </nav>
 
             <div className="flex flex-wrap items-center gap-3">
-              <div className="hidden text-right md:block">
-                <p className="text-sm font-medium leading-tight text-white">
-                  {copy.header.name}
-                </p>
-                <p className="text-xs text-white/70">Texas REALTOR®</p>
-              </div>
-
               <HeaderButton href="tel:+17135053888">
                 {copy.header.call}
               </HeaderButton>
 
-              <HeaderButton href="mailto:zehaifirealty@gmail.com" filled>
+              <HeaderButton href="mailto:info@lonestarliving.homes" filled>
                 {copy.header.email}
               </HeaderButton>
             </div>

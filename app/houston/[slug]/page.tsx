@@ -5,10 +5,23 @@ import {
   getHoustonAreaBySlug,
   houstonAreaPages,
 } from "@/lib/houston-neighborhoods";
+import { getSiteLang, type SiteLang } from "@/lib/i18n/getLang";
 
-type PageProps = {
-  params: Promise<{ slug: string }>;
-};
+type Params = { slug: string };
+type SearchParams = { lang?: string };
+
+function t(value: unknown, lang: SiteLang) {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) return value;
+
+  if (typeof value === "object") {
+    const localized = value as Record<string, unknown>;
+    return localized[lang] ?? localized.en ?? "";
+  }
+
+  return "";
+}
 
 export async function generateStaticParams() {
   return houstonAreaPages.map((page) => ({
@@ -18,8 +31,16 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({
   params,
-}: PageProps): Promise<Metadata> {
+  searchParams,
+}: {
+  params: Promise<Params>;
+  searchParams?: Promise<SearchParams> | SearchParams;
+}): Promise<Metadata> {
   const { slug } = await params;
+  const sp =
+    searchParams instanceof Promise ? await searchParams : searchParams;
+  const lang = getSiteLang(sp?.lang);
+
   const page = getHoustonAreaBySlug(slug);
 
   if (!page) {
@@ -30,8 +51,8 @@ export async function generateMetadata({
   }
 
   return {
-    title: page.metaTitle,
-    description: page.metaDescription,
+    title: String(t(page.metaTitle, lang)),
+    description: String(t(page.metaDescription, lang)),
     alternates: {
       canonical: `/houston/${page.slug}`,
     },
@@ -59,24 +80,36 @@ function getCompareLinks(currentSlug: string) {
   return priorityOrder
     .filter((slug) => slug !== currentSlug)
     .map((slug) => getHoustonAreaBySlug(slug))
-    .filter(Boolean)
-    .slice(0, 5);
+    .filter(Boolean);
 }
 
-export default async function HoustonAreaPage({ params }: PageProps) {
+export default async function HoustonAreaPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<Params>;
+  searchParams?: Promise<SearchParams> | SearchParams;
+}) {
   const { slug } = await params;
+  const sp =
+    searchParams instanceof Promise ? await searchParams : searchParams;
+  const lang = getSiteLang(sp?.lang);
+
   const page = getHoustonAreaBySlug(slug);
 
   if (!page) {
     notFound();
   }
 
-  const compareLinks = getCompareLinks(page.slug);
+  const compareLinks = getCompareLinks(page.slug).slice(0, 5);
+
+  const localizedFaqs =
+    (t(page.seoFaqs, lang) as Array<{ question: string; answer: string }>) || [];
 
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: page.seoFaqs.map((faq) => ({
+    mainEntity: localizedFaqs.map((faq) => ({
       "@type": "Question",
       name: faq.question,
       acceptedAnswer: {
@@ -86,57 +119,164 @@ export default async function HoustonAreaPage({ params }: PageProps) {
     })),
   };
 
+  const overview = (t(page.overview, lang) as string[]) || [];
+  const bestFor = (t(page.bestFor, lang) as string[]) || [];
+  const housing = (t(page.housing, lang) as string[]) || [];
+  const lifestyle = (t(page.lifestyle, lang) as string[]) || [];
+  const commute = (t(page.commute, lang) as string[]) || [];
+
+  const labels = {
+    home: {
+      en: "Home",
+      es: "Inicio",
+      ar: "الرئيسية",
+    },
+    houstonAreas: {
+      en: "Houston Areas",
+      es: "Áreas de Houston",
+      ar: "مناطق هيوستن",
+    },
+    guidance: {
+      en: "Houston neighborhood guidance",
+      es: "Guía de vecindarios de Houston",
+      ar: "دليل أحياء هيوستن",
+    },
+    beginIntake: {
+      en: "Begin intake",
+      es: "Iniciar solicitud",
+      ar: "ابدأ الطلب",
+    },
+    rentalGuidance: {
+      en: "Rental guidance",
+      es: "Guía de renta",
+      ar: "دليل الاستئجار",
+    },
+    buyerGuidance: {
+      en: "Buyer guidance",
+      es: "Guía de شراء",
+      ar: "دليل الشراء",
+    },
+    compareTitle: {
+      en: "Compare Houston areas",
+      es: "Comparar áreas de Houston",
+      ar: "قارن بين مناطق هيوستن",
+    },
+    compareText: {
+      en: "Clients rarely compare just one location. Use these area pages to compare commute, housing style, pricing profile, and neighborhood fit more efficiently.",
+      es: "Rara vez los clientes comparan una sola ubicación. Usa estas páginas para comparar trayecto, tipo de vivienda, nivel de precios y compatibilidad del vecindario con más claridad.",
+      ar: "نادرًا ما يقارن العملاء منطقة واحدة فقط. استخدم هذه الصفحات لمقارنة التنقل ونمط السكن ومستوى الأسعار ومدى ملاءمة الحي بشكل أوضح.",
+    },
+    areaOverview: {
+      en: "Area overview",
+      es: "Resumen del área",
+      ar: "نظرة عامة على المنطقة",
+    },
+    exploreRental: {
+      en: "Explore rental strategy",
+      es: "Explorar estrategia de renta",
+      ar: "استكشف استراتيجية الاستئجار",
+    },
+    bestFit: {
+      en: "Best fit for",
+      es: "Ideal para",
+      ar: "الأنسب لـ",
+    },
+    startGuidedSearch: {
+      en: "Start a guided search",
+      es: "Iniciar búsqueda guiada",
+      ar: "ابدأ بحثًا موجهًا",
+    },
+    housingProfile: {
+      en: "Housing profile",
+      es: "Perfil de vivienda",
+      ar: "ملف السكن",
+    },
+    exploreBuyer: {
+      en: "Explore buyer guidance",
+      es: "Explorar guía para compradores",
+      ar: "استكشف دليل الشراء",
+    },
+    lifestyle: {
+      en: "Lifestyle and positioning",
+      es: "Estilo de vida y posicionamiento",
+      ar: "نمط الحياة والتمركز",
+    },
+    compareMore: {
+      en: "Compare more Houston neighborhoods",
+      es: "Comparar más vecindarios de Houston",
+      ar: "قارن المزيد من أحياء هيوستن",
+    },
+    pricing: {
+      en: "Pricing and decision considerations",
+      es: "Precios y consideraciones de decisión",
+      ar: "اعتبارات الأسعار واتخاذ القرار",
+    },
+    commute: {
+      en: "Commute considerations",
+      es: "Consideraciones de trayecto",
+      ar: "اعتبارات التنقل",
+    },
+    zipCodes: {
+      en: "Relevant ZIP codes",
+      es: "Códigos ZIP relevantes",
+      ar: "الرموز البريدية ذات الصلة",
+    },
+  } as const;
+
   return (
-    <main className="min-h-screen bg-[#f5f5f3] text-neutral-950">
+    <main
+      className="min-h-screen bg-[#f5f5f3] text-neutral-950"
+      dir={lang === "ar" ? "rtl" : "ltr"}
+    >
       <section className="mx-auto max-w-6xl px-6 py-16 md:py-20">
         <div className="flex flex-wrap gap-3">
           <Link
             href="/"
             className="inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-neutral-900 transition hover:border-black/20"
           >
-            Home
+            {labels.home[lang]}
           </Link>
 
           <Link
             href="/houston"
             className="inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-neutral-900 transition hover:border-black/20"
           >
-            Houston Areas
+            {labels.houstonAreas[lang]}
           </Link>
         </div>
 
         <p className="mt-6 text-sm font-medium uppercase tracking-[0.18em] text-neutral-500">
-          Houston neighborhood guidance
+          {labels.guidance[lang]}
         </p>
 
         <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight md:text-5xl">
-          {page.h1}
+          {String(t(page.h1, lang))}
         </h1>
 
         <p className="mt-6 max-w-3xl text-base leading-8 text-neutral-600">
-          {page.intro}
+          {String(t(page.intro, lang))}
         </p>
 
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
-            href={`/intake?type=tenant&segment=general&area=${page.slug}`}
+            href={`/intake?type=tenant&segment=general&area=${page.slug}&lang=${lang}`}
             className="inline-flex items-center justify-center rounded-full bg-neutral-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-neutral-800"
           >
-            Begin intake
+            {labels.beginIntake[lang]}
           </Link>
 
           <Link
-            href="/rent"
+            href={`/rent?lang=${lang}`}
             className="inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-medium text-neutral-900 transition hover:border-black/20"
           >
-            Rental guidance
+            {labels.rentalGuidance[lang]}
           </Link>
 
           <Link
-            href="/buy"
+            href={`/buy?lang=${lang}`}
             className="inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-medium text-neutral-900 transition hover:border-black/20"
           >
-            Buyer guidance
+            {labels.buyerGuidance[lang]}
           </Link>
         </div>
       </section>
@@ -144,23 +284,21 @@ export default async function HoustonAreaPage({ params }: PageProps) {
       <section className="mx-auto max-w-6xl px-6 pb-10">
         <div className="rounded-[1.75rem] border border-black/5 bg-white p-6">
           <h2 className="text-lg font-semibold tracking-tight">
-            Compare Houston areas
+            {labels.compareTitle[lang]}
           </h2>
 
           <p className="mt-2 text-sm leading-7 text-neutral-600">
-            Clients rarely compare just one location. Use these area pages to
-            compare commute, housing style, pricing profile, and neighborhood
-            fit more efficiently.
+            {labels.compareText[lang]}
           </p>
 
           <div className="mt-4 flex flex-wrap gap-2">
             {compareLinks.map((item) => (
               <Link
                 key={item!.slug}
-                href={`/houston/${item!.slug}`}
+                href={`/houston/${item!.slug}?lang=${lang}`}
                 className="rounded-full border border-black/10 bg-neutral-50 px-3 py-1.5 text-sm font-medium text-neutral-800 transition hover:border-black/20 hover:bg-white"
               >
-                {item!.title}
+                {String(t(item!.title, lang))}
               </Link>
             ))}
           </div>
@@ -169,17 +307,19 @@ export default async function HoustonAreaPage({ params }: PageProps) {
 
       <section className="mx-auto grid max-w-6xl gap-6 px-6 pb-16 md:grid-cols-2">
         <div className="rounded-[1.75rem] border border-black/5 bg-white p-6">
-          <h2 className="text-xl font-semibold tracking-tight">Area overview</h2>
+          <h2 className="text-xl font-semibold tracking-tight">
+            {labels.areaOverview[lang]}
+          </h2>
 
           <div className="mt-4 space-y-4 text-sm leading-7 text-neutral-600">
-            {page.overview.map((item) => (
+            {overview.map((item) => (
               <p key={item}>
                 {item}{" "}
                 <Link
-                  href="/rent"
+                  href={`/rent?lang=${lang}`}
                   className="underline underline-offset-4 transition hover:text-neutral-900"
                 >
-                  Explore rental strategy
+                  {labels.exploreRental[lang]}
                 </Link>
                 .
               </p>
@@ -188,86 +328,90 @@ export default async function HoustonAreaPage({ params }: PageProps) {
         </div>
 
         <div className="rounded-[1.75rem] border border-black/5 bg-white p-6">
-          <h2 className="text-xl font-semibold tracking-tight">Best fit for</h2>
+          <h2 className="text-xl font-semibold tracking-tight">
+            {labels.bestFit[lang]}
+          </h2>
 
           <ul className="mt-4 space-y-3 text-sm leading-7 text-neutral-600">
-            {page.bestFor.map((item) => (
+            {bestFor.map((item) => (
               <li key={item}>• {item}</li>
             ))}
           </ul>
 
           <div className="mt-5">
             <Link
-              href={`/intake?type=tenant&segment=general&area=${page.slug}`}
+              href={`/intake?type=tenant&segment=general&area=${page.slug}&lang=${lang}`}
               className="text-sm font-medium underline underline-offset-4 transition hover:text-neutral-900"
             >
-              Start a guided search
-            </Link>
-          </div>
-        </div>
-
-        <div className="rounded-[1.75rem] border border-black/5 bg-white p-6">
-          <h2 className="text-xl font-semibold tracking-tight">Housing profile</h2>
-
-          <ul className="mt-4 space-y-3 text-sm leading-7 text-neutral-600">
-            {page.housing.map((item) => (
-              <li key={item}>• {item}</li>
-            ))}
-          </ul>
-
-          <div className="mt-5">
-            <Link
-              href="/buy"
-              className="text-sm font-medium underline underline-offset-4 transition hover:text-neutral-900"
-            >
-              Explore buyer guidance
+              {labels.startGuidedSearch[lang]}
             </Link>
           </div>
         </div>
 
         <div className="rounded-[1.75rem] border border-black/5 bg-white p-6">
           <h2 className="text-xl font-semibold tracking-tight">
-            Lifestyle and positioning
+            {labels.housingProfile[lang]}
           </h2>
 
           <ul className="mt-4 space-y-3 text-sm leading-7 text-neutral-600">
-            {page.lifestyle.map((item) => (
+            {housing.map((item) => (
               <li key={item}>• {item}</li>
             ))}
           </ul>
 
           <div className="mt-5">
             <Link
-              href="/houston"
+              href={`/buy?lang=${lang}`}
               className="text-sm font-medium underline underline-offset-4 transition hover:text-neutral-900"
             >
-              Compare more Houston neighborhoods
+              {labels.exploreBuyer[lang]}
+            </Link>
+          </div>
+        </div>
+
+        <div className="rounded-[1.75rem] border border-black/5 bg-white p-6">
+          <h2 className="text-xl font-semibold tracking-tight">
+            {labels.lifestyle[lang]}
+          </h2>
+
+          <ul className="mt-4 space-y-3 text-sm leading-7 text-neutral-600">
+            {lifestyle.map((item) => (
+              <li key={item}>• {item}</li>
+            ))}
+          </ul>
+
+          <div className="mt-5">
+            <Link
+              href={`/houston?lang=${lang}`}
+              className="text-sm font-medium underline underline-offset-4 transition hover:text-neutral-900"
+            >
+              {labels.compareMore[lang]}
             </Link>
           </div>
         </div>
 
         <div className="rounded-[1.75rem] border border-black/5 bg-white p-6 md:col-span-2">
           <h2 className="text-xl font-semibold tracking-tight">
-            Pricing and decision considerations
+            {labels.pricing[lang]}
           </h2>
 
           <p className="mt-4 text-sm leading-7 text-neutral-600">
-            {page.pricingNote}{" "}
+            {String(t(page.pricingNote, lang))}{" "}
             <Link
-              href={`/intake?type=tenant&segment=general&area=${page.slug}`}
+              href={`/intake?type=tenant&segment=general&area=${page.slug}&lang=${lang}`}
               className="underline underline-offset-4 transition hover:text-neutral-900"
             >
-              Start a guided search
+              {labels.startGuidedSearch[lang]}
             </Link>
             .
           </p>
 
           <h3 className="mt-6 text-lg font-semibold tracking-tight">
-            Commute considerations
+            {labels.commute[lang]}
           </h3>
 
           <ul className="mt-3 space-y-3 text-sm leading-7 text-neutral-600">
-            {page.commute.map((item) => (
+            {commute.map((item) => (
               <li key={item}>• {item}</li>
             ))}
           </ul>
@@ -275,7 +419,7 @@ export default async function HoustonAreaPage({ params }: PageProps) {
           {page.zipCodes.length > 0 && (
             <>
               <h3 className="mt-6 text-lg font-semibold tracking-tight">
-                Relevant ZIP codes
+                {labels.zipCodes[lang]}
               </h3>
 
               <div className="mt-3 flex flex-wrap gap-2">

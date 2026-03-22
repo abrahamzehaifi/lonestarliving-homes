@@ -9,18 +9,10 @@ type Status = "idle" | "sending" | "error";
 type Language = "en" | "es" | "ar";
 type LeadType = "rent" | "buy" | "sell" | "landlord" | "other";
 type Intent = "tenant" | "buyer" | "seller" | "landlord" | "other";
-type Segment =
-  | "medical_center"
-  | "rice_student"
-  | "relocation"
-  | "apartment_locator"
-  | "general"
-  | "other";
 
 type Props = {
   lang: Language;
   intent: Intent;
-  segment: Segment;
   area: string;
 };
 
@@ -53,6 +45,100 @@ function formatAreaLabel(area: string) {
     .join(" ");
 }
 
+function getIntroCopy(lang: Language, leadType: LeadType) {
+  const copy = {
+    en: {
+      requestLabel: "Request",
+      generalSubtext:
+        "Share a few details and I’ll follow up with the next step.",
+      headings: {
+        rent: "Rental Request",
+        buy: "Buyer Request",
+        sell: "Seller Request",
+        landlord: "Leasing Request",
+        other: "Tell Me What You Need",
+      },
+      subtexts: {
+        rent: "Tell me about your move, budget, and preferred areas.",
+        buy: "Tell me about your goals, budget, and the areas you want to explore.",
+        sell: "Tell me about the property and what you would like to accomplish.",
+        landlord: "Tell me about the property and the leasing help you need.",
+        other: "Share a few details and I’ll review the best next step.",
+      },
+      submitHelp: "I’ll review your request and follow up directly.",
+      areaPrefix: "Area preference:",
+      contactTitle: "Your Information",
+      contactText: "Enter your contact details and a few basics.",
+      detailsTitle: "Request Details",
+      detailsText: "A few details help me understand what you need.",
+    },
+    es: {
+      requestLabel: "Solicitud",
+      generalSubtext:
+        "Comparta algunos detalles y le daré seguimiento con el siguiente paso.",
+      headings: {
+        rent: "Solicitud de renta",
+        buy: "Solicitud de compra",
+        sell: "Solicitud de venta",
+        landlord: "Solicitud de arrendamiento",
+        other: "Cuénteme lo que necesita",
+      },
+      subtexts: {
+        rent: "Cuénteme sobre su mudanza, presupuesto y zonas preferidas.",
+        buy: "Cuénteme sobre sus metas, presupuesto y las zonas que desea explorar.",
+        sell: "Cuénteme sobre la propiedad y lo que le gustaría lograr.",
+        landlord:
+          "Cuénteme sobre la propiedad y la ayuda de arrendamiento que necesita.",
+        other:
+          "Comparta algunos detalles y revisaré el mejor siguiente paso.",
+      },
+      submitHelp: "Revisaré su solicitud y le responderé directamente.",
+      areaPrefix: "Zona preferida:",
+      contactTitle: "Su información",
+      contactText: "Ingrese sus datos y algunos datos básicos.",
+      detailsTitle: "Detalles de la solicitud",
+      detailsText: "Algunos detalles me ayudan a entender lo que necesita.",
+    },
+    ar: {
+      requestLabel: "طلب",
+      generalSubtext: "شارك بعض التفاصيل وسأتابع معك بالخطوة التالية.",
+      headings: {
+        rent: "طلب استئجار",
+        buy: "طلب شراء",
+        sell: "طلب بيع",
+        landlord: "طلب تأجير عقار",
+        other: "أخبرني بما تحتاجه",
+      },
+      subtexts: {
+        rent: "أخبرني عن موعد الانتقال والميزانية والمناطق المفضلة.",
+        buy: "أخبرني عن هدفك والميزانية والمناطق التي ترغب في استكشافها.",
+        sell: "أخبرني عن العقار وما الذي ترغب في تحقيقه.",
+        landlord: "أخبرني عن العقار ونوع المساعدة التي تحتاجها في التأجير.",
+        other: "شارك بعض التفاصيل وسأراجع أفضل خطوة تالية.",
+      },
+      submitHelp: "سأراجع طلبك وأتواصل معك مباشرة.",
+      areaPrefix: "المنطقة المفضلة:",
+      contactTitle: "معلوماتك",
+      contactText: "أدخل معلومات التواصل وبعض التفاصيل الأساسية.",
+      detailsTitle: "تفاصيل الطلب",
+      detailsText: "بعض التفاصيل تساعدني على فهم ما تحتاجه.",
+    },
+  } as const;
+
+  return {
+    requestLabel: copy[lang].requestLabel,
+    generalSubtext: copy[lang].generalSubtext,
+    heading: copy[lang].headings[leadType],
+    subtext: copy[lang].subtexts[leadType],
+    submitHelp: copy[lang].submitHelp,
+    areaPrefix: copy[lang].areaPrefix,
+    contactTitle: copy[lang].contactTitle,
+    contactText: copy[lang].contactText,
+    detailsTitle: copy[lang].detailsTitle,
+    detailsText: copy[lang].detailsText,
+  };
+}
+
 function SectionCard({
   children,
   className = "",
@@ -69,12 +155,7 @@ function SectionCard({
   );
 }
 
-export default function IntakeClient({
-  lang,
-  intent,
-  segment,
-  area,
-}: Props) {
+export default function IntakeClient({ lang, intent, area }: Props) {
   const router = useRouter();
 
   const t = translations[lang].intake;
@@ -86,55 +167,16 @@ export default function IntakeClient({
 
   const initialLeadType = useMemo(() => intentToLeadType(intent), [intent]);
   const [leadType, setLeadType] = useState<LeadType>(initialLeadType);
-  const [rentalGateComplete, setRentalGateComplete] = useState(
-    initialLeadType !== "rent"
-  );
 
   useEffect(() => {
     const nextLeadType = intentToLeadType(intent);
     setLeadType(nextLeadType);
-    setRentalGateComplete(nextLeadType !== "rent");
+    setMsg("");
   }, [intent]);
 
   function handleLeadTypeChange(next: LeadType) {
     setLeadType(next);
-    setRentalGateComplete(next !== "rent");
     setMsg("");
-  }
-
-  function getHeading(type: LeadType) {
-    return t.headings[type];
-  }
-
-  function getSubtext(type: LeadType) {
-    return t.subtexts[type];
-  }
-
-  function onRentalGateContinue(e: React.MouseEvent<HTMLButtonElement>) {
-    e.preventDefault();
-
-    const form = e.currentTarget.form;
-    if (!form) return;
-
-    const budget = (
-      form.elements.namedItem("budget") as HTMLInputElement | null
-    )?.value?.trim();
-
-    const moveInDate = (
-      form.elements.namedItem("moveInDate") as HTMLInputElement | null
-    )?.value?.trim();
-
-    const screeningProfile = (
-      form.elements.namedItem("screeningProfile") as HTMLSelectElement | null
-    )?.value?.trim();
-
-    if (!budget || !moveInDate || !screeningProfile) {
-      setMsg(t.rentalGate.error);
-      return;
-    }
-
-    setMsg("");
-    setRentalGateComplete(true);
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -155,14 +197,16 @@ export default function IntakeClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...payload,
-          intent,
-          segment,
-          area,
-          source: "website",
           preferredLanguage: lang,
           lang,
+          source: "website",
+          ref: "web_intake",
           source_page: window.location.pathname,
           source_path: window.location.pathname + window.location.search,
+          requestContext: {
+            intent,
+            area,
+          },
         }),
       });
 
@@ -178,8 +222,7 @@ export default function IntakeClient({
         return;
       }
 
-      const dest = leadType === "rent" ? "/thanks/rent" : "/thanks";
-      router.push(dest);
+      router.push("/thanks");
     } catch {
       setStatus("error");
       setMsg(t.messages.networkError);
@@ -188,8 +231,7 @@ export default function IntakeClient({
     }
   }
 
-  const heading = getHeading(leadType);
-  const subtext = getSubtext(leadType);
+  const copy = getIntroCopy(lang, leadType);
   const areaLabel = formatAreaLabel(area);
 
   return (
@@ -212,42 +254,40 @@ export default function IntakeClient({
       <section className="mx-auto max-w-3xl px-6 py-12">
         <div className="max-w-2xl">
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-neutral-500">
-            {t.requestLabel}
+            {copy.requestLabel}
           </p>
 
           <h1 className="mt-4 text-3xl font-semibold tracking-tight text-neutral-950 md:text-4xl">
-            {heading}
+            {copy.heading}
           </h1>
 
           <p className="mt-4 text-base leading-8 text-neutral-600">
-            {subtext}
+            {copy.subtext}
           </p>
 
           {areaLabel ? (
             <p className="mt-4 rounded-2xl border border-black/5 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">
-              Preferred area context: <span className="font-medium">{areaLabel}</span>
+              {copy.areaPrefix} <span className="font-medium">{areaLabel}</span>
             </p>
           ) : null}
 
           <p className="mt-4 text-sm leading-7 text-neutral-500">
-            {t.requestSubtext}
+            {copy.generalSubtext}
           </p>
         </div>
 
         <form className="mt-10 space-y-6" onSubmit={onSubmit}>
-          <input type="hidden" name="intent" value={intent} />
           <input type="hidden" name="preferredLanguage" value={lang} />
-          <input type="hidden" name="segment" value={segment} />
           <input type="hidden" name="source" value="website" />
-          <input type="hidden" name="area" value={area} />
+          <input type="hidden" name="ref" value="web_intake" />
 
           <SectionCard className="bg-white">
             <div className="mb-5">
               <p className="text-sm font-semibold text-neutral-950">
-                {t.sections.contact.title}
+                {copy.contactTitle}
               </p>
               <p className="mt-1 text-sm text-neutral-600">
-                {t.sections.contact.text}
+                {copy.contactText}
               </p>
             </div>
 
@@ -315,118 +355,58 @@ export default function IntakeClient({
           </SectionCard>
 
           {leadType === "rent" ? (
-            <>
-              <SectionCard>
-                <div className="mb-5">
-                  <p className="text-sm font-semibold text-neutral-950">
-                    {t.rentalGate.title}
-                  </p>
-                  <p className="mt-1 text-sm text-neutral-600">
-                    {t.rentalGate.text}
-                  </p>
-                </div>
+            <SectionCard>
+              <div className="mb-5">
+                <p className="text-sm font-semibold text-neutral-950">
+                  {copy.detailsTitle}
+                </p>
+                <p className="mt-1 text-sm text-neutral-600">
+                  {copy.detailsText}
+                </p>
+              </div>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  <input
-                    name="budget"
-                    inputMode="numeric"
-                    className={inputClass}
-                    placeholder={t.fields.budget}
-                    required
-                  />
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <input
+                  name="budget"
+                  inputMode="numeric"
+                  className={inputClass}
+                  placeholder={t.fields.budget}
+                />
 
-                  <input
-                    name="moveInDate"
-                    type="date"
-                    className={inputClass}
-                    required
-                  />
+                <input
+                  name="moveInDate"
+                  type="date"
+                  className={inputClass}
+                />
 
-                  <select
-                    name="screeningProfile"
-                    className={inputClass}
-                    defaultValue=""
-                    required
-                  >
-                    <option value="" disabled>
-                      {t.options.screeningProfile.placeholder}
-                    </option>
-                    <option value="clean">{t.options.screeningProfile.clean}</option>
-                    <option value="no_us_credit">
-                      {t.options.screeningProfile.noUsCredit}
-                    </option>
-                    <option value="credit_concern">
-                      {t.options.screeningProfile.creditConcern}
-                    </option>
-                    <option value="broken_lease">
-                      {t.options.screeningProfile.brokenLease}
-                    </option>
-                    <option value="eviction">
-                      {t.options.screeningProfile.eviction}
-                    </option>
-                  </select>
-                </div>
+                <input
+                  name="areas"
+                  className={`${inputClass} md:col-span-2`}
+                  placeholder={
+                    areaLabel
+                      ? `${t.fields.preferredArea} (${areaLabel})`
+                      : t.fields.preferredArea
+                  }
+                  defaultValue={areaLabel}
+                />
 
-                {!rentalGateComplete ? (
-                  <div className="mt-5 flex flex-wrap items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={onRentalGateContinue}
-                      className="inline-flex h-11 items-center justify-center rounded-full bg-neutral-950 px-5 text-sm font-medium text-white transition hover:bg-neutral-800"
-                    >
-                      {t.rentalGate.continue}
-                    </button>
-
-                    <p className="text-xs text-neutral-500">
-                      {t.rentalGate.continueHelp}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                    {t.rentalGate.completeMessage}
-                  </div>
-                )}
-              </SectionCard>
-
-              {rentalGateComplete ? (
-                <SectionCard>
-                  <div className="mb-5">
-                    <p className="text-sm font-semibold text-neutral-950">
-                      {t.sections.searchDetails.title}
-                    </p>
-                    <p className="mt-1 text-sm text-neutral-600">
-                      {t.sections.searchDetails.text}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <input
-                      name="areas"
-                      className={`${inputClass} md:col-span-2`}
-                      placeholder={areaLabel ? `${t.fields.preferredArea} (${areaLabel})` : t.fields.preferredArea}
-                      defaultValue={areaLabel}
-                      required
-                    />
-
-                    <textarea
-                      name="message"
-                      className={`min-h-[140px] ${inputClass} md:col-span-2`}
-                      placeholder={t.fields.message}
-                    />
-                  </div>
-                </SectionCard>
-              ) : null}
-            </>
+                <textarea
+                  name="message"
+                  className={`min-h-[140px] ${inputClass} md:col-span-2`}
+                  placeholder={t.fields.message}
+                />
+              </div>
+            </SectionCard>
           ) : null}
 
           {leadType === "buy" ? (
             <SectionCard>
               <div className="mb-5">
                 <p className="text-sm font-semibold text-neutral-950">
-                  {t.sections.buyerDetails.title}
+                  {copy.detailsTitle}
                 </p>
                 <p className="mt-1 text-sm text-neutral-600">
-                  {t.sections.buyerDetails.text}
+                  {copy.detailsText}
                 </p>
               </div>
 
@@ -435,14 +415,12 @@ export default function IntakeClient({
                   name="priceRange"
                   className={inputClass}
                   placeholder={t.fields.priceRange}
-                  required
                 />
 
                 <select
                   name="financingStatus"
                   className={inputClass}
                   defaultValue=""
-                  required
                 >
                   <option value="" disabled>
                     {t.options.financingStatus.placeholder}
@@ -462,9 +440,12 @@ export default function IntakeClient({
                 <input
                   name="areas"
                   className={`${inputClass} md:col-span-2`}
-                  placeholder={areaLabel ? `${t.fields.preferredArea} (${areaLabel})` : t.fields.preferredArea}
+                  placeholder={
+                    areaLabel
+                      ? `${t.fields.preferredArea} (${areaLabel})`
+                      : t.fields.preferredArea
+                  }
                   defaultValue={areaLabel}
-                  required
                 />
 
                 <textarea
@@ -480,10 +461,10 @@ export default function IntakeClient({
             <SectionCard>
               <div className="mb-5">
                 <p className="text-sm font-semibold text-neutral-950">
-                  {t.sections.sellerDetails.title}
+                  {copy.detailsTitle}
                 </p>
                 <p className="mt-1 text-sm text-neutral-600">
-                  {t.sections.sellerDetails.text}
+                  {copy.detailsText}
                 </p>
               </div>
 
@@ -492,14 +473,12 @@ export default function IntakeClient({
                   name="propertyAddress"
                   className={`${inputClass} md:col-span-2`}
                   placeholder={t.fields.propertyAddress}
-                  required
                 />
 
                 <select
                   name="sellerGoal"
                   className={inputClass}
                   defaultValue=""
-                  required
                 >
                   <option value="" disabled>
                     {t.options.sellerGoal.placeholder}
@@ -522,10 +501,10 @@ export default function IntakeClient({
             <SectionCard>
               <div className="mb-5">
                 <p className="text-sm font-semibold text-neutral-950">
-                  {t.sections.landlordDetails.title}
+                  {copy.detailsTitle}
                 </p>
                 <p className="mt-1 text-sm text-neutral-600">
-                  {t.sections.landlordDetails.text}
+                  {copy.detailsText}
                 </p>
               </div>
 
@@ -534,14 +513,12 @@ export default function IntakeClient({
                   name="propertyArea"
                   className={inputClass}
                   placeholder={t.fields.propertyArea}
-                  required
                 />
 
                 <select
                   name="propertyType"
                   className={inputClass}
                   defaultValue=""
-                  required
                 >
                   <option value="" disabled>
                     {t.options.propertyType.placeholder}
@@ -560,7 +537,6 @@ export default function IntakeClient({
                   name="readyToLease"
                   className={`${inputClass} md:col-span-2`}
                   defaultValue=""
-                  required
                 >
                   <option value="" disabled>
                     {t.options.readyToLease.placeholder}
@@ -604,16 +580,13 @@ export default function IntakeClient({
             <div className="mt-5 flex flex-wrap items-center gap-4">
               <button
                 type="submit"
-                disabled={
-                  status === "sending" ||
-                  (leadType === "rent" && !rentalGateComplete)
-                }
+                disabled={status === "sending"}
                 className="inline-flex h-11 items-center justify-center rounded-full bg-neutral-950 px-6 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {status === "sending" ? t.sending : t.submit}
               </button>
 
-              <p className="text-xs text-neutral-500">{t.structuredHelp}</p>
+              <p className="text-xs text-neutral-500">{copy.submitHelp}</p>
             </div>
 
             {msg ? <p className="mt-4 text-sm text-red-600">{msg}</p> : null}

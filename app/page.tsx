@@ -14,89 +14,75 @@ type HomePageProps = {
 const copy = {
   en: {
     brand: "5th Stream Realty LLC",
-    eyebrow: "Houston real estate guidance",
+    eyebrow: "Houston real estate",
     title:
-      "Houston housing guidance for renters, relocations, buyers, sellers, and landlords.",
+      "Helping clients move forward in Houston real estate with clarity and confidence.",
     body:
-      "Structured intake and real estate guidance for qualified Houston clients, including rentals, relocation, Texas Medical Center housing, Rice student housing, buyer consultations, seller strategy, and landlord representation.",
-    primaryCta: "Start intake",
-    secondaryCta: "Explore rentals",
-    tertiaryCta: "Medical Center housing",
+      "Whether you are renting, buying, selling, or leasing a property, the focus is simple: clear communication, practical guidance, and steady support from start to finish.",
+    primaryCta: "Get started",
+    secondaryCta: "View rentals",
+    tertiaryCta: "Contact",
     buyerServices: "Buyer services",
 
-    servicesEyebrow: "Core paths",
-    servicesTitle: "Clear service paths built around real client needs.",
+    servicesEyebrow: "Services",
+    servicesTitle: "Support across the key real estate paths.",
     servicesBody:
-      "The site is designed to move visitors into the right path faster, with cleaner intake and clearer next steps.",
+      "Each service is designed to help you move forward with better information and fewer unknowns.",
 
     services: [
       {
-        title: "Houston Rentals",
+        title: "Rent",
         description:
-          "Rental and leasing guidance for qualified Houston renters seeking a more organized process.",
+          "Support for clients looking for rental homes and apartments across Houston.",
         href: "/rent",
-        cta: "View rental guidance",
+        cta: "Explore rentals",
       },
       {
-        title: "Texas Medical Center Housing",
+        title: "Buy",
         description:
-          "Housing guidance for medical professionals, fellows, researchers, and healthcare relocations.",
-        href: "/medical-center-housing",
-        cta: "Explore medical housing",
-      },
-      {
-        title: "Rice Student Housing",
-        description:
-          "Housing guidance for Rice students, graduate students, visiting scholars, and international renters.",
-        href: "/rice-student-housing",
-        cta: "Explore student housing",
-      },
-      {
-        title: "Houston Relocation",
-        description:
-          "Structured housing support for professionals and families relocating to Houston.",
-        href: "/houston-relocation",
-        cta: "Start relocation guidance",
-      },
-      {
-        title: "Buyer Representation",
-        description:
-          "Consultation, search strategy, negotiation support, and closing coordination.",
+          "Guidance for clients purchasing a home, from search through closing.",
         href: "/buy",
         cta: "View buyer services",
       },
       {
-        title: "Seller Representation",
+        title: "Sell",
         description:
-          "Pricing strategy, market positioning, offer handling, and transaction execution.",
+          "Support for homeowners preparing, pricing, and selling a property.",
         href: "/sell",
         cta: "View seller services",
       },
+      {
+        title: "Lease",
+        description:
+          "Support for property owners bringing rental units to market.",
+        href: "/landlords",
+        cta: "View leasing support",
+      },
     ],
 
-    sectionOneEyebrow: "Rentals and relocation",
-    sectionOneTitle: "Built for high-intent housing moves.",
+    sectionOneEyebrow: "Renting and moving",
+    sectionOneTitle: "For clients preparing for their next move.",
     sectionOneBody: [
-      "Rental and relocation clients often move on tighter timelines and benefit most from cleaner intake and better routing.",
-      "This includes Texas Medical Center professionals, Rice students, international renters, and clients moving to Houston for work or training.",
-      "The goal is not generic traffic. The goal is qualified inquiries and stronger next-step conversations.",
+      "Some clients are moving quickly, while others are planning ahead.",
+      "Clear communication and the right information early help make the process smoother.",
+      "Each situation is handled based on what is actually needed, not a one-size-fits-all approach.",
     ],
-    sectionOneCta: "Begin tenant intake",
+    sectionOneCta: "Start request",
 
-    sectionTwoEyebrow: "Buyers, sellers, and landlords",
-    sectionTwoTitle: "Structured guidance for higher-value real estate decisions.",
+    sectionTwoEyebrow: "Buying and selling",
+    sectionTwoTitle: "For higher-value real estate decisions.",
     sectionTwoBody: [
-      "Buyer, seller, and landlord inquiries are also routed through structured intake so the next step is clearer from the beginning.",
-      "That means better information upfront, less friction, and more disciplined follow-through.",
-      "Each path is designed to help qualify intent before time is spent on the back end.",
+      "Buying or selling a property requires clarity, timing, and careful coordination.",
+      "The goal is to keep decisions grounded and the process steady from start to finish.",
+      "Each step is handled with attention to detail and clear communication.",
     ],
-    sectionTwoCta: "Begin consultation",
+    sectionTwoCta: "Request consultation",
 
     finalEyebrow: "Next step",
-    finalTitle: "Start with the intake path that fits your situation.",
+    finalTitle: "Start with a simple request.",
     finalBody:
-      "Choose the path that matches your need and submit the relevant details so the request can be reviewed efficiently.",
-    finalPrimary: "Start intake",
+      "Share a few details and the next step will be outlined clearly based on your situation.",
+    finalPrimary: "Get started",
     finalSecondary: "Email office",
     legal:
       "Brokered by 5th Stream Realty LLC. Representation services are provided in accordance with Texas law and applicable written agreements.",
@@ -104,91 +90,75 @@ const copy = {
 
   es: {
     brand: "5th Stream Realty LLC",
-    eyebrow: "Guía inmobiliaria en Houston",
+    eyebrow: "Bienes raíces en Houston",
     title:
-      "Guía de vivienda en Houston para inquilinos, reubicaciones, compradores, vendedores y propietarios.",
+      "Ayudando a los clientes a avanzar en bienes raíces en Houston con claridad y confianza.",
     body:
-      "Solicitud estructurada y guía inmobiliaria para clientes calificados en Houston, incluyendo rentas, reubicación, vivienda cerca del Texas Medical Center, vivienda para estudiantes de Rice, consultas para compradores, estrategia para vendedores y representación para propietarios.",
-    primaryCta: "Comenzar solicitud",
-    secondaryCta: "Explorar rentas",
-    tertiaryCta: "Vivienda Medical Center",
+      "Ya sea para rentar, comprar, vender o arrendar una propiedad, el enfoque es simple: comunicación clara, orientación práctica y apoyo constante de principio a fin.",
+    primaryCta: "Comenzar",
+    secondaryCta: "Ver rentas",
+    tertiaryCta: "Contacto",
     buyerServices: "Servicios para compradores",
 
-    servicesEyebrow: "Rutas principales",
-    servicesTitle:
-      "Rutas de servicio claras construidas alrededor de necesidades reales.",
+    servicesEyebrow: "Servicios",
+    servicesTitle: "Apoyo en los principales caminos inmobiliarios.",
     servicesBody:
-      "El sitio está diseñado para mover a los visitantes hacia la ruta correcta más rápido, con mejor solicitud y pasos siguientes más claros.",
+      "Cada servicio está diseñado para ayudarle a avanzar con mejor información y menos incertidumbre.",
 
     services: [
       {
-        title: "Rentas en Houston",
+        title: "Rentar",
         description:
-          "Guía de renta y arrendamiento para inquilinos calificados en Houston que desean un proceso más organizado.",
+          "Apoyo para clientes que buscan casas y apartamentos en renta en Houston.",
         href: "/rent",
-        cta: "Ver guía de renta",
+        cta: "Explorar rentas",
       },
       {
-        title: "Vivienda Texas Medical Center",
+        title: "Comprar",
         description:
-          "Guía de vivienda para profesionales médicos, fellows, investigadores y reubicaciones del sector salud.",
-        href: "/medical-center-housing",
-        cta: "Explorar vivienda médica",
-      },
-      {
-        title: "Vivienda para estudiantes de Rice",
-        description:
-          "Guía de vivienda para estudiantes de Rice, posgrado, investigadores visitantes e inquilinos internacionales.",
-        href: "/rice-student-housing",
-        cta: "Explorar vivienda estudiantil",
-      },
-      {
-        title: "Reubicación a Houston",
-        description:
-          "Apoyo estructurado de vivienda para profesionales y familias que se mudan a Houston.",
-        href: "/houston-relocation",
-        cta: "Iniciar guía de reubicación",
-      },
-      {
-        title: "Representación para compradores",
-        description:
-          "Consulta, estrategia de búsqueda, apoyo en negociación y coordinación de cierre.",
+          "Orientación para clientes que desean comprar una vivienda, desde la búsqueda hasta el cierre.",
         href: "/buy",
         cta: "Ver servicios para compradores",
       },
       {
-        title: "Representación para vendedores",
+        title: "Vender",
         description:
-          "Estrategia de precio, posicionamiento, manejo de ofertas y ejecución de la transacción.",
+          "Apoyo para propietarios que se preparan para fijar precio y vender una propiedad.",
         href: "/sell",
         cta: "Ver servicios para vendedores",
       },
+      {
+        title: "Arrendar",
+        description:
+          "Apoyo para propietarios que desean llevar una unidad en renta al mercado.",
+        href: "/landlords",
+        cta: "Ver apoyo de arrendamiento",
+      },
     ],
 
-    sectionOneEyebrow: "Rentas y reubicación",
-    sectionOneTitle: "Diseñado para movimientos de vivienda con alta intención.",
+    sectionOneEyebrow: "Rentar y mudarse",
+    sectionOneTitle: "Para clientes que se preparan para su próxima mudanza.",
     sectionOneBody: [
-      "Los clientes de renta y reubicación suelen actuar con plazos más ajustados y se benefician más de una solicitud más clara y mejor clasificación.",
-      "Esto incluye profesionales del Texas Medical Center, estudiantes de Rice, inquilinos internacionales y clientes que se mudan a Houston por trabajo o formación.",
-      "La meta no es tráfico genérico. La meta es obtener consultas calificadas y mejores conversaciones de siguiente paso.",
+      "Algunos clientes se mueven rápidamente, mientras que otros planean con más tiempo.",
+      "Una comunicación clara y la información correcta desde el inicio ayudan a que el proceso sea más fluido.",
+      "Cada situación se maneja según lo que realmente se necesita, no con un enfoque genérico.",
     ],
-    sectionOneCta: "Comenzar solicitud de inquilino",
+    sectionOneCta: "Iniciar solicitud",
 
-    sectionTwoEyebrow: "Compradores, vendedores y propietarios",
-    sectionTwoTitle:
-      "Guía estructurada para decisiones inmobiliarias de mayor valor.",
+    sectionTwoEyebrow: "Comprar y vender",
+    sectionTwoTitle: "Para decisiones inmobiliarias de mayor valor.",
     sectionTwoBody: [
-      "Las consultas de compradores, vendedores y propietarios también pasan por una solicitud estructurada para que el siguiente paso sea más claro desde el inicio.",
-      "Eso significa mejor información desde el principio, menos fricción y seguimiento más disciplinado.",
-      "Cada ruta está diseñada para ayudar a calificar la intención antes de invertir tiempo en la gestión posterior.",
+      "Comprar o vender una propiedad requiere claridad, buen momento y coordinación cuidadosa.",
+      "El objetivo es mantener las decisiones bien fundamentadas y el proceso estable de principio a fin.",
+      "Cada paso se maneja con atención al detalle y comunicación clara.",
     ],
-    sectionTwoCta: "Comenzar consulta",
+    sectionTwoCta: "Solicitar consulta",
 
     finalEyebrow: "Siguiente paso",
-    finalTitle: "Comience con la ruta de solicitud que se ajuste a su situación.",
+    finalTitle: "Comience con una solicitud simple.",
     finalBody:
-      "Elija la ruta que coincida con su necesidad y envíe los detalles relevantes para que la solicitud sea revisada con eficiencia.",
-    finalPrimary: "Comenzar solicitud",
+      "Comparta algunos detalles y el siguiente paso se definirá claramente según su situación.",
+    finalPrimary: "Comenzar",
     finalSecondary: "Correo de la oficina",
     legal:
       "Intermediado por 5th Stream Realty LLC. Los servicios de representación se prestan conforme a la ley de Texas y los acuerdos escritos aplicables.",
@@ -196,89 +166,74 @@ const copy = {
 
   ar: {
     brand: "5th Stream Realty LLC",
-    eyebrow: "إرشاد عقاري في هيوستن",
-    title:
-      "إرشاد سكني في هيوستن للمستأجرين والمنتقلين والمشترين والبائعين والملاك.",
+    eyebrow: "العقار في هيوستن",
+    title: "مساعدة العملاء على التقدم في عقارات هيوستن بوضوح وثقة.",
     body:
-      "استقبال منظم وإرشاد عقاري للعملاء المؤهلين في هيوستن، بما في ذلك الإيجارات والانتقال وسكن Texas Medical Center وسكن طلاب Rice واستشارات المشترين واستراتيجية البائعين وتمثيل الملاك.",
-    primaryCta: "ابدأ الطلب",
-    secondaryCta: "استكشف الإيجارات",
-    tertiaryCta: "سكن Medical Center",
+      "سواء كنت ترغب في الاستئجار أو الشراء أو البيع أو تأجير عقار، فالفكرة بسيطة: تواصل واضح، وإرشاد عملي، ودعم ثابت من البداية إلى النهاية.",
+    primaryCta: "ابدأ",
+    secondaryCta: "عرض الإيجارات",
+    tertiaryCta: "تواصل",
     buyerServices: "خدمات المشترين",
 
-    servicesEyebrow: "المسارات الرئيسية",
-    servicesTitle: "مسارات خدمة واضحة مبنية على احتياجات فعلية.",
+    servicesEyebrow: "الخدمات",
+    servicesTitle: "دعم عبر المسارات العقارية الأساسية.",
     servicesBody:
-      "تم تصميم الموقع لتوجيه الزوار إلى المسار المناسب بشكل أسرع، مع استقبال أوضح وخطوات تالية أكثر وضوحًا.",
+      "تم تصميم كل خدمة لمساعدتك على التقدم بمعلومات أوضح وحالة أقل من عدم اليقين.",
 
     services: [
       {
-        title: "إيجارات هيوستن",
+        title: "استئجار",
         description:
-          "إرشاد الإيجار والتأجير للمستأجرين المؤهلين في هيوستن الذين يريدون عملية أكثر تنظيمًا.",
+          "دعم للعملاء الذين يبحثون عن منازل وشقق للإيجار في هيوستن.",
         href: "/rent",
-        cta: "عرض إرشاد الإيجار",
+        cta: "استكشف الإيجارات",
       },
       {
-        title: "سكن Texas Medical Center",
+        title: "شراء",
         description:
-          "إرشاد سكني للمهنيين الطبيين والباحثين وحالات الانتقال في القطاع الصحي.",
-        href: "/medical-center-housing",
-        cta: "استكشف السكن الطبي",
-      },
-      {
-        title: "سكن طلاب Rice",
-        description:
-          "إرشاد سكني لطلاب Rice وطلاب الدراسات العليا والباحثين الزائرين والمستأجرين الدوليين.",
-        href: "/rice-student-housing",
-        cta: "استكشف السكن الطلابي",
-      },
-      {
-        title: "الانتقال إلى هيوستن",
-        description:
-          "دعم سكني منظم للمهنيين والعائلات المنتقلين إلى هيوستن.",
-        href: "/houston-relocation",
-        cta: "ابدأ إرشاد الانتقال",
-      },
-      {
-        title: "تمثيل المشترين",
-        description:
-          "استشارة، واستراتيجية البحث، ودعم التفاوض، وتنسيق الإغلاق.",
+          "إرشاد للعملاء الراغبين في شراء منزل، من البحث حتى الإغلاق.",
         href: "/buy",
         cta: "عرض خدمات المشترين",
       },
       {
-        title: "تمثيل البائعين",
+        title: "بيع",
         description:
-          "استراتيجية التسعير، والتموضع، والتعامل مع العروض، وتنفيذ الصفقة.",
+          "دعم لمالكي المنازل الذين يستعدون لتسعير وبيع عقار.",
         href: "/sell",
         cta: "عرض خدمات البائعين",
       },
+      {
+        title: "تأجير",
+        description:
+          "دعم لمالكي العقارات الذين يرغبون في طرح وحداتهم الإيجارية في السوق.",
+        href: "/landlords",
+        cta: "عرض دعم التأجير",
+      },
     ],
 
-    sectionOneEyebrow: "الإيجارات والانتقال",
-    sectionOneTitle: "مبني لحالات السكن ذات النية العالية.",
+    sectionOneEyebrow: "الاستئجار والانتقال",
+    sectionOneTitle: "للعملاء الذين يستعدون لخطوتهم القادمة.",
     sectionOneBody: [
-      "عملاء الإيجار والانتقال غالبًا ما يتحركون ضمن جداول زمنية أسرع ويستفيدون أكثر من استقبال أوضح وتوجيه أفضل.",
-      "ويشمل ذلك مهنيي Texas Medical Center وطلاب Rice والمستأجرين الدوليين والعملاء المنتقلين إلى هيوستن للعمل أو التدريب.",
-      "الهدف ليس حركة مرور عامة. الهدف هو استفسارات مؤهلة ومحادثات أفضل للخطوة التالية.",
+      "بعض العملاء يتحركون بسرعة، بينما يخطط آخرون مسبقًا.",
+      "التواصل الواضح والمعلومات الصحيحة في البداية يساعدان على جعل العملية أكثر سلاسة.",
+      "يتم التعامل مع كل حالة بناءً على ما تحتاجه فعليًا، وليس بأسلوب واحد للجميع.",
     ],
-    sectionOneCta: "ابدأ طلب المستأجر",
+    sectionOneCta: "ابدأ الطلب",
 
-    sectionTwoEyebrow: "المشترون والبائعون والملاك",
-    sectionTwoTitle: "إرشاد منظم لقرارات عقارية أعلى قيمة.",
+    sectionTwoEyebrow: "الشراء والبيع",
+    sectionTwoTitle: "للقرارات العقارية الأعلى قيمة.",
     sectionTwoBody: [
-      "يتم أيضًا توجيه استفسارات المشترين والبائعين والملاك عبر استقبال منظم حتى تصبح الخطوة التالية أوضح من البداية.",
-      "وهذا يعني معلومات أفضل مقدمًا، واحتكاكًا أقل، ومتابعة أكثر انضباطًا.",
-      "كل مسار مصمم للمساعدة في تأهيل النية قبل استهلاك الوقت في المراحل الخلفية.",
+      "شراء أو بيع عقار يتطلب وضوحًا وتوقيتًا وتنسيقًا دقيقًا.",
+      "الهدف هو إبقاء القرارات منضبطة والعملية مستقرة من البداية إلى النهاية.",
+      "يتم التعامل مع كل خطوة بعناية وبتواصل واضح.",
     ],
-    sectionTwoCta: "ابدأ الاستشارة",
+    sectionTwoCta: "اطلب استشارة",
 
     finalEyebrow: "الخطوة التالية",
-    finalTitle: "ابدأ بمسار الطلب المناسب لحالتك.",
+    finalTitle: "ابدأ بطلب بسيط.",
     finalBody:
-      "اختر المسار الذي يطابق احتياجك وأرسل التفاصيل ذات الصلة حتى تتم مراجعة الطلب بكفاءة.",
-    finalPrimary: "ابدأ الطلب",
+      "شارك بعض التفاصيل وسيتم توضيح الخطوة التالية بشكل واضح بناءً على حالتك.",
+    finalPrimary: "ابدأ",
     finalSecondary: "بريد المكتب",
     legal:
       "يتم التوسط من خلال 5th Stream Realty LLC. تُقدَّم خدمات التمثيل وفقًا لقانون تكساس والاتفاقيات الكتابية المعمول بها.",
@@ -364,16 +319,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </p>
 
             <div className="mt-10 flex flex-wrap gap-3">
-              <DarkButton href={`/intake?type=tenant&segment=general&lang=${lang}`}>
+              <DarkButton href={`/intake?service=tenant&lang=${lang}`}>
                 {t.primaryCta}
               </DarkButton>
               <DarkButton href={`/rent?lang=${lang}`} secondary>
                 {t.secondaryCta}
               </DarkButton>
-              <DarkButton
-                href={`/medical-center-housing?lang=${lang}`}
-                secondary
-              >
+              <DarkButton href={`mailto:info@lonestarliving.homes`} secondary>
                 {t.tertiaryCta}
               </DarkButton>
             </div>
@@ -395,7 +347,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </p>
           </div>
 
-          <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {t.services.map((service) => (
               <Link
                 key={service.title}
@@ -416,14 +368,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </div>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <LightButton href={`/intake?type=tenant&segment=general&lang=${lang}`}>
+            <LightButton href={`/intake?service=tenant&lang=${lang}`}>
               {t.primaryCta}
             </LightButton>
             <LightButton href={`/buy?lang=${lang}`}>
               {t.buyerServices}
             </LightButton>
             <a
-              href="mailto:zehaifirealty@gmail.com"
+              href="mailto:info@lonestarliving.homes"
               className="inline-flex items-center justify-center rounded-full border border-black/10 px-5 py-3 text-sm font-medium text-neutral-800 transition hover:border-black/20 hover:bg-neutral-50"
             >
               {t.finalSecondary}
@@ -448,7 +400,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 ))}
               </div>
               <div className="mt-6">
-                <LightButton href={`/intake?type=tenant&segment=general&lang=${lang}`}>
+                <LightButton href={`/intake?service=tenant&lang=${lang}`}>
                   {t.sectionOneCta}
                 </LightButton>
               </div>
@@ -467,7 +419,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 ))}
               </div>
               <div className="mt-6">
-                <LightButton href={`/intake?type=buyer&segment=general&lang=${lang}`}>
+                <LightButton href={`/intake?service=buyer&lang=${lang}`}>
                   {t.sectionTwoCta}
                 </LightButton>
               </div>
@@ -490,11 +442,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <LightButton href={`/intake?type=tenant&segment=general&lang=${lang}`}>
+              <LightButton href={`/intake?service=tenant&lang=${lang}`}>
                 {t.finalPrimary}
               </LightButton>
               <a
-                href="mailto:zehaifirealty@gmail.com"
+                href="mailto:info@lonestarliving.homes"
                 className="inline-flex items-center justify-center rounded-full border border-black/10 px-5 py-3 text-sm font-medium text-neutral-800 transition hover:border-black/20 hover:bg-neutral-50"
               >
                 {t.finalSecondary}

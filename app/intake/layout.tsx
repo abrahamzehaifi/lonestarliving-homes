@@ -2,12 +2,18 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "Request Guidance | LonestarLiving.homes",
+  title: "Request Information | LonestarLiving.homes",
   description:
-    "Submit a structured Houston real estate request for rentals, relocation, buying, selling, or landlord guidance through LonestarLiving.homes.",
+    "Contact LonestarLiving.homes to request guidance for renting, buying, selling, or leasing property in Houston.",
   robots: {
     index: false,
     follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
   },
 };
 

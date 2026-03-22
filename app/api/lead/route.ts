@@ -2,7 +2,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { Resend } from "resend";
-import Twilio from "twilio";
 
 type LeadType = "rent" | "buy" | "sell" | "landlord" | "other";
 type LeadQuality = "priority_a" | "priority_b" | "priority_c";
@@ -31,11 +30,11 @@ type NormalizedLead = {
   sourcePage?: string;
   sourcePath?: string;
   contactConsent?: boolean;
+  ref?: string;
 
   budget?: number;
   moveInDate?: string;
   areas?: string;
-  screeningProfile?: string;
 
   priceRange?: string;
   financingStatus?: string;
@@ -120,6 +119,10 @@ function toBool(v: unknown): boolean | undefined {
   return undefined;
 }
 
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return Boolean(v) && typeof v === "object" && !Array.isArray(v);
+}
+
 function isValidLeadType(v: unknown): v is LeadType {
   return (
     v === "rent" ||
@@ -151,6 +154,52 @@ function coerceLang(v: unknown): string | undefined {
   const x = cleanString(v, 12).toLowerCase();
   if (x === "en" || x === "es" || x === "ar") return x;
   return undefined;
+}
+
+function inferSegmentFromContext(body: Record<string, unknown>): Segment {
+  const directSegment = coerceSegment(body.segment);
+  if (directSegment) return directSegment;
+
+  const requestContext = isRecord(body.requestContext) ? body.requestContext : null;
+
+  const nestedSegment =
+    coerceSegment(requestContext?.segment) ??
+    coerceSegment(requestContext?.contextBucket);
+
+  if (nestedSegment) return nestedSegment;
+
+  const sourcePath = cleanString(body.source_path, 1000).toLowerCase();
+  const sourcePage = cleanString(body.source_page, 500).toLowerCase();
+  const ref = cleanString(body.ref, 120).toLowerCase();
+
+  const combined = `${sourcePath} ${sourcePage} ${ref}`;
+
+  if (combined.includes("medical")) return "medical_center";
+  if (combined.includes("rice")) return "rice_student";
+  if (combined.includes("relocation")) return "relocation";
+  if (combined.includes("apartment")) return "apartment_locator";
+
+  return "general";
+}
+
+function getNestedIntent(body: Record<string, unknown>): string | undefined {
+  const requestContext = isRecord(body.requestContext) ? body.requestContext : null;
+
+  return (
+    cleanString(body.intent, 40).toLowerCase() ||
+    cleanString(requestContext?.intent, 40).toLowerCase() ||
+    undefined
+  );
+}
+
+function getNestedArea(body: Record<string, unknown>): string | undefined {
+  const requestContext = isRecord(body.requestContext) ? body.requestContext : null;
+
+  return (
+    cleanString(body.area, 120).toLowerCase() ||
+    cleanString(requestContext?.area, 120).toLowerCase() ||
+    undefined
+  );
 }
 
 function normalizeLead(raw: unknown): NormalizeLeadResult {
@@ -198,17 +247,18 @@ function normalizeLead(raw: unknown): NormalizeLeadResult {
     email,
     phone,
     message,
-    intent: cleanString(body.intent, 40).toLowerCase() || undefined,
+    intent: getNestedIntent(body),
     timeline: cleanString(body.timeline, 40).toLowerCase() || undefined,
     source: cleanString(body.source, 80).toLowerCase() || "website",
-    segment: coerceSegment(body.segment) ?? "general",
+    segment: inferSegmentFromContext(body),
     preferredLanguage:
       cleanString(body.preferredLanguage, 12).toLowerCase() || normalizedLang,
     lang: normalizedLang,
-    area: cleanString(body.area, 120).toLowerCase() || undefined,
+    area: getNestedArea(body),
     sourcePage: cleanString(body.source_page, 500) || undefined,
     sourcePath: cleanString(body.source_path, 1000) || undefined,
     contactConsent: toBool(body.contactConsent),
+    ref: cleanString(body.ref, 120).toLowerCase() || undefined,
   };
 
   if (lead.contactConsent !== true) {
@@ -223,8 +273,6 @@ function normalizeLead(raw: unknown): NormalizeLeadResult {
     lead.budget = toNumber(body.budget);
     lead.moveInDate = cleanString(body.moveInDate, 120) || undefined;
     lead.areas = cleanString(body.areas, 400) || undefined;
-    lead.screeningProfile =
-      cleanString(body.screeningProfile, 80).toLowerCase() || undefined;
 
     if (lead.budget === undefined || lead.budget < 500) {
       return { ok: false, error: "Minimum rental budget is $500." };
@@ -232,14 +280,6 @@ function normalizeLead(raw: unknown): NormalizeLeadResult {
 
     if (!lead.moveInDate) {
       return { ok: false, error: "Move-in date is required for rentals." };
-    }
-
-    if (!lead.areas) {
-      return { ok: false, error: "Preferred area is required for rentals." };
-    }
-
-    if (!lead.screeningProfile) {
-      return { ok: false, error: "Screening profile is required for rentals." };
     }
   }
 
@@ -249,31 +289,30 @@ function normalizeLead(raw: unknown): NormalizeLeadResult {
       cleanString(body.financingStatus, 80).toLowerCase() || undefined;
     lead.areas = cleanString(body.areas, 400) || undefined;
 
-    if (!lead.priceRange || !lead.financingStatus || !lead.areas) {
-      return { ok: false, error: "Missing buyer intake fields." };
+    if (!lead.priceRange) {
+      return { ok: false, error: "Price range is required for buyers." };
     }
   }
 
   if (leadType === "sell") {
-    lead.propertyAddress =
-      cleanString(body.propertyAddress, 250) || undefined;
-    lead.sellerGoal =
-      cleanString(body.sellerGoal, 80).toLowerCase() || undefined;
+    lead.propertyAddress = cleanString(body.propertyAddress, 250) || undefined;
+    lead.sellerGoal = cleanString(body.sellerGoal, 80).toLowerCase() || undefined;
 
-    if (!lead.propertyAddress || !lead.sellerGoal) {
-      return { ok: false, error: "Missing seller intake fields." };
+    if (!lead.propertyAddress) {
+      return { ok: false, error: "Property address is required for sellers." };
     }
   }
 
   if (leadType === "landlord") {
     lead.propertyArea = cleanString(body.propertyArea, 120) || undefined;
-    lead.propertyType =
-      cleanString(body.propertyType, 80).toLowerCase() || undefined;
-    lead.readyToLease =
-      cleanString(body.readyToLease, 20).toLowerCase() || undefined;
+    lead.propertyType = cleanString(body.propertyType, 80).toLowerCase() || undefined;
+    lead.readyToLease = cleanString(body.readyToLease, 20).toLowerCase() || undefined;
 
-    if (!lead.propertyArea || !lead.propertyType || !lead.readyToLease) {
-      return { ok: false, error: "Missing landlord intake fields." };
+    if (!lead.propertyArea) {
+      return {
+        ok: false,
+        error: "Property area is required for landlord requests.",
+      };
     }
   }
 
@@ -298,26 +337,24 @@ function routeLead(lead: NormalizedLead): { reasons: string[] } {
   }
 
   if (lead.leadType === "rent") {
-    if (
-      lead.screeningProfile === "clean" ||
-      lead.screeningProfile === "no_us_credit"
-    ) {
-      reasons.push(`screening_profile_${lead.screeningProfile}`);
-      reasons.push("routing_fast_track");
-      return { reasons };
+    if ((lead.budget ?? 0) >= 1800) {
+      reasons.push("rent_budget_ready");
     }
 
-    reasons.push(`screening_profile_${lead.screeningProfile ?? "unknown"}`);
-    reasons.push("routing_review");
-    return { reasons };
+    if (
+      lead.timeline === "asap" ||
+      lead.timeline === "30_days" ||
+      lead.timeline === "within_30_days"
+    ) {
+      reasons.push("rent_timeline_active");
+    }
   }
 
   return { reasons };
 }
 
 function scoreLeadQuality(
-  lead: NormalizedLead,
-  reasons: string[]
+  lead: NormalizedLead
 ): { leadQuality: LeadQuality; qualityReasons: string[] } {
   let score = 0;
   const qualityReasons: string[] = [];
@@ -338,11 +375,6 @@ function scoreLeadQuality(
   }
 
   if (lead.leadType === "rent") {
-    if (reasons.includes("routing_fast_track")) {
-      score += 2;
-      qualityReasons.push("rent_fast_track");
-    }
-
     if ((lead.budget ?? 0) >= 1800) {
       score += 1;
       qualityReasons.push("rent_budget_1800_plus");
@@ -351,6 +383,11 @@ function scoreLeadQuality(
     if ((lead.budget ?? 0) >= 2500) {
       score += 1;
       qualityReasons.push("rent_budget_2500_plus");
+    }
+
+    if (lead.moveInDate) {
+      score += 1;
+      qualityReasons.push("rent_move_in_provided");
     }
   }
 
@@ -367,6 +404,11 @@ function scoreLeadQuality(
     } else if (lead.financingStatus === "need_lender") {
       score += 1;
       qualityReasons.push("financing_in_progress");
+    }
+
+    if (lead.priceRange) {
+      score += 1;
+      qualityReasons.push("buyer_budget_defined");
     }
   }
 
@@ -447,6 +489,7 @@ function sanitizeRawForStorage(raw: unknown) {
   if (!raw || typeof raw !== "object") return {};
 
   const body = raw as Record<string, unknown>;
+  const requestContext = isRecord(body.requestContext) ? body.requestContext : null;
 
   return {
     leadType: cleanString(body.leadType, 40),
@@ -464,12 +507,12 @@ function sanitizeRawForStorage(raw: unknown) {
     area: cleanString(body.area, 120) || null,
     source_page: cleanString(body.source_page, 500) || null,
     source_path: cleanString(body.source_path, 1000) || null,
+    ref: cleanString(body.ref, 120) || null,
     contactConsent: toBool(body.contactConsent) ?? null,
 
     budget: toNumber(body.budget) ?? null,
     moveInDate: cleanString(body.moveInDate, 120) || null,
     areas: cleanString(body.areas, 400) || null,
-    screeningProfile: cleanString(body.screeningProfile, 80) || null,
 
     priceRange: cleanString(body.priceRange, 120) || null,
     financingStatus: cleanString(body.financingStatus, 80) || null,
@@ -480,6 +523,15 @@ function sanitizeRawForStorage(raw: unknown) {
     propertyArea: cleanString(body.propertyArea, 120) || null,
     propertyType: cleanString(body.propertyType, 80) || null,
     readyToLease: cleanString(body.readyToLease, 20) || null,
+
+    requestContext: requestContext
+      ? {
+          intent: cleanString(requestContext.intent, 40) || null,
+          area: cleanString(requestContext.area, 120) || null,
+          segment: cleanString(requestContext.segment, 80) || null,
+          contextBucket: cleanString(requestContext.contextBucket, 80) || null,
+        }
+      : null,
   };
 }
 
@@ -521,7 +573,6 @@ async function persistLeadToSupabase(
       budget: lead.budget ?? null,
       move_in_date: lead.moveInDate ?? null,
       areas: lead.areas ?? null,
-      screening_profile: lead.screeningProfile ?? null,
 
       price_range: lead.priceRange ?? null,
       financing_status: lead.financingStatus ?? null,
@@ -571,6 +622,7 @@ async function insertLeadCreatedEvent(
       area: params.lead.area ?? null,
       source_page: params.lead.sourcePage ?? null,
       source_path: params.lead.sourcePath ?? null,
+      ref: params.lead.ref ?? null,
     },
   });
 
@@ -589,9 +641,16 @@ function formatLeadSummary(
   qualityReasons: string[],
   id?: string | null
 ) {
+  const icon =
+    leadQuality === "priority_a"
+      ? "🔥"
+      : leadQuality === "priority_b"
+      ? "⚡"
+      : "•";
+
   const lines: string[] = [];
 
-  lines.push(`New lead (${lead.leadType.toUpperCase()}) — ${lead.name}`);
+  lines.push(`${icon} New lead (${lead.leadType.toUpperCase()}) — ${lead.name}`);
   if (id) lines.push(`Lead ID: ${id}`);
   lines.push(`Segment: ${lead.segment ?? "general"}`);
   lines.push(`Lead quality: ${leadQuality}`);
@@ -603,9 +662,8 @@ function formatLeadSummary(
   if (lead.intent) lines.push(`Intent: ${lead.intent}`);
   if (lead.timeline) lines.push(`Timeline: ${lead.timeline}`);
   if (lead.source) lines.push(`Source: ${lead.source}`);
-  if (lead.preferredLanguage) {
-    lines.push(`Language: ${lead.preferredLanguage}`);
-  }
+  if (lead.ref) lines.push(`Ref: ${lead.ref}`);
+  if (lead.preferredLanguage) lines.push(`Language: ${lead.preferredLanguage}`);
   if (lead.lang) lines.push(`Lang: ${lead.lang}`);
   if (lead.area) lines.push(`Area: ${lead.area}`);
   if (lead.sourcePage) lines.push(`Source page: ${lead.sourcePage}`);
@@ -615,9 +673,6 @@ function formatLeadSummary(
     if (lead.budget !== undefined) lines.push(`Budget: $${lead.budget}`);
     if (lead.moveInDate) lines.push(`Move-in: ${lead.moveInDate}`);
     if (lead.areas) lines.push(`Areas: ${lead.areas}`);
-    if (lead.screeningProfile) {
-      lines.push(`Screening profile: ${lead.screeningProfile}`);
-    }
   }
 
   if (lead.leadType === "buy") {
@@ -627,9 +682,7 @@ function formatLeadSummary(
   }
 
   if (lead.leadType === "sell") {
-    if (lead.propertyAddress) {
-      lines.push(`Property address: ${lead.propertyAddress}`);
-    }
+    if (lead.propertyAddress) lines.push(`Property address: ${lead.propertyAddress}`);
     if (lead.sellerGoal) lines.push(`Seller goal: ${lead.sellerGoal}`);
   }
 
@@ -670,12 +723,6 @@ async function sendEmailNotification(opts: { subject: string; text: string }) {
   const resend = new Resend(apiKey);
 
   try {
-    console.log("Sending lead email...", {
-      from,
-      to,
-      subject: opts.subject,
-    });
-
     const resp = await resend.emails.send({
       from,
       to,
@@ -697,8 +744,6 @@ async function sendEmailNotification(opts: { subject: string; text: string }) {
       };
     }
 
-    console.log("Lead email sent:", resp);
-
     return {
       ok: true as const,
       id: (resp as { data?: { id?: string } })?.data?.id ?? null,
@@ -714,170 +759,130 @@ async function sendEmailNotification(opts: { subject: string; text: string }) {
   }
 }
 
-async function sendSmsNotification(opts: { body: string }) {
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_FROM_NUMBER;
-  const to = process.env.TWILIO_TO_NUMBER;
+async function sendTelegramNotification(text: string) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
 
-  if (!sid || !token || !from || !to) {
-    console.error("SMS skipped: missing env vars", {
-      hasSid: Boolean(sid),
+  if (!token || !chatId) {
+    console.error("Telegram skipped: missing env vars", {
       hasToken: Boolean(token),
-      hasFrom: Boolean(from),
-      hasTo: Boolean(to),
+      hasChatId: Boolean(chatId),
     });
 
     return {
       ok: false as const,
       skipped: true as const,
-      error: "Missing Twilio env vars",
+      error: "Missing TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID",
     };
   }
 
-  const client = Twilio(sid, token);
-
   try {
-    console.log("Sending lead SMS...", {
-      from,
-      to,
+    const resp = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+      }),
     });
 
-    const msg = await client.messages.create({ from, to, body: opts.body });
+    if (!resp.ok) {
+      const body = await resp.text();
+      console.error("Telegram notification failed:", body);
 
-    console.log("Lead SMS sent:", { sid: msg.sid });
+      return {
+        ok: false as const,
+        skipped: false as const,
+        error: body || "Telegram send failed",
+      };
+    }
 
-    return { ok: true as const, sid: msg.sid };
+    return { ok: true as const };
   } catch (e: unknown) {
-    console.error("Lead SMS failed:", e);
+    console.error("Telegram notification failed:", e);
 
     return {
       ok: false as const,
       skipped: false as const,
-      error: e instanceof Error ? e.message : "Twilio error",
+      error: e instanceof Error ? e.message : "Telegram error",
     };
   }
 }
 
 export async function POST(req: Request) {
+  let raw: unknown;
+
   try {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-      return jsonError(500, "Missing NEXT_PUBLIC_SUPABASE_URL");
-    }
-
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      return jsonError(500, "Missing SUPABASE_SERVICE_ROLE_KEY");
-    }
-
-    const raw: unknown = await req.json().catch(() => null);
-    if (!raw || typeof raw !== "object") {
-      return jsonError(400, "Invalid JSON body.");
-    }
-
-    const normalized = normalizeLead(raw);
-    if (!normalized.ok) {
-      return jsonError(400, normalized.error);
-    }
-
-    const lead = normalized.lead;
-    lead.ip = getClientIp(req);
-    lead.userAgent = req.headers.get("user-agent");
-
-    const { reasons } = routeLead(lead);
-    const { leadQuality, qualityReasons } = scoreLeadQuality(lead, reasons);
-
-    const supabase = createSupabaseServiceClient();
-
-    const persisted = await persistLeadToSupabase(
-      supabase,
-      lead,
-      reasons,
-      leadQuality,
-      qualityReasons,
-      raw
-    );
-
-    if (!persisted.ok) {
-      console.error("Supabase insert failed:", persisted.error);
-      return jsonError(500, "Supabase insert failed", persisted.error);
-    }
-
-    const id = persisted.id ?? null;
-
-    if (id) {
-      const eventInsert = await insertLeadCreatedEvent(supabase, {
-        leadId: id,
-        lead,
-        leadQuality,
-        reasons,
-        qualityReasons,
-      });
-
-      if (!eventInsert.ok) {
-        console.error("lead_created event insert failed:", eventInsert.error);
-      }
-    }
-
-    const summary = formatLeadSummary(
-      lead,
-      reasons,
-      leadQuality,
-      qualityReasons,
-      id
-    );
-
-    const emailSubject =
-      lead.leadType === "rent"
-        ? `New RENT lead — ${lead.name} ($${lead.budget ?? "?"}/mo)`
-        : `New ${lead.leadType.toUpperCase()} lead — ${lead.name}`;
-
-    const emailRes = await sendEmailNotification({
-      subject: emailSubject,
-      text: summary,
-    });
-
-    console.log("Lead email result:", emailRes);
-
-    const smsBody =
-      lead.leadType === "rent"
-        ? `New RENT lead: ${lead.name} | $${lead.budget ?? "?"}/mo | Move-in ${lead.moveInDate ?? "?"} | ${lead.phone} | ${leadQuality}${lead.area ? ` | ${lead.area}` : ""}`
-        : `New ${lead.leadType.toUpperCase()} lead: ${lead.name} | ${lead.phone} | ${leadQuality}${lead.area ? ` | ${lead.area}` : ""}`;
-
-    const smsRes = await sendSmsNotification({ body: smsBody });
-
-    console.log("Lead SMS result:", smsRes);
-
-    if (!emailRes.ok) {
-      console.error("EMAIL NOTIFICATION FAILED:", emailRes);
-    }
-
-    if (!smsRes.ok) {
-      console.error("SMS NOTIFICATION FAILED:", smsRes);
-    }
-
-    const warning =
-      !emailRes.ok || !smsRes.ok
-        ? "Lead saved, but one or more notifications failed."
-        : null;
-
-    return NextResponse.json({
-      ok: true,
-      segment: lead.segment ?? "general",
-      reasons,
-      lead_quality: leadQuality,
-      quality_reasons: qualityReasons,
-      id,
-      notifications: {
-        email: emailRes,
-        sms: smsRes,
-      },
-      warning,
-      timeline: {
-        lead_created: Boolean(id),
-      },
-    });
-  } catch (err: unknown) {
-    console.error("API /api/lead crashed:", err);
-    return jsonError(500, "Server error", err);
+    raw = await req.json();
+  } catch (e) {
+    return jsonError(400, "Invalid JSON body.", e);
   }
+
+  const normalized = normalizeLead(raw);
+  if (!normalized.ok) {
+    return jsonError(400, normalized.error);
+  }
+
+  const lead = normalized.lead;
+  lead.ip = getClientIp(req);
+  lead.userAgent = req.headers.get("user-agent");
+
+  const { reasons } = routeLead(lead);
+  const { leadQuality, qualityReasons } = scoreLeadQuality(lead);
+
+  const supabase = createSupabaseServiceClient();
+
+  const persisted = await persistLeadToSupabase(
+    supabase,
+    lead,
+    reasons,
+    leadQuality,
+    qualityReasons,
+    raw
+  );
+
+  if (!persisted.ok) {
+    console.error("Lead insert failed:", persisted.error);
+    return jsonError(500, "Failed to save lead.", persisted.error);
+  }
+
+  if (persisted.id) {
+    await insertLeadCreatedEvent(supabase, {
+      leadId: persisted.id,
+      lead,
+      leadQuality,
+      reasons,
+      qualityReasons,
+    });
+  }
+
+  const summary = formatLeadSummary(
+    lead,
+    reasons,
+    leadQuality,
+    qualityReasons,
+    persisted.id ?? null
+  );
+
+  const subject = `New Lead (${lead.leadType.toUpperCase()}) — ${lead.name}`;
+
+  const [telegramResult, emailResult] = await Promise.allSettled([
+    sendTelegramNotification(summary),
+    sendEmailNotification({ subject, text: summary }),
+  ]);
+
+  if (telegramResult.status === "rejected") {
+    console.error("Telegram notification promise rejected:", telegramResult.reason);
+  }
+
+  if (emailResult.status === "rejected") {
+    console.error("Email notification promise rejected:", emailResult.reason);
+  }
+
+  return NextResponse.json({
+    ok: true,
+    leadId: persisted.id ?? null,
+  });
 }

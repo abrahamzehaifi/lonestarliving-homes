@@ -6,27 +6,27 @@ import { useSearchParams } from "next/navigation";
 const services = [
   {
     title: "Buyer Representation",
-    desc: "Search strategy, showings, negotiation, and closing coordination through formal buyer representation.",
-    cta: "Buyer Consultation",
-    type: "buyer",
+    desc: "Support for clients purchasing a home, from the early search through contract and closing.",
+    cta: "Buyer Request",
+    service: "buyer",
   },
   {
     title: "Seller Representation",
-    desc: "Pricing strategy, marketing guidance, offer evaluation, and transaction execution.",
-    cta: "Seller Consultation",
-    type: "seller",
+    desc: "Support for owners preparing, pricing, marketing, and selling a property in Houston.",
+    cta: "Seller Request",
+    service: "seller",
   },
   {
-    title: "Tenant Representation",
-    desc: "Structured rental search support and lease coordination for qualified applicants.",
-    cta: "Rental Consultation",
-    type: "tenant",
+    title: "Rental Guidance",
+    desc: "Help for clients searching for a rental home, apartment, or lease opportunity that fits their needs.",
+    cta: "Rental Request",
+    service: "tenant",
   },
   {
-    title: "Landlord Representation",
-    desc: "Leasing-focused support, including marketing coordination, tenant placement process, and lease execution.",
-    cta: "Leasing Consultation",
-    type: "landlord",
+    title: "Leasing Support",
+    desc: "Help for property owners who want assistance bringing a rental to market and moving toward lease execution.",
+    cta: "Owner Request",
+    service: "landlord",
   },
 ];
 
@@ -43,30 +43,31 @@ export default function ServicesSection() {
           </div>
 
           <h2 className="mt-6 text-3xl font-semibold leading-tight text-slate-950 md:text-4xl">
-            Full-service representation with structured execution.
+            Real estate representation with a clear, steady approach.
           </h2>
 
           <p className="mt-6 text-lg leading-relaxed text-slate-600">
-            Clear intake. Defined expectations. Strategic negotiation. Designed
-            to reduce friction and keep transactions controlled and moving.
+            Buying, selling, renting, or leasing out a property often comes with
+            important decisions. The focus here is simple: clear communication,
+            practical guidance, and dependable support.
           </p>
         </div>
 
         <div className="mt-14 grid gap-8 md:grid-cols-2">
-          {services.map((s) => {
-            const href = `/intake?type=${s.type}&lang=${lang}`;
+          {services.map((service) => {
+            const href = `/intake?service=${service.service}&lang=${lang}`;
 
             return (
               <div
-                key={s.title}
+                key={service.title}
                 className="group rounded-xl border border-slate-200 bg-white p-8 shadow-sm transition hover:shadow-md"
               >
                 <h3 className="text-xl font-semibold text-slate-950">
-                  {s.title}
+                  {service.title}
                 </h3>
 
                 <p className="mt-4 text-base leading-relaxed text-slate-600">
-                  {s.desc}
+                  {service.desc}
                 </p>
 
                 <div className="mt-8">
@@ -74,7 +75,7 @@ export default function ServicesSection() {
                     href={href}
                     className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 transition group-hover:translate-x-1"
                   >
-                    {s.cta}
+                    {service.cta}
                     <span aria-hidden="true">→</span>
                   </Link>
                 </div>
@@ -83,7 +84,7 @@ export default function ServicesSection() {
           })}
         </div>
 
-        <p className="mt-14 text-xs text-slate-500">
+        <p className="mt-14 text-xs leading-relaxed text-slate-500">
           Representation services are provided by Abraham Zehaifi, Texas
           REALTOR®, brokered by 5th Stream Realty LLC, under written agreements
           where required by Texas law.
