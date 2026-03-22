@@ -38,19 +38,21 @@ export default async function CrmPage({
 
   const { lead: selectedLeadId } = await searchParams;
 
-  const [{ data: leads, error: leadsError }, { data: activities, error: activitiesError }] =
-    await Promise.all([
-      supabase
-        .from("crm_leads")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("crm_activities")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false }),
-    ]);
+  const [
+    { data: leads, error: leadsError },
+    { data: activities, error: activitiesError },
+  ] = await Promise.all([
+    supabase
+      .from("crm_leads")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("crm_activities")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false }),
+  ]);
 
   if (leadsError) throw new Error(leadsError.message);
   if (activitiesError) throw new Error(activitiesError.message);
@@ -69,7 +71,8 @@ export default async function CrmPage({
     followUpsDue: (leads ?? []).filter(
       (l) => l.next_follow_up_at && l.next_follow_up_at <= today
     ).length,
-    appointments: (leads ?? []).filter((l) => l.stage === "appointment_set").length,
+    appointments: (leads ?? []).filter((l) => l.stage === "appointment_set")
+      .length,
     signed: (leads ?? []).filter((l) => l.stage === "listing_signed").length,
     closed: (leads ?? []).filter((l) => l.stage === "closed").length,
   };
@@ -77,11 +80,26 @@ export default async function CrmPage({
   return (
     <main className="space-y-6 p-6">
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <div className="rounded-2xl border p-4"><p className="text-sm text-neutral-500">New Leads</p><p className="text-2xl font-semibold">{kpis.newLeads}</p></div>
-        <div className="rounded-2xl border p-4"><p className="text-sm text-neutral-500">Follow-Ups Due</p><p className="text-2xl font-semibold">{kpis.followUpsDue}</p></div>
-        <div className="rounded-2xl border p-4"><p className="text-sm text-neutral-500">Appointments</p><p className="text-2xl font-semibold">{kpis.appointments}</p></div>
-        <div className="rounded-2xl border p-4"><p className="text-sm text-neutral-500">Listings Signed</p><p className="text-2xl font-semibold">{kpis.signed}</p></div>
-        <div className="rounded-2xl border p-4"><p className="text-sm text-neutral-500">Closed</p><p className="text-2xl font-semibold">{kpis.closed}</p></div>
+        <div className="rounded-2xl border p-4">
+          <p className="text-sm text-neutral-500">New Leads</p>
+          <p className="text-2xl font-semibold">{kpis.newLeads}</p>
+        </div>
+        <div className="rounded-2xl border p-4">
+          <p className="text-sm text-neutral-500">Follow-Ups Due</p>
+          <p className="text-2xl font-semibold">{kpis.followUpsDue}</p>
+        </div>
+        <div className="rounded-2xl border p-4">
+          <p className="text-sm text-neutral-500">Appointments</p>
+          <p className="text-2xl font-semibold">{kpis.appointments}</p>
+        </div>
+        <div className="rounded-2xl border p-4">
+          <p className="text-sm text-neutral-500">Listings Signed</p>
+          <p className="text-2xl font-semibold">{kpis.signed}</p>
+        </div>
+        <div className="rounded-2xl border p-4">
+          <p className="text-sm text-neutral-500">Closed</p>
+          <p className="text-2xl font-semibold">{kpis.closed}</p>
+        </div>
       </section>
 
       <LeadCreateForm />
