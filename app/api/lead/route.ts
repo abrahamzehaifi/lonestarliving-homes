@@ -23,6 +23,8 @@ type NormalizedLead = {
   intent?: string;
   timeline?: string;
   source?: string;
+  sourceDetail?: string;
+  channel?: string;
   segment?: Segment;
   preferredLanguage?: string;
   lang?: string;
@@ -31,6 +33,8 @@ type NormalizedLead = {
   sourcePath?: string;
   contactConsent?: boolean;
   ref?: string;
+  leadScore?: number;
+  priority?: string;
 
   budget?: number;
   moveInDate?: string;
@@ -250,6 +254,9 @@ function normalizeLead(raw: unknown): NormalizeLeadResult {
     intent: getNestedIntent(body),
     timeline: cleanString(body.timeline, 40).toLowerCase() || undefined,
     source: cleanString(body.source, 80).toLowerCase() || "website",
+    sourceDetail:
+      cleanString(body.source_detail, 120).toLowerCase() || undefined,
+    channel: cleanString(body.channel, 80).toLowerCase() || undefined,
     segment: inferSegmentFromContext(body),
     preferredLanguage:
       cleanString(body.preferredLanguage, 12).toLowerCase() || normalizedLang,
@@ -259,6 +266,8 @@ function normalizeLead(raw: unknown): NormalizeLeadResult {
     sourcePath: cleanString(body.source_path, 1000) || undefined,
     contactConsent: toBool(body.contactConsent),
     ref: cleanString(body.ref, 120).toLowerCase() || undefined,
+    leadScore: toNumber(body.lead_score),
+    priority: cleanString(body.priority, 20).toLowerCase() || undefined,
   };
 
   if (lead.contactConsent !== true) {
@@ -295,8 +304,10 @@ function normalizeLead(raw: unknown): NormalizeLeadResult {
   }
 
   if (leadType === "sell") {
-    lead.propertyAddress = cleanString(body.propertyAddress, 250) || undefined;
-    lead.sellerGoal = cleanString(body.sellerGoal, 80).toLowerCase() || undefined;
+    lead.propertyAddress =
+      cleanString(body.propertyAddress, 250) || undefined;
+    lead.sellerGoal =
+      cleanString(body.sellerGoal, 80).toLowerCase() || undefined;
 
     if (!lead.propertyAddress) {
       return { ok: false, error: "Property address is required for sellers." };
@@ -305,8 +316,10 @@ function normalizeLead(raw: unknown): NormalizeLeadResult {
 
   if (leadType === "landlord") {
     lead.propertyArea = cleanString(body.propertyArea, 120) || undefined;
-    lead.propertyType = cleanString(body.propertyType, 80).toLowerCase() || undefined;
-    lead.readyToLease = cleanString(body.readyToLease, 20).toLowerCase() || undefined;
+    lead.propertyType =
+      cleanString(body.propertyType, 80).toLowerCase() || undefined;
+    lead.readyToLease =
+      cleanString(body.readyToLease, 20).toLowerCase() || undefined;
 
     if (!lead.propertyArea) {
       return {
@@ -334,6 +347,18 @@ function routeLead(lead: NormalizedLead): { reasons: string[] } {
 
   if (lead.area) {
     reasons.push(`area_${lead.area}`);
+  }
+
+  if (lead.sourceDetail) {
+    reasons.push(`source_detail_${lead.sourceDetail}`);
+  }
+
+  if (lead.channel) {
+    reasons.push(`channel_${lead.channel}`);
+  }
+
+  if (lead.priority) {
+    reasons.push(`priority_${lead.priority}`);
   }
 
   if (lead.leadType === "rent") {
@@ -441,6 +466,28 @@ function scoreLeadQuality(
     qualityReasons.push("referral_source");
   }
 
+  if (lead.sourceDetail?.includes("priority")) {
+    score += 2;
+    qualityReasons.push("priority_source_detail");
+  }
+
+  if (lead.sourceDetail?.includes("seo")) {
+    score += 1;
+    qualityReasons.push("seo_source_detail");
+  }
+
+  if (lead.channel === "organic") {
+    qualityReasons.push("channel_organic");
+  }
+
+  if (lead.leadScore !== undefined) {
+    qualityReasons.push(`lead_score_${lead.leadScore}`);
+  }
+
+  if (lead.priority) {
+    qualityReasons.push(`priority_${lead.priority}`);
+  }
+
   if (lead.message && lead.message.length >= 40) {
     score += 1;
     qualityReasons.push("detailed_message");
@@ -501,6 +548,8 @@ function sanitizeRawForStorage(raw: unknown) {
     intent: cleanString(body.intent, 40) || null,
     timeline: cleanString(body.timeline, 40) || null,
     source: cleanString(body.source, 80) || null,
+    source_detail: cleanString(body.source_detail, 120) || null,
+    channel: cleanString(body.channel, 80) || null,
     segment: cleanString(body.segment, 80) || null,
     preferredLanguage: cleanString(body.preferredLanguage, 12) || null,
     lang: cleanString(body.lang, 12) || null,
@@ -509,6 +558,8 @@ function sanitizeRawForStorage(raw: unknown) {
     source_path: cleanString(body.source_path, 1000) || null,
     ref: cleanString(body.ref, 120) || null,
     contactConsent: toBool(body.contactConsent) ?? null,
+    lead_score: toNumber(body.lead_score) ?? null,
+    priority: cleanString(body.priority, 20) || null,
 
     budget: toNumber(body.budget) ?? null,
     moveInDate: cleanString(body.moveInDate, 120) || null,
@@ -563,12 +614,16 @@ async function persistLeadToSupabase(
       intent: lead.intent ?? null,
       timeline: lead.timeline ?? null,
       source: lead.source ?? "website",
+      source_detail: lead.sourceDetail ?? null,
+      channel: lead.channel ?? null,
       preferred_language: lead.preferredLanguage ?? null,
       lang: lead.lang ?? null,
       area: lead.area ?? null,
       source_page: lead.sourcePage ?? null,
       source_path: lead.sourcePath ?? null,
       contact_consent: lead.contactConsent ?? null,
+      lead_score: lead.leadScore ?? null,
+      priority: lead.priority ?? null,
 
       budget: lead.budget ?? null,
       move_in_date: lead.moveInDate ?? null,
@@ -617,6 +672,10 @@ async function insertLeadCreatedEvent(
       reasons: params.reasons,
       quality_reasons: params.qualityReasons,
       source: params.lead.source ?? "website",
+      source_detail: params.lead.sourceDetail ?? null,
+      channel: params.lead.channel ?? null,
+      lead_score: params.lead.leadScore ?? null,
+      priority: params.lead.priority ?? null,
       timeline: params.lead.timeline ?? null,
       lang: params.lead.lang ?? null,
       area: params.lead.area ?? null,
@@ -652,6 +711,8 @@ function formatLeadSummary(
 
   lines.push(`${icon} New lead (${lead.leadType.toUpperCase()}) — ${lead.name}`);
   if (id) lines.push(`Lead ID: ${id}`);
+  if (lead.priority) lines.push(`Priority: ${lead.priority}`);
+  if (lead.leadScore !== undefined) lines.push(`Lead score: ${lead.leadScore}`);
   lines.push(`Segment: ${lead.segment ?? "general"}`);
   lines.push(`Lead quality: ${leadQuality}`);
   lines.push(`Routing reasons: ${reasons.join(", ") || "—"}`);
@@ -662,6 +723,8 @@ function formatLeadSummary(
   if (lead.intent) lines.push(`Intent: ${lead.intent}`);
   if (lead.timeline) lines.push(`Timeline: ${lead.timeline}`);
   if (lead.source) lines.push(`Source: ${lead.source}`);
+  if (lead.sourceDetail) lines.push(`Source detail: ${lead.sourceDetail}`);
+  if (lead.channel) lines.push(`Channel: ${lead.channel}`);
   if (lead.ref) lines.push(`Ref: ${lead.ref}`);
   if (lead.preferredLanguage) lines.push(`Language: ${lead.preferredLanguage}`);
   if (lead.lang) lines.push(`Lang: ${lead.lang}`);
