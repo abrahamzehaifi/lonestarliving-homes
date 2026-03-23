@@ -13,20 +13,20 @@ type SearchParams = Promise<{ lead?: string }>;
 type CrmLead = {
   id: string;
   stage: string;
-  created_at?: string | null;
-  next_follow_up_at?: string | null;
-  last_contacted_at?: string | null;
-  priority?: string | null;
-  lead_score?: number | null;
-  lead_quality?: "priority_a" | "priority_b" | "priority_c" | null;
+  created_at: string | null;
+  next_follow_up_at: string | null;
+  last_contacted_at: string | null;
+  priority: string | null;
+  lead_score: number | null;
+  lead_quality: "priority_a" | "priority_b" | "priority_c" | null;
 
   full_name: string;
   property_address: string;
   motivation: string | null;
-  source_detail?: string | null;
-  channel?: string | null;
-  phone?: string | null;
-  email?: string | null;
+  source_detail: string | null;
+  channel: string | null;
+  phone: string | null;
+  email: string | null;
 };
 
 async function getSupabase() {
@@ -59,11 +59,9 @@ function leadQualityWeight(lead: CrmLead) {
 
 function isOverdue(value?: string | null) {
   if (!value) return false;
-
-  const time = new Date(value).getTime();
-  if (Number.isNaN(time)) return false;
-
-  return time <= Date.now();
+  const t = new Date(value).getTime();
+  if (Number.isNaN(t)) return false;
+  return t <= Date.now();
 }
 
 function sortLeadsForExecution(leads: CrmLead[]) {
@@ -87,6 +85,7 @@ function sortLeadsForExecution(leads: CrmLead[]) {
     const followUpA = a.next_follow_up_at
       ? new Date(a.next_follow_up_at).getTime()
       : Number.MAX_SAFE_INTEGER;
+
     const followUpB = b.next_follow_up_at
       ? new Date(b.next_follow_up_at).getTime()
       : Number.MAX_SAFE_INTEGER;
@@ -134,7 +133,27 @@ export default async function CrmPage({
   if (leadsError) throw new Error(leadsError.message);
   if (activitiesError) throw new Error(activitiesError.message);
 
-  const sortedLeads = sortLeadsForExecution((leads ?? []) as CrmLead[]);
+  // 🔥 CRITICAL FIX: normalize data (removes undefined)
+  const normalizedLeads: CrmLead[] = (leads ?? []).map((l: any) => ({
+    id: l.id,
+    stage: l.stage,
+    created_at: l.created_at ?? null,
+    next_follow_up_at: l.next_follow_up_at ?? null,
+    last_contacted_at: l.last_contacted_at ?? null,
+    priority: l.priority ?? null,
+    lead_score: l.lead_score ?? null,
+    lead_quality: l.lead_quality ?? null,
+
+    full_name: l.full_name ?? "",
+    property_address: l.property_address ?? "",
+    motivation: l.motivation ?? null,
+    source_detail: l.source_detail ?? null,
+    channel: l.channel ?? null,
+    phone: l.phone ?? null,
+    email: l.email ?? null,
+  }));
+
+  const sortedLeads = sortLeadsForExecution(normalizedLeads);
 
   const selectedLead =
     sortedLeads.find((lead) => lead.id === selectedLeadId) ??
@@ -167,25 +186,6 @@ export default async function CrmPage({
         <KpiCard label="Listings Signed" value={kpis.signed} />
         <KpiCard label="Closed" value={kpis.closed} />
         <KpiCard label="High Priority" value={kpis.highPriority} />
-      </section>
-
-      <section className="rounded-2xl border bg-white p-4">
-        <h2 className="text-lg font-semibold">Daily Execution</h2>
-
-        <div className="mt-3 grid gap-3 md:grid-cols-3">
-          <ExecCard
-            title="Respond first"
-            desc="Call overdue and high-priority leads before anything else."
-          />
-          <ExecCard
-            title="Clear follow-ups"
-            desc="Run follow-ups, clear overdue leads, and log every touch."
-          />
-          <ExecCard
-            title="Advance pipeline"
-            desc="Move pricing, showings, appointments, and contracts forward daily."
-          />
-        </div>
       </section>
 
       <section className="flex flex-wrap items-center gap-3">
@@ -222,15 +222,6 @@ function KpiCard({ label, value }: { label: string; value: number }) {
     <div className="rounded-2xl border p-4">
       <p className="text-sm text-neutral-500">{label}</p>
       <p className="text-2xl font-semibold">{value}</p>
-    </div>
-  );
-}
-
-function ExecCard({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div className="rounded-xl border bg-neutral-50 p-3">
-      <p className="text-sm text-neutral-500">{title}</p>
-      <p className="mt-1 text-sm text-neutral-800">{desc}</p>
     </div>
   );
 }
