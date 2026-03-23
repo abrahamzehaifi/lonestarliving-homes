@@ -15,9 +15,18 @@ type CrmLead = {
   stage: string;
   created_at?: string | null;
   next_follow_up_at?: string | null;
+  last_contacted_at?: string | null;
   priority?: string | null;
   lead_score?: number | null;
   lead_quality?: "priority_a" | "priority_b" | "priority_c" | null;
+
+  full_name: string;
+  property_address: string;
+  motivation: string | null;
+  source_detail?: string | null;
+  channel?: string | null;
+  phone?: string | null;
+  email?: string | null;
 };
 
 async function getSupabase() {
@@ -143,8 +152,7 @@ export default async function CrmPage({
     followUpsDue: sortedLeads.filter(
       (l) => l.next_follow_up_at && l.next_follow_up_at <= today
     ).length,
-    appointments: sortedLeads.filter((l) => l.stage === "appointment_set")
-      .length,
+    appointments: sortedLeads.filter((l) => l.stage === "appointment_set").length,
     signed: sortedLeads.filter((l) => l.stage === "listing_signed").length,
     closed: sortedLeads.filter((l) => l.stage === "closed").length,
     highPriority: sortedLeads.filter((l) => l.priority === "high").length,
