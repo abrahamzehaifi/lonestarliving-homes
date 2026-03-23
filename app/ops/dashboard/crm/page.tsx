@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@supabase/ssr";
 
+import NextBestActionPanel from "@/components/crm/NextBestActionPanel";
 import { CRM_STAGES } from "@/lib/crm/stages";
 import LeadCreateForm from "@/components/crm/LeadCreateForm";
 import PipelineColumn from "@/components/crm/PipelineColumn";
@@ -59,9 +60,11 @@ function leadQualityWeight(lead: CrmLead) {
 
 function isOverdue(value?: string | null) {
   if (!value) return false;
-  const t = new Date(value).getTime();
-  if (Number.isNaN(t)) return false;
-  return t <= Date.now();
+
+  const time = new Date(value).getTime();
+  if (Number.isNaN(time)) return false;
+
+  return time <= Date.now();
 }
 
 function sortLeadsForExecution(leads: CrmLead[]) {
@@ -75,7 +78,8 @@ function sortLeadsForExecution(leads: CrmLead[]) {
     const qualityDiff = leadQualityWeight(b) - leadQualityWeight(a);
     if (qualityDiff !== 0) return qualityDiff;
 
-    const priorityDiff = priorityWeight(b.priority) - priorityWeight(a.priority);
+    const priorityDiff =
+      priorityWeight(b.priority) - priorityWeight(a.priority);
     if (priorityDiff !== 0) return priorityDiff;
 
     const scoreA = typeof a.lead_score === "number" ? a.lead_score : -1;
@@ -133,24 +137,23 @@ export default async function CrmPage({
   if (leadsError) throw new Error(leadsError.message);
   if (activitiesError) throw new Error(activitiesError.message);
 
-  // 🔥 CRITICAL FIX: normalize data (removes undefined)
-  const normalizedLeads: CrmLead[] = (leads ?? []).map((l: any) => ({
-    id: l.id,
-    stage: l.stage,
-    created_at: l.created_at ?? null,
-    next_follow_up_at: l.next_follow_up_at ?? null,
-    last_contacted_at: l.last_contacted_at ?? null,
-    priority: l.priority ?? null,
-    lead_score: l.lead_score ?? null,
-    lead_quality: l.lead_quality ?? null,
+  const normalizedLeads: CrmLead[] = (leads ?? []).map((lead: any) => ({
+    id: lead.id,
+    stage: lead.stage,
+    created_at: lead.created_at ?? null,
+    next_follow_up_at: lead.next_follow_up_at ?? null,
+    last_contacted_at: lead.last_contacted_at ?? null,
+    priority: lead.priority ?? null,
+    lead_score: lead.lead_score ?? null,
+    lead_quality: lead.lead_quality ?? null,
 
-    full_name: l.full_name ?? "",
-    property_address: l.property_address ?? "",
-    motivation: l.motivation ?? null,
-    source_detail: l.source_detail ?? null,
-    channel: l.channel ?? null,
-    phone: l.phone ?? null,
-    email: l.email ?? null,
+    full_name: lead.full_name ?? "",
+    property_address: lead.property_address ?? "",
+    motivation: lead.motivation ?? null,
+    source_detail: lead.source_detail ?? null,
+    channel: lead.channel ?? null,
+    phone: lead.phone ?? null,
+    email: lead.email ?? null,
   }));
 
   const sortedLeads = sortLeadsForExecution(normalizedLeads);
@@ -171,7 +174,8 @@ export default async function CrmPage({
     followUpsDue: sortedLeads.filter(
       (l) => l.next_follow_up_at && l.next_follow_up_at <= today
     ).length,
-    appointments: sortedLeads.filter((l) => l.stage === "appointment_set").length,
+    appointments: sortedLeads.filter((l) => l.stage === "appointment_set")
+      .length,
     signed: sortedLeads.filter((l) => l.stage === "listing_signed").length,
     closed: sortedLeads.filter((l) => l.stage === "closed").length,
     highPriority: sortedLeads.filter((l) => l.priority === "high").length,
@@ -187,6 +191,8 @@ export default async function CrmPage({
         <KpiCard label="Closed" value={kpis.closed} />
         <KpiCard label="High Priority" value={kpis.highPriority} />
       </section>
+
+      <NextBestActionPanel leads={sortedLeads} />
 
       <section className="flex flex-wrap items-center gap-3">
         <RunFollowUpsButton />
