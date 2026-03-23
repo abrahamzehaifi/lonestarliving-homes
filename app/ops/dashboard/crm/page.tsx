@@ -17,6 +17,7 @@ type CrmLead = {
   next_follow_up_at?: string | null;
   priority?: string | null;
   lead_score?: number | null;
+  lead_quality?: "priority_a" | "priority_b" | "priority_c" | null;
 };
 
 async function getSupabase() {
@@ -35,15 +36,39 @@ async function getSupabase() {
 }
 
 function priorityWeight(priority?: string | null) {
-  if (priority === "high") return 2;
-  if (priority === "normal") return 1;
+  if (priority === "high") return 3;
+  if (priority === "normal") return 2;
+  return 1;
+}
+
+function leadQualityWeight(lead: CrmLead) {
+  if (lead.lead_quality === "priority_a") return 3;
+  if (lead.lead_quality === "priority_b") return 2;
+  if (lead.lead_quality === "priority_c") return 1;
   return 0;
+}
+
+function isOverdue(value?: string | null) {
+  if (!value) return false;
+
+  const time = new Date(value).getTime();
+  if (Number.isNaN(time)) return false;
+
+  return time <= Date.now();
 }
 
 function sortLeadsForExecution(leads: CrmLead[]) {
   return [...leads].sort((a, b) => {
-    const priorityDiff =
-      priorityWeight(b.priority) - priorityWeight(a.priority);
+    const aOverdue = isOverdue(a.next_follow_up_at);
+    const bOverdue = isOverdue(b.next_follow_up_at);
+
+    if (aOverdue && !bOverdue) return -1;
+    if (!aOverdue && bOverdue) return 1;
+
+    const qualityDiff = leadQualityWeight(b) - leadQualityWeight(a);
+    if (qualityDiff !== 0) return qualityDiff;
+
+    const priorityDiff = priorityWeight(b.priority) - priorityWeight(a.priority);
     if (priorityDiff !== 0) return priorityDiff;
 
     const scoreA = typeof a.lead_score === "number" ? a.lead_score : -1;
@@ -56,10 +81,12 @@ function sortLeadsForExecution(leads: CrmLead[]) {
     const followUpB = b.next_follow_up_at
       ? new Date(b.next_follow_up_at).getTime()
       : Number.MAX_SAFE_INTEGER;
+
     if (followUpA !== followUpB) return followUpA - followUpB;
 
     const createdA = a.created_at ? new Date(a.created_at).getTime() : 0;
     const createdB = b.created_at ? new Date(b.created_at).getTime() : 0;
+
     return createdB - createdA;
   });
 }
@@ -140,7 +167,7 @@ export default async function CrmPage({
         <div className="mt-3 grid gap-3 md:grid-cols-3">
           <ExecCard
             title="Respond first"
-            desc="Call high-priority leads and active buyers before anything else."
+            desc="Call overdue and high-priority leads before anything else."
           />
           <ExecCard
             title="Clear follow-ups"
