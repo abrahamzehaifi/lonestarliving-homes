@@ -1,4 +1,5 @@
 import { addActivity, updateLeadDetails } from "@/app/ops/dashboard/crm/actions";
+import OutcomeTrackingPanel from "@/components/crm/OutcomeTrackingPanel";
 
 type Lead = {
   id: string;
@@ -8,7 +9,7 @@ type Lead = {
   property_address: string;
   source: string;
   stage: string;
-  motivation: string;
+  motivation: string | null;
   timeline: string | null;
 
   price_expectation: number | null;
@@ -19,11 +20,14 @@ type Lead = {
   cma_notes: string | null;
   next_follow_up_at: string | null;
 
-  // NEW (from intake system)
   priority?: string | null;
   lead_score?: number | null;
   source_detail?: string | null;
   channel?: string | null;
+
+  last_outcome?: string | null;
+  last_outcome_at?: string | null;
+  outcome_notes?: string | null;
 };
 
 type Activity = {
@@ -53,11 +57,41 @@ function PriorityBadge({ priority }: { priority?: string | null }) {
 
 function formatDate(value: string | null) {
   if (!value) return "—";
+
   try {
     return new Date(value).toLocaleString();
   } catch {
     return value;
   }
+}
+
+function toDateTimeLocal(value: string | null) {
+  if (!value) return "";
+
+  try {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+  } catch {
+    return "";
+  }
+}
+
+function FollowUpStatus({ value }: { value: string | null }) {
+  if (!value) return null;
+
+  const due = new Date(value);
+  if (Number.isNaN(due.getTime())) return null;
+
+  const overdue = due.getTime() < Date.now();
+
+  return (
+    <p className={`mt-1 text-xs ${overdue ? "text-red-600" : "text-neutral-500"}`}>
+      {overdue ? "Overdue — act now" : "Upcoming"}
+    </p>
+  );
 }
 
 export default function LeadDetailPanel({
@@ -79,9 +113,8 @@ export default function LeadDetailPanel({
 
   return (
     <aside className="space-y-4">
-      {/* TOP CARD — IDENTITY + PRIORITY */}
       <section className="rounded-2xl border p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">{lead.full_name}</h2>
           <PriorityBadge priority={lead.priority} />
         </div>
@@ -96,22 +129,19 @@ export default function LeadDetailPanel({
           <p>Stage: {lead.stage}</p>
         </div>
 
-        {/* ATTRIBUTION (CRITICAL) */}
         <div className="mt-4 rounded-xl bg-neutral-50 p-3 text-sm">
           <p className="font-medium">Lead Source</p>
           <p className="text-neutral-600">
-            {lead.source_detail || "—"} {lead.channel ? `· ${lead.channel}` : ""}
+            {lead.source_detail || "—"}
+            {lead.channel ? ` · ${lead.channel}` : ""}
           </p>
 
-          {typeof lead.lead_score === "number" && (
-            <p className="mt-1 text-neutral-600">
-              Score: {lead.lead_score}
-            </p>
-          )}
+          {typeof lead.lead_score === "number" ? (
+            <p className="mt-1 text-neutral-600">Score: {lead.lead_score}</p>
+          ) : null}
         </div>
       </section>
 
-      {/* EXECUTION — FOLLOW UP */}
       <section className="rounded-2xl border p-4">
         <h3 className="mb-2 font-semibold">Next Action</h3>
 
@@ -119,16 +149,11 @@ export default function LeadDetailPanel({
           Follow-up: {formatDate(lead.next_follow_up_at)}
         </p>
 
-        {lead.next_follow_up_at && (
-          <p className="mt-1 text-xs text-neutral-500">
-            {new Date(lead.next_follow_up_at) < new Date()
-              ? "⚠️ Overdue — act now"
-              : "Upcoming"}
-          </p>
-        )}
+        <FollowUpStatus value={lead.next_follow_up_at} />
       </section>
 
-      {/* DEAL STRATEGY */}
+      <OutcomeTrackingPanel lead={lead} />
+
       <section className="rounded-2xl border p-4">
         <h3 className="mb-3 font-semibold">Deal Strategy</h3>
 
@@ -191,11 +216,7 @@ export default function LeadDetailPanel({
           <input
             name="next_follow_up_at"
             type="datetime-local"
-            defaultValue={
-              lead.next_follow_up_at
-                ? new Date(lead.next_follow_up_at).toISOString().slice(0, 16)
-                : ""
-            }
+            defaultValue={toDateTimeLocal(lead.next_follow_up_at)}
             className="w-full rounded-xl border px-3 py-2"
           />
 
@@ -205,7 +226,6 @@ export default function LeadDetailPanel({
         </form>
       </section>
 
-      {/* ACTIVITY INPUT */}
       <section className="rounded-2xl border p-4">
         <h3 className="mb-3 font-semibold">Log Activity</h3>
 
@@ -235,7 +255,6 @@ export default function LeadDetailPanel({
         </form>
       </section>
 
-      {/* TIMELINE */}
       <section className="rounded-2xl border p-4">
         <h3 className="mb-3 font-semibold">Timeline</h3>
 
@@ -245,7 +264,7 @@ export default function LeadDetailPanel({
           ) : (
             activities.map((activity) => (
               <div key={activity.id} className="rounded-xl border p-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3">
                   <p className="text-xs font-medium uppercase">
                     {activity.activity_type}
                   </p>
@@ -253,6 +272,7 @@ export default function LeadDetailPanel({
                     {new Date(activity.created_at).toLocaleString()}
                   </p>
                 </div>
+
                 <p className="mt-2 text-sm text-neutral-700">
                   {activity.content}
                 </p>
