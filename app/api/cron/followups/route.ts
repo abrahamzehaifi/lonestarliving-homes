@@ -33,10 +33,13 @@ async function sendTelegramNotification(message: string) {
   const chatId = process.env.TELEGRAM_CHAT_ID;
 
   if (!token || !chatId) {
-    return { ok: false, skipped: true };
+    return {
+      ok: false as const,
+      skipped: true as const,
+      error: "Missing Telegram env vars",
+    };
   }
 
-  // Telegram hard limit ≈ 4096 chars
   const safeMessage = message.slice(0, 3800);
 
   try {
@@ -49,30 +52,41 @@ async function sendTelegramNotification(message: string) {
       }),
     });
 
-    return { ok: res.ok };
-  } catch {
-    return { ok: false };
+    if (!res.ok) {
+      const text = await res.text();
+      return {
+        ok: false as const,
+        skipped: false as const,
+        error: text,
+      };
+    }
+
+    return { ok: true as const, skipped: false as const };
+  } catch (error) {
+    return {
+      ok: false as const,
+      skipped: false as const,
+      error: error instanceof Error ? error.message : "Telegram request failed",
+    };
   }
 }
 
 export async function GET(req: Request) {
-  // 🔐 Auth
   const authHeader = req.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ ok: false }, { status: 401 });
+    return NextResponse.json(
+      { ok: false, where: "auth", error: "Unauthorized" },
+      { status: 401 }
+    );
   }
 
-  const supabase = createSupabaseServiceClient();
-  const now = new Date().toISOString();
-
-  // ⏱️ HARD LIMIT runtime (prevents hanging builds)
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
-
   try {
-    const { data: leads, error } = await supabase
+    const supabase = createSupabaseServiceClient();
+    const now = new Date().toISOString();
+
+    const { data: leads, error: leadsError } = await supabase
       .from("crm_leads")
       .select(
         "id, user_id, full_name, stage, next_follow_up_at, priority, lead_score, source_detail, channel"
@@ -82,66 +96,110 @@ export async function GET(req: Request) {
       .order("next_follow_up_at", { ascending: true })
       .limit(50);
 
-    if (error) {
-      return NextResponse.json({ ok: false }, { status: 500 });
+    if (leadsError) {
+      console.error("cron followups leads query failed:", leadsError);
+      return NextResponse.json(
+        {
+          ok: false,
+          where: "crm_leads_query",
+          error: leadsError.message,
+          details: leadsError,
+        },
+        { status: 500 }
+      );
     }
 
     const dueLeads = ((leads ?? []) as DueLead[]).filter(
-      (l) => l.stage !== "closed"
+      (lead) => lead.stage !== "closed"
     );
 
     if (dueLeads.length === 0) {
-      return NextResponse.json({ ok: true, dueCount: 0 });
+      return NextResponse.json({
+        ok: true,
+        dueCount: 0,
+        message: "No due follow-ups.",
+      });
     }
 
-    const high = dueLeads.filter((l) => l.priority === "high");
-    const normal = dueLeads.filter((l) => l.priority !== "high");
+    const high = dueLeads.filter((lead) => lead.priority === "high");
+    const normal = dueLeads.filter((lead) => lead.priority !== "high");
 
     const lines: string[] = [];
-
     lines.push(`Follow-ups due: ${dueLeads.length}`);
     lines.push("");
 
-    if (high.length) {
+    if (high.length > 0) {
       lines.push("High Priority");
-      high.forEach((l) => {
-        lines.push(`• ${l.full_name || "Lead"}`);
-        lines.push(`  Score: ${l.lead_score ?? "-"}`);
-        lines.push(`  Stage: ${l.stage ?? "-"}`);
-        lines.push(`  Due: ${formatDateTime(l.next_follow_up_at)}`);
+      for (const lead of high) {
+        lines.push(`• ${lead.full_name || "Lead"}`);
+        lines.push(`  Score: ${lead.lead_score ?? "-"}`);
+        lines.push(`  Stage: ${lead.stage ?? "-"}`);
+        lines.push(`  Due: ${formatDateTime(lead.next_follow_up_at)}`);
         lines.push("");
-      });
+      }
     }
 
-    if (normal.length) {
+    if (normal.length > 0) {
       lines.push("Standard");
-      normal.forEach((l) => {
-        lines.push(`• ${l.full_name || "Lead"}`);
-        lines.push(`  Stage: ${l.stage ?? "-"}`);
+      for (const lead of normal) {
+        lines.push(`• ${lead.full_name || "Lead"}`);
+        lines.push(`  Stage: ${lead.stage ?? "-"}`);
         lines.push("");
-      });
+      }
     }
 
-    await sendTelegramNotification(lines.join("\n"));
+    const telegram = await sendTelegramNotification(lines.join("\n"));
 
-    // 🧠 Insert activity (lightweight, no spam duplication risk)
-    await supabase.from("crm_activities").insert(
-      dueLeads.map((l) => ({
-        lead_id: l.id,
-        user_id: l.user_id,
+    if (!telegram.ok && !telegram.skipped) {
+      console.error("cron followups telegram failed:", telegram.error);
+      return NextResponse.json(
+        {
+          ok: false,
+          where: "telegram",
+          error: telegram.error,
+        },
+        { status: 500 }
+      );
+    }
+
+    const { error: activityError } = await supabase.from("crm_activities").insert(
+      dueLeads.map((lead) => ({
+        lead_id: lead.id,
+        user_id: lead.user_id,
         activity_type: "followup_due",
         content: "Automated follow-up reminder",
       }))
     );
 
+    if (activityError) {
+      console.error("cron followups activity insert failed:", activityError);
+      return NextResponse.json(
+        {
+          ok: false,
+          where: "crm_activities_insert",
+          error: activityError.message,
+          details: activityError,
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
       ok: true,
       dueCount: dueLeads.length,
       highPriority: high.length,
+      telegram,
     });
-  } catch {
-    return NextResponse.json({ ok: false }, { status: 500 });
-  } finally {
-    clearTimeout(timeout);
+  } catch (error) {
+    console.error("cron followups unhandled error:", error);
+
+    return NextResponse.json(
+      {
+        ok: false,
+        where: "unhandled",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
   }
 }
