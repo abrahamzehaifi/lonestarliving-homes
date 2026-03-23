@@ -3,6 +3,14 @@
     {
       "path": "/api/cron/followups",
       "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/followups",
+      "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/cron/followups",
+      "schedule": "0 21 * * *"
     }
   ]
 }
