@@ -6,6 +6,7 @@ import SellerOpportunityPanel from "@/components/crm/SellerOpportunityPanel";
 import DailyCadencePanel from "@/components/crm/DailyCadencePanel";
 import WeeklyScoreboardPanel from "@/components/crm/WeeklyScoreboardPanel";
 import TaskQueuePanel from "@/components/crm/TaskQueuePanel";
+import HotLeadsPanel from "@/components/crm/HotLeadsPanel";
 import NextBestActionPanel from "@/components/crm/NextBestActionPanel";
 import SourcePerformancePanel from "@/components/crm/SourcePerformancePanel";
 import StageConversionPanel from "@/components/crm/StageConversionPanel";
@@ -153,6 +154,8 @@ export default async function CrmPage({
         leads={sortedLeads}
         activities={normalizedActivities}
       />
+
+      <HotLeadsPanel leads={sortedLeads} />
 
       <TaskQueuePanel leads={sortedLeads} />
 
