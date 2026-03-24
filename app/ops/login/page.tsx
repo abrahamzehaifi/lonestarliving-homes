@@ -5,7 +5,12 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      flowType: "pkce",
+    },
+  }
 );
 
 export default function OpsLoginPage() {
@@ -30,9 +35,10 @@ export default function OpsLoginPage() {
 
     if (error) {
       setError(error.message);
-    } else {
-      setSent(true);
+      return;
     }
+
+    setSent(true);
   }
 
   return (
@@ -65,9 +71,7 @@ export default function OpsLoginPage() {
               {loading ? "Sending..." : "Send Magic Link"}
             </button>
 
-            {error && (
-              <p className="text-sm text-red-600">{error}</p>
-            )}
+            {error ? <p className="text-sm text-red-600">{error}</p> : null}
           </form>
         ) : (
           <div className="mt-6 text-sm text-neutral-600">
