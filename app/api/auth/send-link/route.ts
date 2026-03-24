@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { SignJWT } from "jose";
+import { Resend } from "resend";
 
 const encoder = new TextEncoder();
 
@@ -20,7 +21,9 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!email || String(email).trim().toLowerCase() !== allowedEmail.toLowerCase()) {
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+
+    if (!normalizedEmail || normalizedEmail !== allowedEmail.toLowerCase()) {
       return NextResponse.json(
         { ok: false, error: "Unauthorized email." },
         { status: 401 }
@@ -38,36 +41,33 @@ export async function POST(req: Request) {
 
     const verifyUrl = `${baseUrl}/auth/verify?token=${encodeURIComponent(token)}`;
 
-    const emailRes = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: [allowedEmail],
-        subject: "Your LonestarLiving ops access link",
-        html: `
-          <div style="font-family: Arial, sans-serif; line-height: 1.5;">
-            <h2>Operations Login</h2>
-            <p>Click the secure link below to access your CRM dashboard.</p>
-            <p>
-              <a href="${verifyUrl}" style="display:inline-block;padding:12px 18px;background:#111;color:#fff;text-decoration:none;border-radius:8px;">
-                Open CRM
-              </a>
-            </p>
-            <p>This link expires in 15 minutes.</p>
-          </div>
-        `,
-        text: `Open your CRM: ${verifyUrl}\n\nThis link expires in 15 minutes.`,
-      }),
+    const resend = new Resend(resendKey);
+
+    const { error } = await resend.emails.send({
+      from: fromEmail,
+      to: [allowedEmail],
+      subject: "Your LonestarLiving ops access link",
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+          <h2>Operations Login</h2>
+          <p>Click the secure link below to access your CRM dashboard.</p>
+          <p>
+            <a
+              href="${verifyUrl}"
+              style="display:inline-block;padding:12px 18px;background:#111;color:#fff;text-decoration:none;border-radius:8px;"
+            >
+              Open CRM
+            </a>
+          </p>
+          <p>This link expires in 15 minutes.</p>
+        </div>
+      `,
+      text: `Open your CRM: ${verifyUrl}\n\nThis link expires in 15 minutes.`,
     });
 
-    if (!emailRes.ok) {
-      const text = await emailRes.text();
+    if (error) {
       return NextResponse.json(
-        { ok: false, error: `Failed to send email: ${text}` },
+        { ok: false, error: `Failed to send email: ${error.message}` },
         { status: 500 }
       );
     }
