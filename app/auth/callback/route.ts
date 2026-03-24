@@ -3,16 +3,14 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
+  const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
 
   if (!code) {
-    return NextResponse.redirect(
-      new URL("/ops/login?error=missing_code", request.url)
-    );
+    return NextResponse.redirect(new URL("/ops/login?error=missing_code", origin));
   }
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,17 +19,21 @@ export async function GET(request: Request) {
       cookies: {
         getAll: () => cookieStore.getAll(),
         setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          );
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
         },
       },
     }
   );
 
-  await supabase.auth.exchangeCodeForSession(code);
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-  return NextResponse.redirect(
-    new URL("/ops/dashboard/crm", request.url)
-  );
+  if (error) {
+    return NextResponse.redirect(
+      new URL(`/ops/login?error=${encodeURIComponent(error.message)}`, origin)
+    );
+  }
+
+  return NextResponse.redirect(new URL("/ops/dashboard/crm", origin));
 }
