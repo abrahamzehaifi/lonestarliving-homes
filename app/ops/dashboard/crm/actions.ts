@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { CRM_STAGE_OPTIONS } from "@/lib/crm/stages";
@@ -19,16 +18,6 @@ async function getSupabase() {
       },
     }
   );
-}
-
-async function getUserId() {
-  const supabase = await getSupabase();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
-  return { supabase, userId: user.id };
 }
 
 function getNextFollowUpByStage(stage: string, priority?: string | null) {
@@ -57,12 +46,8 @@ function getNextFollowUpByStage(stage: string, priority?: string | null) {
 }
 
 function cleanPriority(value: FormDataEntryValue | null): string | null {
-  const x = String(value || "")
-    .trim()
-    .toLowerCase();
-
-  if (!x) return null;
-  return x;
+  const x = String(value || "").trim().toLowerCase();
+  return x || null;
 }
 
 function cleanNumber(value: FormDataEntryValue | null): number | null {
@@ -74,7 +59,7 @@ function cleanNumber(value: FormDataEntryValue | null): number | null {
 }
 
 export async function createLead(formData: FormData) {
-  const { supabase, userId } = await getUserId();
+  const supabase = await getSupabase();
 
   const full_name = String(formData.get("full_name") || "").trim();
   const property_address = String(formData.get("property_address") || "").trim();
@@ -85,7 +70,8 @@ export async function createLead(formData: FormData) {
 
   const priority = cleanPriority(formData.get("priority")) || "normal";
   const lead_score = cleanNumber(formData.get("lead_score"));
-  const source_detail = String(formData.get("source_detail") || "").trim() || null;
+  const source_detail =
+    String(formData.get("source_detail") || "").trim() || null;
   const channel = String(formData.get("channel") || "").trim() || null;
 
   if (!full_name || !property_address) {
@@ -96,7 +82,6 @@ export async function createLead(formData: FormData) {
   const next_follow_up_at = getNextFollowUpByStage(stage, priority);
 
   const { error } = await supabase.from("crm_leads").insert({
-    user_id: userId,
     full_name,
     property_address,
     phone,
@@ -117,10 +102,10 @@ export async function createLead(formData: FormData) {
 }
 
 export async function updateLeadStage(formData: FormData) {
-  const { supabase, userId } = await getUserId();
+  const supabase = await getSupabase();
 
-  const id = String(formData.get("id") || "");
-  const stage = String(formData.get("stage") || "");
+  const id = String(formData.get("id") || "").trim();
+  const stage = String(formData.get("stage") || "").trim();
 
   if (!id || !CRM_STAGE_OPTIONS.has(stage as never)) {
     throw new Error("Invalid stage update.");
@@ -130,7 +115,6 @@ export async function updateLeadStage(formData: FormData) {
     .from("crm_leads")
     .select("priority")
     .eq("id", id)
-    .eq("user_id", userId)
     .single();
 
   if (fetchError) throw new Error(fetchError.message);
@@ -147,8 +131,7 @@ export async function updateLeadStage(formData: FormData) {
       last_contacted_at: new Date().toISOString(),
       next_follow_up_at,
     })
-    .eq("id", id)
-    .eq("user_id", userId);
+    .eq("id", id);
 
   if (error) throw new Error(error.message);
 
@@ -156,9 +139,9 @@ export async function updateLeadStage(formData: FormData) {
 }
 
 export async function updateLeadDetails(formData: FormData) {
-  const { supabase, userId } = await getUserId();
+  const supabase = await getSupabase();
 
-  const id = String(formData.get("id") || "");
+  const id = String(formData.get("id") || "").trim();
   if (!id) throw new Error("Missing lead id.");
 
   const payload = {
@@ -176,8 +159,7 @@ export async function updateLeadDetails(formData: FormData) {
   const { error } = await supabase
     .from("crm_leads")
     .update(payload)
-    .eq("id", id)
-    .eq("user_id", userId);
+    .eq("id", id);
 
   if (error) throw new Error(error.message);
 
@@ -185,10 +167,10 @@ export async function updateLeadDetails(formData: FormData) {
 }
 
 export async function addActivity(formData: FormData) {
-  const { supabase, userId } = await getUserId();
+  const supabase = await getSupabase();
 
-  const lead_id = String(formData.get("lead_id") || "");
-  const activity_type = String(formData.get("activity_type") || "note");
+  const lead_id = String(formData.get("lead_id") || "").trim();
+  const activity_type = String(formData.get("activity_type") || "note").trim();
   const content = String(formData.get("content") || "").trim();
 
   if (!lead_id || !content) {
@@ -197,7 +179,6 @@ export async function addActivity(formData: FormData) {
 
   const { error } = await supabase.from("crm_activities").insert({
     lead_id,
-    user_id: userId,
     activity_type,
     content,
   });
