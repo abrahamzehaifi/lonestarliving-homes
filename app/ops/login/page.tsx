@@ -1,44 +1,45 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    auth: {
-      flowType: "pkce",
-    },
-  }
-);
 
 export default function OpsLoginPage() {
-  const [email, setEmail] = useState("");
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState("zehaifirealty@gmail.com");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleLogin(e: React.FormEvent) {
+  const urlError = searchParams.get("error");
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    try {
+      const res = await fetch("/api/auth/send-link", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
 
-    setLoading(false);
+      const data = await res.json();
 
-    if (error) {
-      setError(error.message);
-      return;
+      if (!res.ok || !data.ok) {
+        setError(data.error || "Failed to send access link.");
+        setLoading(false);
+        return;
+      }
+
+      setSent(true);
+      setLoading(false);
+    } catch {
+      setError("Something went wrong. Try again.");
+      setLoading(false);
     }
-
-    setSent(true);
   }
 
   return (
@@ -52,8 +53,12 @@ export default function OpsLoginPage() {
           Operations Login
         </h1>
 
+        <p className="mt-2 text-sm text-neutral-600">
+          Secure email link access for the private CRM and dashboard.
+        </p>
+
         {!sent ? (
-          <form onSubmit={handleLogin} className="mt-6 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <input
               type="email"
               required
@@ -68,14 +73,19 @@ export default function OpsLoginPage() {
               disabled={loading}
               className="w-full rounded-lg bg-black py-2 text-sm font-medium text-white"
             >
-              {loading ? "Sending..." : "Send Magic Link"}
+              {loading ? "Sending..." : "Send Access Link"}
             </button>
 
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            {!error && urlError ? (
+              <p className="text-sm text-red-600">
+                Login link expired or invalid. Request a new one.
+              </p>
+            ) : null}
           </form>
         ) : (
-          <div className="mt-6 text-sm text-neutral-600">
-            Check your email and click the login link.
+          <div className="mt-6 rounded-xl border bg-neutral-50 p-4 text-sm text-neutral-700">
+            Check your email and click the secure access link.
           </div>
         )}
       </div>
