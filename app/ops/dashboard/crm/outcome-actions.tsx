@@ -1,9 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 type Outcome =
   | "no_answer"
@@ -27,17 +26,6 @@ async function getSupabase() {
   );
 }
 
-async function getUserContext() {
-  const supabase = await getSupabase();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
-
-  return { supabase, userId: user.id };
-}
-
 function nextFollowUpFromOutcome(outcome: Outcome) {
   const now = new Date();
 
@@ -57,15 +45,22 @@ function nextFollowUpFromOutcome(outcome: Outcome) {
   if (outcome === "spoke") return addDays(2);
   if (outcome === "interested") return addHours(24);
   if (outcome === "appointment_set") return addDays(1);
-  return null; // lost
+  return null;
 }
 
 function stageFromOutcome(currentStage: string, outcome: Outcome) {
   if (outcome === "appointment_set") return "appointment_set";
   if (outcome === "lost") return "lost";
-  if (currentStage === "new_lead" && (outcome === "no_answer" || outcome === "spoke" || outcome === "interested")) {
+
+  if (
+    currentStage === "new_lead" &&
+    (outcome === "no_answer" ||
+      outcome === "spoke" ||
+      outcome === "interested")
+  ) {
     return "contacted";
   }
+
   return currentStage;
 }
 
@@ -78,7 +73,7 @@ function labelFromOutcome(outcome: Outcome) {
 }
 
 export async function saveLeadOutcome(formData: FormData) {
-  const { supabase, userId } = await getUserContext();
+  const supabase = await getSupabase();
 
   const leadId = String(formData.get("leadId") || "").trim();
   const outcome = String(formData.get("outcome") || "").trim() as Outcome;
@@ -100,9 +95,8 @@ export async function saveLeadOutcome(formData: FormData) {
 
   const { data: lead, error: leadError } = await supabase
     .from("crm_leads")
-    .select("id, user_id, stage")
+    .select("id, stage")
     .eq("id", leadId)
-    .eq("user_id", userId)
     .single();
 
   if (leadError || !lead) {
@@ -123,8 +117,7 @@ export async function saveLeadOutcome(formData: FormData) {
       last_outcome_at: nowIso,
       outcome_notes: notes || null,
     })
-    .eq("id", leadId)
-    .eq("user_id", userId);
+    .eq("id", leadId);
 
   if (updateError) throw new Error(updateError.message);
 
@@ -138,7 +131,6 @@ export async function saveLeadOutcome(formData: FormData) {
 
   const { error: activityError } = await supabase.from("crm_activities").insert({
     lead_id: leadId,
-    user_id: userId,
     activity_type: "outcome",
     content: activityText,
   });
