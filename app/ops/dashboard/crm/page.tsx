@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { createServerClient } from "@supabase/ssr";
 
 import SellerOpportunityPanel from "@/components/crm/SellerOpportunityPanel";
@@ -64,11 +63,8 @@ async function getSupabase() {
 
 function isOverdue(value?: string | null) {
   if (!value) return false;
-
   const time = new Date(value).getTime();
-  if (Number.isNaN(time)) return false;
-
-  return time <= Date.now();
+  return !Number.isNaN(time) && time <= Date.now();
 }
 
 function sortLeadsForExecution(leads: CrmLead[]) {
@@ -90,17 +86,11 @@ export default async function CrmPage({
 }) {
   const supabase = await getSupabase();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
-
   const { lead: selectedLeadId } = await searchParams;
 
   const [{ data: leads }, { data: activities }] = await Promise.all([
-    supabase.from("crm_leads").select("*").eq("user_id", user.id),
-    supabase.from("crm_activities").select("*").eq("user_id", user.id),
+    supabase.from("crm_leads").select("*"),
+    supabase.from("crm_activities").select("*"),
   ]);
 
   const normalizedLeads: CrmLead[] = (leads ?? []).map((l: any) => ({
@@ -145,34 +135,17 @@ export default async function CrmPage({
 
   return (
     <main className="space-y-6 p-6">
-      <DailyCadencePanel
-        leads={sortedLeads}
-        activities={normalizedActivities}
-      />
-
-      <WeeklyScoreboardPanel
-        leads={sortedLeads}
-        activities={normalizedActivities}
-      />
-
+      <DailyCadencePanel leads={sortedLeads} activities={normalizedActivities} />
+      <WeeklyScoreboardPanel leads={sortedLeads} activities={normalizedActivities} />
       <HotLeadsPanel leads={sortedLeads} />
-
       <TaskQueuePanel leads={sortedLeads} />
-
       <SellerOpportunityPanel leads={sortedLeads} />
-
       <NextBestActionPanel leads={sortedLeads} />
-
       <SourcePerformancePanel leads={sortedLeads} />
-
       <StageConversionPanel leads={sortedLeads} />
-
       <StaleLeadsPanel leads={sortedLeads} />
 
-      <section className="flex flex-wrap gap-3">
-        <RunFollowUpsButton />
-      </section>
-
+      <RunFollowUpsButton />
       <LeadCreateForm />
 
       <section className="grid gap-6 xl:grid-cols-[1.6fr_.9fr]">
