@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@supabase/ssr";
 
+import SellerOpportunityPanel from "@/components/crm/SellerOpportunityPanel";
 import DailyCadencePanel from "@/components/crm/DailyCadencePanel";
 import WeeklyScoreboardPanel from "@/components/crm/WeeklyScoreboardPanel";
 import TaskQueuePanel from "@/components/crm/TaskQueuePanel";
@@ -62,8 +63,10 @@ async function getSupabase() {
 
 function isOverdue(value?: string | null) {
   if (!value) return false;
+
   const time = new Date(value).getTime();
   if (Number.isNaN(time)) return false;
+
   return time <= Date.now();
 }
 
@@ -94,10 +97,7 @@ export default async function CrmPage({
 
   const { lead: selectedLeadId } = await searchParams;
 
-  const [
-    { data: leads },
-    { data: activities },
-  ] = await Promise.all([
+  const [{ data: leads }, { data: activities }] = await Promise.all([
     supabase.from("crm_leads").select("*").eq("user_id", user.id),
     supabase.from("crm_activities").select("*").eq("user_id", user.id),
   ]);
@@ -155,6 +155,8 @@ export default async function CrmPage({
       />
 
       <TaskQueuePanel leads={sortedLeads} />
+
+      <SellerOpportunityPanel leads={sortedLeads} />
 
       <NextBestActionPanel leads={sortedLeads} />
 
