@@ -1,16 +1,12 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 export default function OpsLoginPage() {
-  const searchParams = useSearchParams();
   const [email, setEmail] = useState("zehaifirealty@gmail.com");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const urlError = searchParams.get("error");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,7 +33,7 @@ export default function OpsLoginPage() {
       setSent(true);
       setLoading(false);
     } catch {
-      setError("Something went wrong. Try again.");
+      setError("Something went wrong.");
       setLoading(false);
     }
   }
@@ -53,40 +49,30 @@ export default function OpsLoginPage() {
           Operations Login
         </h1>
 
-        <p className="mt-2 text-sm text-neutral-600">
-          Secure email link access for the private CRM and dashboard.
-        </p>
-
         {!sent ? (
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <input
               type="email"
               required
-              placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2 text-sm"
+              className="w-full rounded-lg border px-3 py-2"
             />
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-black py-2 text-sm font-medium text-white"
+              className="w-full rounded-lg bg-black py-2 text-white"
             >
               {loading ? "Sending..." : "Send Access Link"}
             </button>
 
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
-            {!error && urlError ? (
-              <p className="text-sm text-red-600">
-                Login link expired or invalid. Request a new one.
-              </p>
-            ) : null}
+            {error && <p className="text-red-600 text-sm">{error}</p>}
           </form>
         ) : (
-          <div className="mt-6 rounded-xl border bg-neutral-50 p-4 text-sm text-neutral-700">
-            Check your email and click the secure access link.
-          </div>
+          <p className="mt-6 text-sm text-neutral-600">
+            Check your email and click the access link.
+          </p>
         )}
       </div>
     </main>
