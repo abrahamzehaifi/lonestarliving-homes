@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@supabase/ssr";
 
+import DailyCadencePanel from "@/components/crm/DailyCadencePanel";
 import NextBestActionPanel from "@/components/crm/NextBestActionPanel";
 import SourcePerformancePanel from "@/components/crm/SourcePerformancePanel";
 import StageConversionPanel from "@/components/crm/StageConversionPanel";
@@ -32,6 +33,14 @@ type CrmLead = {
   channel: string | null;
   phone: string | null;
   email: string | null;
+};
+
+type CrmActivity = {
+  id: string;
+  lead_id: string;
+  activity_type: string;
+  content: string;
+  created_at: string;
 };
 
 async function getSupabase() {
@@ -160,6 +169,16 @@ export default async function CrmPage({
     email: lead.email ?? null,
   }));
 
+  const normalizedActivities: CrmActivity[] = (activities ?? []).map(
+    (activity: any) => ({
+      id: activity.id,
+      lead_id: activity.lead_id,
+      activity_type: activity.activity_type,
+      content: activity.content,
+      created_at: activity.created_at,
+    })
+  );
+
   const sortedLeads = sortLeadsForExecution(normalizedLeads);
 
   const selectedLead =
@@ -168,7 +187,7 @@ export default async function CrmPage({
     null;
 
   const selectedActivities = selectedLead
-    ? (activities ?? []).filter((a) => a.lead_id === selectedLead.id)
+    ? normalizedActivities.filter((a) => a.lead_id === selectedLead.id)
     : [];
 
   const today = new Date().toISOString();
@@ -195,6 +214,8 @@ export default async function CrmPage({
         <KpiCard label="Closed" value={kpis.closed} />
         <KpiCard label="High Priority" value={kpis.highPriority} />
       </section>
+
+      <DailyCadencePanel leads={sortedLeads} activities={normalizedActivities} />
 
       <TaskQueuePanel leads={sortedLeads} />
 
