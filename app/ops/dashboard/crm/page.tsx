@@ -4,6 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 
 import NextBestActionPanel from "@/components/crm/NextBestActionPanel";
 import SourcePerformancePanel from "@/components/crm/SourcePerformancePanel";
+import StageConversionPanel from "@/components/crm/StageConversionPanel";
 import { CRM_STAGES } from "@/lib/crm/stages";
 import LeadCreateForm from "@/components/crm/LeadCreateForm";
 import PipelineColumn from "@/components/crm/PipelineColumn";
@@ -196,6 +197,8 @@ export default async function CrmPage({
       <NextBestActionPanel leads={sortedLeads} />
 
       <SourcePerformancePanel leads={sortedLeads} />
+
+      <StageConversionPanel leads={sortedLeads} />
 
       <section className="flex flex-wrap items-center gap-3">
         <RunFollowUpsButton />
