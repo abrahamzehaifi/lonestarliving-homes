@@ -6,6 +6,7 @@ import NextBestActionPanel from "@/components/crm/NextBestActionPanel";
 import SourcePerformancePanel from "@/components/crm/SourcePerformancePanel";
 import StageConversionPanel from "@/components/crm/StageConversionPanel";
 import StaleLeadsPanel from "@/components/crm/StaleLeadsPanel";
+import TaskQueuePanel from "@/components/crm/TaskQueuePanel";
 import { CRM_STAGES } from "@/lib/crm/stages";
 import LeadCreateForm from "@/components/crm/LeadCreateForm";
 import PipelineColumn from "@/components/crm/PipelineColumn";
@@ -194,6 +195,8 @@ export default async function CrmPage({
         <KpiCard label="Closed" value={kpis.closed} />
         <KpiCard label="High Priority" value={kpis.highPriority} />
       </section>
+
+      <TaskQueuePanel leads={sortedLeads} />
 
       <NextBestActionPanel leads={sortedLeads} />
 
