@@ -24,7 +24,7 @@ async function hasValidOpsSession(req: NextRequest) {
   }
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (!pathname.startsWith("/ops")) {
@@ -34,9 +34,7 @@ export async function middleware(req: NextRequest) {
   if (pathname === "/ops/login") {
     const valid = await hasValidOpsSession(req);
     if (valid) {
-      return NextResponse.redirect(
-        new URL("/ops/dashboard/crm", req.url)
-      );
+      return NextResponse.redirect(new URL("/ops/dashboard/crm", req.url));
     }
     return NextResponse.next();
   }
@@ -44,9 +42,7 @@ export async function middleware(req: NextRequest) {
   const valid = await hasValidOpsSession(req);
 
   if (!valid) {
-    return NextResponse.redirect(
-      new URL("/ops/login", req.url)
-    );
+    return NextResponse.redirect(new URL("/ops/login", req.url));
   }
 
   return NextResponse.next();
