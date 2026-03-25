@@ -63,6 +63,7 @@ async function getSupabase() {
 
 function isOverdue(value?: string | null) {
   if (!value) return false;
+
   const time = new Date(value).getTime();
   return !Number.isNaN(time) && time <= Date.now();
 }
@@ -85,13 +86,24 @@ export default async function CrmPage({
   searchParams: SearchParams;
 }) {
   const supabase = await getSupabase();
-
   const { lead: selectedLeadId } = await searchParams;
 
-  const [{ data: leads }, { data: activities }] = await Promise.all([
-    supabase.from("crm_leads").select("*"),
-    supabase.from("crm_activities").select("*"),
+  const [
+    { data: leads, error: leadsError },
+    { data: activities, error: activitiesError },
+  ] = await Promise.all([
+    supabase
+      .from("crm_leads")
+      .select("*")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("crm_activities")
+      .select("*")
+      .order("created_at", { ascending: false }),
   ]);
+
+  if (leadsError) throw new Error(leadsError.message);
+  if (activitiesError) throw new Error(activitiesError.message);
 
   const normalizedLeads: CrmLead[] = (leads ?? []).map((l: any) => ({
     id: l.id,
@@ -135,17 +147,34 @@ export default async function CrmPage({
 
   return (
     <main className="space-y-6 p-6">
-      <DailyCadencePanel leads={sortedLeads} activities={normalizedActivities} />
-      <WeeklyScoreboardPanel leads={sortedLeads} activities={normalizedActivities} />
+      <DailyCadencePanel
+        leads={sortedLeads}
+        activities={normalizedActivities}
+      />
+
+      <WeeklyScoreboardPanel
+        leads={sortedLeads}
+        activities={normalizedActivities}
+      />
+
       <HotLeadsPanel leads={sortedLeads} />
+
       <TaskQueuePanel leads={sortedLeads} />
+
       <SellerOpportunityPanel leads={sortedLeads} />
+
       <NextBestActionPanel leads={sortedLeads} />
+
       <SourcePerformancePanel leads={sortedLeads} />
+
       <StageConversionPanel leads={sortedLeads} />
+
       <StaleLeadsPanel leads={sortedLeads} />
 
-      <RunFollowUpsButton />
+      <section className="flex flex-wrap gap-3">
+        <RunFollowUpsButton />
+      </section>
+
       <LeadCreateForm />
 
       <section className="grid gap-6 xl:grid-cols-[1.6fr_.9fr]">
