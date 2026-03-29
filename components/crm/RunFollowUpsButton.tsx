@@ -7,6 +7,8 @@ export default function RunFollowUpsButton() {
   const [msg, setMsg] = useState("");
 
   async function run() {
+    if (loading) return;
+
     setLoading(true);
     setMsg("");
 
@@ -15,18 +17,19 @@ export default function RunFollowUpsButton() {
         method: "POST",
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
 
-      if (res.ok) {
-        setMsg(`Processed ${data.processed} leads`);
-      } else {
-        setMsg("Error running follow-ups");
+      if (!res.ok) {
+        setMsg(data?.error || "Error running follow-ups");
+        return;
       }
+
+      setMsg(`Processed ${data?.processed ?? 0} leads`);
     } catch {
       setMsg("Network error");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   return (
@@ -34,12 +37,12 @@ export default function RunFollowUpsButton() {
       <button
         onClick={run}
         disabled={loading}
-        className="rounded-xl bg-black px-4 py-2 text-white"
+        className="rounded-xl bg-black px-4 py-2 text-white disabled:opacity-60"
       >
         {loading ? "Running..." : "Run Follow-Ups"}
       </button>
 
-      {msg && <p className="text-sm text-neutral-600">{msg}</p>}
+      {msg ? <p className="text-sm text-neutral-600">{msg}</p> : null}
     </div>
   );
 }

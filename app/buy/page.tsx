@@ -12,11 +12,11 @@ type BuyPageProps = {
 const copy = {
   en: {
     eyebrow: "Buy",
-    title: "Buy a home in Houston with strategy, not guesswork.",
+    title: "Buy a home in Houston with clarity and strategy.",
     bodyOne:
-      "Buyer representation should be disciplined. The objective is not simply to open doors. The objective is to identify the right property, evaluate the opportunity realistically, structure the offer intelligently, and protect your position throughout the transaction.",
+      "Buying a home should be handled with clear guidance from the start. The goal is not simply to tour properties. The goal is to identify the right fit, understand the market, structure the offer thoughtfully, and protect your position throughout the transaction.",
     bodyTwo:
-      "That includes search strategy, private showings, market analysis, contract guidance, negotiation, option period coordination, and a clear path from contract to closing.",
+      "That includes search planning, private showings, market guidance, contract support, negotiation, option period coordination, and a clear path from contract to closing.",
     primaryCta: "Begin Buyer Intake",
     secondaryCta: "Ask a Question",
     legal:
@@ -24,11 +24,11 @@ const copy = {
   },
   es: {
     eyebrow: "Comprar",
-    title: "Compre una vivienda en Houston con estrategia, no con suposiciones.",
+    title: "Compre una vivienda en Houston con claridad y estrategia.",
     bodyOne:
-      "La representación del comprador debe ser disciplinada. El objetivo no es simplemente abrir puertas. El objetivo es identificar la propiedad correcta, evaluar la oportunidad con realismo, estructurar la oferta con inteligencia y proteger su posición durante toda la transacción.",
+      "La compra de una vivienda debe manejarse con una orientación clara desde el principio. El objetivo no es simplemente visitar propiedades. El objetivo es identificar la opción correcta, entender el mercado, estructurar la oferta con criterio y proteger su posición durante toda la transacción.",
     bodyTwo:
-      "Eso incluye estrategia de búsqueda, visitas privadas, análisis de mercado, orientación contractual, negociación, coordinación del período de opción y un camino claro desde el contrato hasta el cierre.",
+      "Eso incluye planificación de búsqueda, visitas privadas, orientación de mercado, apoyo contractual, negociación, coordinación del período de opción y un camino claro desde el contrato hasta el cierre.",
     primaryCta: "Comenzar solicitud de comprador",
     secondaryCta: "Hacer una pregunta",
     legal:
@@ -36,11 +36,11 @@ const copy = {
   },
   ar: {
     eyebrow: "شراء",
-    title: "اشترِ منزلاً في هيوستن باستراتيجية لا بالتخمين.",
+    title: "اشترِ منزلاً في هيوستن بوضوح واستراتيجية.",
     bodyOne:
-      "يجب أن يكون تمثيل المشتري منضبطًا. الهدف ليس مجرد فتح الأبواب. الهدف هو تحديد العقار المناسب، وتقييم الفرصة بشكل واقعي، وصياغة العرض بذكاء، وحماية موقفك طوال الصفقة.",
+      "يجب أن تتم عملية شراء المنزل بإرشاد واضح من البداية. الهدف ليس مجرد مشاهدة العقارات، بل تحديد الخيار المناسب، وفهم السوق، وصياغة العرض بعناية، وحماية موقفك طوال الصفقة.",
     bodyTwo:
-      "ويشمل ذلك استراتيجية البحث، والجولات الخاصة، وتحليل السوق، والإرشاد التعاقدي، والتفاوض، وتنسيق فترة الخيار، ومسارًا واضحًا من العقد إلى الإغلاق.",
+      "ويشمل ذلك تخطيط البحث، والجولات الخاصة، والإرشاد السوقي، والدعم التعاقدي، والتفاوض، وتنسيق فترة الخيار، ومسارًا واضحًا من العقد إلى الإغلاق.",
     primaryCta: "ابدأ طلب المشتري",
     secondaryCta: "اطرح سؤالاً",
     legal:
@@ -77,7 +77,7 @@ export default async function BuyPage({ searchParams }: BuyPageProps) {
 
       <div className="mt-8 flex flex-wrap gap-3">
         <Link
-          href={`/intake?type=buyer&segment=general&lang=${lang}`}
+          href={`/intake?type=buy&lang=${lang}`}
           className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:opacity-90"
         >
           {t.primaryCta}

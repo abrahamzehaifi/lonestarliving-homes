@@ -32,7 +32,7 @@ const services = [
     type: "landlord",
     src: "services_landlord",
   },
-];
+] as const;
 
 export default function ServicesSection() {
   const searchParams = useSearchParams();

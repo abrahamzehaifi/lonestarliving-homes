@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 
 type Props = {
   leadId: string;
-  currentStatus: string | null;
+  currentStage: string | null;
   commissionActual: number | null;
   outcomeNotes: string | null;
 };
 
 export default function LeadCloseDeal({
   leadId,
-  currentStatus,
+  currentStage,
   commissionActual,
   outcomeNotes,
 }: Props) {
@@ -85,7 +85,7 @@ export default function LeadCloseDeal({
       }
 
       setSuccess(
-        currentStatus === "closed"
+        currentStage === "closed"
           ? "Closed deal details updated."
           : "Deal closed successfully."
       );
@@ -146,7 +146,7 @@ export default function LeadCloseDeal({
         >
           {isPending
             ? "Saving..."
-            : currentStatus === "closed"
+            : currentStage === "closed"
             ? "Update closed deal"
             : "Close deal"}
         </button>

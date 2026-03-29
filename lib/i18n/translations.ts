@@ -16,49 +16,49 @@ export const translations = {
     intake: {
       requestLabel: "Request guidance",
       requestSubtext:
-        "Submit the details that matter most so the next step can be more focused and practical.",
+        "Share the details that matter most so the next step is clear, practical, and relevant to your situation.",
       structuredHelp:
-        "Structured requests help route the next step more efficiently.",
+        "A clear request helps me respond with better guidance and stronger next steps.",
       messages: {
         submitError: "Something went wrong. Please try again.",
         networkError: "Network error. Please try again.",
       },
       headings: {
-        rent: "Begin rental assistance",
+        rent: "Begin rental guidance",
         buy: "Begin buyer consultation",
         sell: "Begin seller consultation",
         landlord: "Begin landlord consultation",
         other: "Begin consultation",
       },
       subtexts: {
-        rent: "Share a few details so your rental request can be reviewed and routed to the most appropriate next step.",
-        buy: "Share a few details so your buyer request can be reviewed and routed to the most appropriate next step.",
-        sell: "Share a few details so your seller request can be reviewed and routed to the most appropriate next step.",
+        rent: "Share a few details about your rental search so I can respond with the most useful next step.",
+        buy: "Share a few details about your purchase goals so I can respond with the most useful next step.",
+        sell: "Share a few details about your property and goals so I can respond with the most useful next step.",
         landlord:
-          "Share a few details so your landlord request can be reviewed and routed to the most appropriate next step.",
+          "Share a few details about your property and leasing goals so I can respond with the most useful next step.",
         other:
-          "Share a few details so your request can be reviewed and routed to the most appropriate next step.",
+          "Share a few details about what you need so I can respond with the most useful next step.",
       },
       sections: {
         contact: {
           title: "Contact details",
-          text: "Start with the basics so a response can be routed correctly.",
+          text: "Start with the basics so I know how to reach you.",
         },
         searchDetails: {
           title: "Search details",
-          text: "Add the practical details that help narrow the search more efficiently.",
+          text: "Add the practical details that help narrow the search and save time.",
         },
         buyerDetails: {
           title: "Buyer details",
-          text: "Provide enough context to assess timing, price range, and next steps.",
+          text: "Provide enough context to understand your goals, price range, and timing.",
         },
         sellerDetails: {
           title: "Seller details",
-          text: "Provide the property details and sale priority so the response can be more useful.",
+          text: "Provide the property details and sale priorities so the response can be more useful.",
         },
         landlordDetails: {
           title: "Landlord details",
-          text: "Share the property basics and leasing readiness so the request can be evaluated properly.",
+          text: "Share the property basics and leasing timeline so the request can be handled more effectively.",
         },
       },
       fields: {
@@ -70,7 +70,6 @@ export const translations = {
         timelinePlaceholder: "Timeline",
         budget: "Monthly budget",
         moveInDate: "Move-in date",
-        screeningProfile: "Screening profile",
         preferredArea: "Preferred area",
         message: "Additional details",
         priceRange: "Target price range",
@@ -95,14 +94,6 @@ export const translations = {
           within30: "Within 30 days",
           oneToThree: "1–3 months",
           threePlus: "3+ months",
-        },
-        screeningProfile: {
-          placeholder: "Screening profile",
-          clean: "Clean / standard screening",
-          noUsCredit: "No U.S. credit history",
-          creditConcern: "Credit concern",
-          brokenLease: "Broken lease",
-          eviction: "Eviction",
         },
         financingStatus: {
           placeholder: "Financing status",
@@ -130,16 +121,6 @@ export const translations = {
           no: "No",
         },
       },
-      rentalGate: {
-        title: "Quick rental screen",
-        text: "Start with these three fields so the rental request can be routed correctly.",
-        continue: "Continue",
-        continueHelp: "Complete these fields first to continue.",
-        completeMessage:
-          "Rental basics captured. Continue with area preferences and any additional notes.",
-        error:
-          "Please complete monthly budget, move-in date, and screening profile.",
-      },
       placeholders: {
         fullName: "Full name",
         email: "name@email.com",
@@ -165,49 +146,49 @@ export const translations = {
     intake: {
       requestLabel: "Solicitar orientación",
       requestSubtext:
-        "Comparta los detalles más importantes para que el siguiente paso sea más claro y práctico.",
+        "Comparta los detalles más importantes para que el siguiente paso sea claro, práctico y relevante para su situación.",
       structuredHelp:
-        "Las solicitudes estructuradas ayudan a dirigir el siguiente paso de forma más eficiente.",
+        "Una solicitud clara me ayuda a responder con mejor orientación y siguientes pasos más útiles.",
       messages: {
         submitError: "Ocurrió un error. Inténtelo de nuevo.",
         networkError: "Error de red. Inténtelo de nuevo.",
       },
       headings: {
-        rent: "Comenzar asistencia de renta",
+        rent: "Comenzar orientación de renta",
         buy: "Comenzar consulta para comprar",
         sell: "Comenzar consulta para vender",
         landlord: "Comenzar consulta para propietario",
         other: "Comenzar consulta",
       },
       subtexts: {
-        rent: "Comparta algunos detalles para que su solicitud de renta sea revisada y dirigida al siguiente paso más adecuado.",
-        buy: "Comparta algunos detalles para que su solicitud de compra sea revisada y dirigida al siguiente paso más adecuado.",
-        sell: "Comparta algunos detalles para que su solicitud de venta sea revisada y dirigida al siguiente paso más adecuado.",
+        rent: "Comparta algunos detalles sobre su búsqueda de renta para que pueda recibir una respuesta más útil.",
+        buy: "Comparta algunos detalles sobre su objetivo de compra para que pueda recibir una respuesta más útil.",
+        sell: "Comparta algunos detalles sobre su propiedad y sus objetivos para que pueda recibir una respuesta más útil.",
         landlord:
-          "Comparta algunos detalles para que su solicitud como propietario sea revisada y dirigida al siguiente paso más adecuado.",
+          "Comparta algunos detalles sobre su propiedad y sus metas de arrendamiento para que pueda recibir una respuesta más útil.",
         other:
-          "Comparta algunos detalles para que su solicitud sea revisada y dirigida al siguiente paso más adecuado.",
+          "Comparta algunos detalles sobre lo que necesita para que pueda recibir una respuesta más útil.",
       },
       sections: {
         contact: {
           title: "Datos de contacto",
-          text: "Comience con lo básico para que la respuesta pueda dirigirse correctamente.",
+          text: "Empiece con lo básico para saber cómo comunicarme con usted.",
         },
         searchDetails: {
           title: "Detalles de búsqueda",
-          text: "Agregue los detalles prácticos que ayuden a reducir la búsqueda de manera más eficiente.",
+          text: "Agregue los detalles prácticos que ayuden a enfocar la búsqueda y ahorrar tiempo.",
         },
         buyerDetails: {
           title: "Detalles del comprador",
-          text: "Proporcione suficiente contexto para evaluar tiempos, rango de precio y siguientes pasos.",
+          text: "Proporcione suficiente contexto para entender sus metas, rango de precio y tiempos.",
         },
         sellerDetails: {
           title: "Detalles del vendedor",
-          text: "Proporcione los detalles de la propiedad y la prioridad de venta para que la respuesta sea más útil.",
+          text: "Comparta los detalles de la propiedad y sus prioridades de venta para que la respuesta sea más útil.",
         },
         landlordDetails: {
           title: "Detalles del propietario",
-          text: "Comparta los datos básicos de la propiedad y su nivel de preparación para rentarse.",
+          text: "Comparta los datos básicos de la propiedad y el tiempo estimado para rentarla.",
         },
       },
       fields: {
@@ -219,7 +200,6 @@ export const translations = {
         timelinePlaceholder: "Plazo",
         budget: "Presupuesto mensual",
         moveInDate: "Fecha de mudanza",
-        screeningProfile: "Perfil de evaluación",
         preferredArea: "Área preferida",
         message: "Detalles adicionales",
         priceRange: "Rango de precio objetivo",
@@ -245,14 +225,6 @@ export const translations = {
           within30: "Dentro de 30 días",
           oneToThree: "1–3 meses",
           threePlus: "Más de 3 meses",
-        },
-        screeningProfile: {
-          placeholder: "Perfil de evaluación",
-          clean: "Evaluación limpia / estándar",
-          noUsCredit: "Sin historial de crédito en EE. UU.",
-          creditConcern: "Problema de crédito",
-          brokenLease: "Contrato roto",
-          eviction: "Desalojo",
         },
         financingStatus: {
           placeholder: "Estado del financiamiento",
@@ -280,16 +252,6 @@ export const translations = {
           no: "No",
         },
       },
-      rentalGate: {
-        title: "Filtro rápido de renta",
-        text: "Comience con estos tres campos para que la solicitud de renta sea dirigida correctamente.",
-        continue: "Continuar",
-        continueHelp: "Complete estos campos primero para continuar.",
-        completeMessage:
-          "Los datos básicos de renta ya fueron capturados. Continúe con las zonas preferidas y cualquier nota adicional.",
-        error:
-          "Complete el presupuesto mensual, la fecha de mudanza y el perfil de evaluación.",
-      },
       placeholders: {
         fullName: "Nombre completo",
         email: "nombre@email.com",
@@ -316,9 +278,9 @@ export const translations = {
     intake: {
       requestLabel: "طلب استشارة",
       requestSubtext:
-        "أرسل التفاصيل الأساسية حتى تكون الخطوة التالية أكثر دقة وتنظيمًا.",
+        "أرسل التفاصيل الأساسية حتى تكون الخطوة التالية واضحة وعملية ومرتبطة باحتياجك.",
       structuredHelp:
-        "الطلبات المنظمة تساعد في توجيه الخطوة التالية بشكل أكثر كفاءة.",
+        "كلما كان الطلب أوضح، كان الرد أكثر فائدة ودقة.",
       messages: {
         submitError: "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
         networkError: "خطأ في الاتصال. يرجى المحاولة مرة أخرى.",
@@ -331,26 +293,26 @@ export const translations = {
         other: "ابدأ الاستشارة",
       },
       subtexts: {
-        rent: "شارك بعض التفاصيل حتى تتم مراجعة طلب الإيجار وتوجيهه إلى الخطوة التالية المناسبة.",
-        buy: "شارك بعض التفاصيل حتى تتم مراجعة طلب الشراء وتوجيهه إلى الخطوة التالية المناسبة.",
-        sell: "شارك بعض التفاصيل حتى تتم مراجعة طلب البيع وتوجيهه إلى الخطوة التالية المناسبة.",
+        rent: "شارك بعض التفاصيل عن بحثك عن الإيجار حتى أتمكن من الرد بالخطوة التالية الأنسب.",
+        buy: "شارك بعض التفاصيل عن هدفك في الشراء حتى أتمكن من الرد بالخطوة التالية الأنسب.",
+        sell: "شارك بعض التفاصيل عن العقار وأهدافك حتى أتمكن من الرد بالخطوة التالية الأنسب.",
         landlord:
-          "شارك بعض التفاصيل حتى تتم مراجعة طلب المالك وتوجيهه إلى الخطوة التالية المناسبة.",
+          "شارك بعض التفاصيل عن العقار وأهداف التأجير حتى أتمكن من الرد بالخطوة التالية الأنسب.",
         other:
-          "شارك بعض التفاصيل حتى تتم مراجعة طلبك وتوجيهه إلى الخطوة التالية المناسبة.",
+          "شارك بعض التفاصيل عمّا تحتاجه حتى أتمكن من الرد بالخطوة التالية الأنسب.",
       },
       sections: {
         contact: {
           title: "بيانات التواصل",
-          text: "ابدأ بالأساسيات حتى يتم توجيه الرد بشكل صحيح.",
+          text: "ابدأ بالأساسيات حتى أعرف أفضل طريقة للتواصل معك.",
         },
         searchDetails: {
           title: "تفاصيل البحث",
-          text: "أضف التفاصيل العملية التي تساعد على تضييق البحث بشكل أكثر كفاءة.",
+          text: "أضف التفاصيل العملية التي تساعد على تضييق البحث وتوفير الوقت.",
         },
         buyerDetails: {
           title: "تفاصيل المشتري",
-          text: "أدخل معلومات كافية لتقييم التوقيت والنطاق السعري والخطوات التالية.",
+          text: "أدخل معلومات كافية لفهم أهدافك والنطاق السعري والتوقيت.",
         },
         sellerDetails: {
           title: "تفاصيل البائع",
@@ -358,7 +320,7 @@ export const translations = {
         },
         landlordDetails: {
           title: "تفاصيل المالك",
-          text: "أدخل أساسيات العقار ومدى جاهزيته للتأجير حتى يتم تقييم الطلب بشكل صحيح.",
+          text: "أدخل أساسيات العقار وتوقيت التأجير حتى تتم متابعة الطلب بشكل أفضل.",
         },
       },
       fields: {
@@ -370,7 +332,6 @@ export const translations = {
         timelinePlaceholder: "الإطار الزمني",
         budget: "الميزانية الشهرية",
         moveInDate: "تاريخ الانتقال",
-        screeningProfile: "ملف التقييم",
         preferredArea: "المنطقة المفضلة",
         message: "تفاصيل إضافية",
         priceRange: "نطاق السعر المستهدف",
@@ -395,14 +356,6 @@ export const translations = {
           within30: "خلال 30 يومًا",
           oneToThree: "1–3 أشهر",
           threePlus: "أكثر من 3 أشهر",
-        },
-        screeningProfile: {
-          placeholder: "ملف التقييم",
-          clean: "تقييم عادي / نظيف",
-          noUsCredit: "لا يوجد سجل ائتماني أمريكي",
-          creditConcern: "مشكلة ائتمانية",
-          brokenLease: "فسخ عقد إيجار",
-          eviction: "إخلاء",
         },
         financingStatus: {
           placeholder: "حالة التمويل",
@@ -429,16 +382,6 @@ export const translations = {
           yes: "نعم",
           no: "لا",
         },
-      },
-      rentalGate: {
-        title: "أساسيات طلب الإيجار",
-        text: "أكمل هذه المعلومات أولًا قبل متابعة بقية الطلب.",
-        continue: "متابعة",
-        continueHelp: "أكمل هذه الحقول أولًا للمتابعة.",
-        completeMessage:
-          "تم حفظ أساسيات طلب الإيجار. يمكنك الآن متابعة المناطق المفضلة وأي ملاحظات إضافية.",
-        error:
-          "يرجى إدخال الميزانية وتاريخ الانتقال وحالة الفحص قبل المتابعة.",
       },
       placeholders: {
         fullName: "الاسم الكامل",

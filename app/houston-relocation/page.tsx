@@ -6,10 +6,9 @@ type Language = "en" | "es" | "ar";
 export default async function HoustonRelocationPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ lang?: string }>;
+  searchParams?: { lang?: string };
 }) {
-  const sp = (await searchParams) ?? {};
-  const lang: Language = await getPreferredSiteLang(sp.lang);
+  const lang: Language = await getPreferredSiteLang(searchParams?.lang);
 
   return <HoustonRelocationClient lang={lang} />;
 }

@@ -148,21 +148,15 @@ export default function HoustonRelocationClient({ lang }: Props) {
           {t.title}
         </h1>
 
-        <p className="mt-6 max-w-3xl text-neutral-600">
-          {t.intro}
-        </p>
+        <p className="mt-6 max-w-3xl text-neutral-600">{t.intro}</p>
 
-        <p className="mt-4 max-w-3xl text-neutral-600">
-          {t.body1}
-        </p>
+        <p className="mt-4 max-w-3xl text-neutral-600">{t.body1}</p>
 
-        <p className="mt-4 max-w-3xl text-neutral-600">
-          {t.body2}
-        </p>
+        <p className="mt-4 max-w-3xl text-neutral-600">{t.body2}</p>
 
-        <div className="mt-10 flex gap-3">
+        <div className="mt-10 flex flex-wrap gap-3">
           <Link
-            href={`/intake?service=tenant&src=relocation&lang=${lang}`}
+            href={`/intake?type=tenant&segment=relocation&lang=${lang}`}
             className="rounded-full bg-black px-5 py-3 text-sm text-white"
           >
             {t.ctaPrimary}
@@ -182,12 +176,16 @@ export default function HoustonRelocationClient({ lang }: Props) {
       </section>
 
       <section className="mx-auto max-w-6xl px-6 pb-20">
+        <h2 className="mb-4 text-xl font-semibold text-neutral-950">
+          {t.areasTitle}
+        </h2>
+
         <div className="grid gap-4 md:grid-cols-3">
           {t.areaLinks.map((item) => (
             <Link
               key={item.href}
-              href={item.href}
-              className="rounded-xl border bg-white p-4 text-sm"
+              href={`${item.href}?lang=${lang}`}
+              className="rounded-xl border bg-white p-4 text-sm transition hover:bg-neutral-50"
             >
               {item.label}
             </Link>

@@ -1,3 +1,5 @@
+export type SupportedLang = "en" | "es" | "ar";
+
 export type LocalizedText =
   | string
   | {
@@ -7,22 +9,24 @@ export type LocalizedText =
     };
 
 export type LocalizedList =
-  | string[]
+  | readonly string[]
   | {
-      en: string[];
-      es?: string[];
-      ar?: string[];
+      en: readonly string[];
+      es?: readonly string[];
+      ar?: readonly string[];
     };
 
+export type LocalizedFaqItem = {
+  question: string;
+  answer: string;
+};
+
 export type LocalizedFaqs =
-  | Array<{
-      question: string;
-      answer: string;
-    }>
+  | readonly LocalizedFaqItem[]
   | {
-      en: Array<{ question: string; answer: string }>;
-      es?: Array<{ question: string; answer: string }>;
-      ar?: Array<{ question: string; answer: string }>;
+      en: readonly LocalizedFaqItem[];
+      es?: readonly LocalizedFaqItem[];
+      ar?: readonly LocalizedFaqItem[];
     };
 
 export type HoustonAreaPage = {
@@ -36,13 +40,13 @@ export type HoustonAreaPage = {
   lifestyle: LocalizedList;
   pricingNote: LocalizedText;
   commute: LocalizedList;
-  zipCodes: string[];
+  zipCodes: readonly string[];
   metaTitle: LocalizedText;
   metaDescription: LocalizedText;
   seoFaqs: LocalizedFaqs;
 };
 
-export const houstonAreaPages: HoustonAreaPage[] = [
+export const houstonAreaPages = [
   {
     slug: "cypress",
     title: { en: "Cypress", es: "Cypress", ar: "سايبريس" },
@@ -1419,8 +1423,18 @@ export const houstonAreaPages: HoustonAreaPage[] = [
       ],
     },
   },
-];
+] as const satisfies readonly HoustonAreaPage[];
 
 export function getHoustonAreaBySlug(slug: string) {
-  return houstonAreaPages.find((page) => page.slug === slug);
+  const normalized = slug.trim().toLowerCase();
+  return houstonAreaPages.find((page) => page.slug === normalized);
+}
+
+export function getAllHoustonAreaSlugs() {
+  return houstonAreaPages.map((page) => page.slug);
+}
+
+export function hasHoustonAreaSlug(slug: string) {
+  const normalized = slug.trim().toLowerCase();
+  return houstonAreaPages.some((page) => page.slug === normalized);
 }

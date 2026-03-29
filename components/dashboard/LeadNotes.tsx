@@ -69,6 +69,8 @@ export default function LeadNotes({ leadId, notes }: Props) {
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
+    if (isPending) return;
+
     const trimmed = note.trim();
 
     if (!trimmed) {
@@ -92,7 +94,7 @@ export default function LeadNotes({ leadId, notes }: Props) {
         }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const data = await res.json().catch(() => null);
 
       if (!res.ok) {
         setError(
@@ -131,7 +133,11 @@ export default function LeadNotes({ leadId, notes }: Props) {
         <textarea
           id="lead-note"
           value={note}
-          onChange={(e) => setNote(e.target.value)}
+          onChange={(e) => {
+            setNote(e.target.value);
+            if (error) setError("");
+            if (success) setSuccess("");
+          }}
           rows={5}
           placeholder="Add internal note..."
           disabled={isPending}

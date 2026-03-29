@@ -3,7 +3,7 @@ import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 type DueLead = {
   id: string;
-  user_id: string;
+  user_id: string | null;
   full_name: string | null;
   stage: string | null;
   next_follow_up_at: string | null;
@@ -110,7 +110,7 @@ export async function GET(req: Request) {
     }
 
     const dueLeads = ((leads ?? []) as DueLead[]).filter(
-      (lead) => lead.stage !== "closed"
+      (lead) => lead.stage !== "closed" && lead.stage !== "lost"
     );
 
     if (dueLeads.length === 0) {
@@ -135,6 +135,8 @@ export async function GET(req: Request) {
         lines.push(`  Score: ${lead.lead_score ?? "-"}`);
         lines.push(`  Stage: ${lead.stage ?? "-"}`);
         lines.push(`  Due: ${formatDateTime(lead.next_follow_up_at)}`);
+        if (lead.source_detail) lines.push(`  Source: ${lead.source_detail}`);
+        if (lead.channel) lines.push(`  Channel: ${lead.channel}`);
         lines.push("");
       }
     }
@@ -144,6 +146,7 @@ export async function GET(req: Request) {
       for (const lead of normal) {
         lines.push(`• ${lead.full_name || "Lead"}`);
         lines.push(`  Stage: ${lead.stage ?? "-"}`);
+        if (lead.source_detail) lines.push(`  Source: ${lead.source_detail}`);
         lines.push("");
       }
     }
@@ -162,14 +165,15 @@ export async function GET(req: Request) {
       );
     }
 
-    const { error: activityError } = await supabase.from("crm_activities").insert(
-      dueLeads.map((lead) => ({
-        lead_id: lead.id,
-        user_id: lead.user_id,
-        activity_type: "followup_due",
-        content: "Automated follow-up reminder",
-      }))
-    );
+    const activityPayload = dueLeads.map((lead) => ({
+      lead_id: lead.id,
+      activity_type: "followup_due",
+      content: "Automated follow-up reminder",
+    }));
+
+    const { error: activityError } = await supabase
+      .from("crm_activities")
+      .insert(activityPayload);
 
     if (activityError) {
       console.error("cron followups activity insert failed:", activityError);

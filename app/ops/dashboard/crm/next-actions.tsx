@@ -31,11 +31,20 @@ function addDays(days: number) {
   return d.toISOString();
 }
 
+function revalidateCrmViews() {
+  revalidatePath("/ops/dashboard/crm");
+  revalidatePath("/ops/leads");
+  revalidatePath("/ops/pipeline");
+  revalidatePath("/ops/dashboard");
+}
+
 export async function markLeadContacted(formData: FormData) {
   const supabase = await getSupabase();
 
   const leadId = String(formData.get("leadId") || "").trim();
-  if (!leadId) throw new Error("Missing lead id.");
+  if (!leadId) {
+    throw new Error("Missing lead id.");
+  }
 
   const { data: lead, error: leadError } = await supabase
     .from("crm_leads")
@@ -43,11 +52,17 @@ export async function markLeadContacted(formData: FormData) {
     .eq("id", leadId)
     .single();
 
-  if (leadError || !lead) {
-    throw new Error("Lead not found.");
+  if (leadError) {
+    console.error("MARK CONTACTED FETCH ERROR:", leadError);
+    return;
   }
 
-  const nextStage = lead.stage === "new_lead" ? "contacted" : lead.stage;
+  if (!lead) {
+    console.error("MARK CONTACTED: lead not found:", leadId);
+    return;
+  }
+
+  const nextStage = lead.stage === "new" ? "contacted" : lead.stage;
 
   const nextFollowUpAt =
     lead.lead_quality === "priority_a" || lead.priority === "high"
@@ -63,7 +78,10 @@ export async function markLeadContacted(formData: FormData) {
     })
     .eq("id", leadId);
 
-  if (updateError) throw new Error(updateError.message);
+  if (updateError) {
+    console.error("MARK CONTACTED UPDATE ERROR:", updateError);
+    return;
+  }
 
   const { error: activityError } = await supabase.from("crm_activities").insert({
     lead_id: leadId,
@@ -72,10 +90,11 @@ export async function markLeadContacted(formData: FormData) {
   });
 
   if (activityError) {
-    throw new Error(activityError.message);
+    console.error("MARK CONTACTED ACTIVITY ERROR:", activityError);
+    return;
   }
 
-  revalidatePath("/ops/dashboard/crm");
+  revalidateCrmViews();
 }
 
 export async function setQuickFollowUp(formData: FormData) {
@@ -84,7 +103,14 @@ export async function setQuickFollowUp(formData: FormData) {
   const leadId = String(formData.get("leadId") || "").trim();
   const followUpType = String(formData.get("followUpType") || "tomorrow").trim();
 
-  if (!leadId) throw new Error("Missing lead id.");
+  if (!leadId) {
+    throw new Error("Missing lead id.");
+  }
+
+  const allowed = new Set(["today_pm", "tomorrow", "two_days", "next_week"]);
+  if (!allowed.has(followUpType)) {
+    throw new Error("Invalid follow-up type.");
+  }
 
   let nextFollowUpAt = addDays(1);
 
@@ -100,7 +126,10 @@ export async function setQuickFollowUp(formData: FormData) {
     })
     .eq("id", leadId);
 
-  if (updateError) throw new Error(updateError.message);
+  if (updateError) {
+    console.error("QUICK FOLLOW-UP UPDATE ERROR:", updateError);
+    return;
+  }
 
   const { error: activityError } = await supabase.from("crm_activities").insert({
     lead_id: leadId,
@@ -109,8 +138,9 @@ export async function setQuickFollowUp(formData: FormData) {
   });
 
   if (activityError) {
-    throw new Error(activityError.message);
+    console.error("QUICK FOLLOW-UP ACTIVITY ERROR:", activityError);
+    return;
   }
 
-  revalidatePath("/ops/dashboard/crm");
+  revalidateCrmViews();
 }

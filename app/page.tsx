@@ -6,9 +6,9 @@ import { getPreferredSiteLang } from "@/lib/i18n/getLangServer";
 type Language = "en" | "es" | "ar";
 
 type HomePageProps = {
-  searchParams?: Promise<{
+  searchParams?: {
     lang?: string;
-  }>;
+  };
 };
 
 const copy = {
@@ -272,8 +272,7 @@ function LightButton({
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
-  const resolvedSearchParams = (await searchParams) ?? {};
-  const lang: Language = await getPreferredSiteLang(resolvedSearchParams.lang);
+  const lang: Language = await getPreferredSiteLang(searchParams?.lang);
   const t = copy[lang];
   const isArabic = lang === "ar";
 
@@ -310,13 +309,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </p>
 
             <div className="mt-10 flex flex-wrap gap-3">
-              <DarkButton href={`/intake?service=tenant&src=home_hero&lang=${lang}`}>
+              <DarkButton href={`/intake?type=tenant&lang=${lang}`}>
                 {t.primaryCta}
               </DarkButton>
               <DarkButton href={`/rent?lang=${lang}`} secondary>
                 {t.secondaryCta}
               </DarkButton>
-              <DarkButton href={`/intake?service=buyer&src=home_hero_buyer&lang=${lang}`} secondary>
+              <DarkButton href={`/intake?type=buy&lang=${lang}`} secondary>
                 {t.buyerCta}
               </DarkButton>
             </div>
@@ -359,10 +358,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </div>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <LightButton href={`/intake?service=tenant&src=home_services&lang=${lang}`}>
+            <LightButton href={`/intake?type=tenant&lang=${lang}`}>
               {t.primaryCta}
             </LightButton>
-            <LightButton href={`/intake?service=buyer&src=home_services_buyer&lang=${lang}`}>
+            <LightButton href={`/intake?type=buy&lang=${lang}`}>
               {t.buyerCta}
             </LightButton>
           </div>
@@ -385,7 +384,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 ))}
               </div>
               <div className="mt-6">
-                <LightButton href={`/intake?service=tenant&src=home_move&lang=${lang}`}>
+                <LightButton href={`/intake?type=tenant&lang=${lang}`}>
                   {t.sectionOneCta}
                 </LightButton>
               </div>
@@ -404,7 +403,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 ))}
               </div>
               <div className="mt-6">
-                <LightButton href={`/intake?service=buyer&src=home_buy_sell&lang=${lang}`}>
+                <LightButton href={`/intake?type=buy&lang=${lang}`}>
                   {t.sectionTwoCta}
                 </LightButton>
               </div>
@@ -427,7 +426,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <LightButton href={`/intake?service=tenant&src=home_final&lang=${lang}`}>
+              <LightButton href={`/intake?type=tenant&lang=${lang}`}>
                 {t.finalPrimary}
               </LightButton>
             </div>

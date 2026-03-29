@@ -12,7 +12,10 @@ async function hasValidOpsSession(req: NextRequest) {
 
     if (!token || !secret || !allowedEmail) return false;
 
-    const { payload } = await jwtVerify(token, encoder.encode(secret));
+    const { payload } = await jwtVerify(token, encoder.encode(secret), {
+      issuer: "lonestarliving.ops",
+      audience: "ops-dashboard",
+    });
 
     return (
       payload.role === "ops" &&
@@ -31,11 +34,13 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname === "/ops/login") {
+  if (pathname === "/ops/login" || pathname === "/ops/verify") {
     const valid = await hasValidOpsSession(req);
-    if (valid) {
+
+    if (pathname === "/ops/login" && valid) {
       return NextResponse.redirect(new URL("/ops/dashboard/crm", req.url));
     }
+
     return NextResponse.next();
   }
 

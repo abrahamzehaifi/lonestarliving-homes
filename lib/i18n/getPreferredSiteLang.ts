@@ -1,10 +1,11 @@
-import { cookies } from "next/headers";
-import { getSiteLang, type SiteLang } from "./getLang";
+function isValidLang(value: string | null | undefined): value is SiteLang {
+  return value === "en" || value === "es" || value === "ar";
+}
 
 export async function getPreferredSiteLang(
   searchParamLang?: string | null
 ): Promise<SiteLang> {
-  if (searchParamLang === "es" || searchParamLang === "ar") {
+  if (isValidLang(searchParamLang)) {
     return searchParamLang;
   }
 

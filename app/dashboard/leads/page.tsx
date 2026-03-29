@@ -3,40 +3,42 @@ import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 type LeadQuality = "priority_a" | "priority_b" | "priority_c";
 
-type LeadRow = {
+type CrmLeadRow = {
   id: string;
-  created_at: string;
-  name: string;
-  email: string;
+  created_at: string | null;
+  full_name: string | null;
+  email: string | null;
   phone: string | null;
-  lead_type: string;
-  status: string | null;
+  property_address: string | null;
+  stage: string | null;
   lead_quality: LeadQuality | string | null;
-  follow_up_at: string | null;
-  next_action: string | null;
+  next_follow_up_at: string | null;
   timeline: string | null;
-  source: string | null;
-  segment: string | null;
-  commission_estimate: number | null;
-  commission_actual: number | null;
+  source_detail: string | null;
+  channel: string | null;
+  priority: string | null;
+  lead_score: number | null;
 };
 
 type DashboardLeadsPageProps = {
   searchParams?: {
-    status?: string;
+    stage?: string;
     quality?: string;
     followup?: string;
   };
 };
 
-const STATUS_ORDER = [
+const STAGE_ORDER = [
   "new",
   "contacted",
-  "qualified",
-  "showing",
-  "application",
+  "conversation",
+  "appointment_set",
+  "appointment_done",
+  "follow_up",
+  "listing_signed",
   "closed",
   "lost",
+  "nurture",
 ] as const;
 
 const QUALITY_ORDER = ["priority_a", "priority_b", "priority_c"] as const;
@@ -63,26 +65,6 @@ function formatDate(value: string | null | undefined) {
   } catch {
     return value ?? "—";
   }
-}
-
-function formatCurrency(value: number | null | undefined) {
-  if (value == null) return "—";
-
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    }).format(value);
-  } catch {
-    return `$${value}`;
-  }
-}
-
-function formatPercent(numerator: number, denominator: number) {
-  if (denominator <= 0) return "—";
-  const value = (numerator / denominator) * 100;
-  return `${Math.round(value)}%`;
 }
 
 function timeAgo(value: string | null | undefined) {
@@ -123,22 +105,28 @@ function labelize(value: string | null | undefined) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function statusPriority(status: string | null) {
-  switch (status) {
+function stagePriority(stage: string | null) {
+  switch (stage) {
     case "new":
       return 0;
     case "contacted":
       return 1;
-    case "qualified":
+    case "conversation":
       return 2;
-    case "showing":
+    case "appointment_set":
       return 3;
-    case "application":
+    case "appointment_done":
       return 4;
-    case "closed":
+    case "follow_up":
       return 5;
-    case "lost":
+    case "listing_signed":
       return 6;
+    case "closed":
+      return 7;
+    case "lost":
+      return 8;
+    case "nurture":
+      return 9;
     default:
       return 99;
   }
@@ -157,22 +145,28 @@ function qualityPriority(quality: string | null) {
   }
 }
 
-function getStatusClasses(status: string | null) {
-  switch (status) {
+function getStageClasses(stage: string | null) {
+  switch (stage) {
     case "new":
       return "bg-blue-50 text-blue-700 ring-blue-100";
     case "contacted":
       return "bg-amber-50 text-amber-700 ring-amber-100";
-    case "qualified":
-      return "bg-emerald-50 text-emerald-700 ring-emerald-100";
-    case "showing":
+    case "conversation":
       return "bg-violet-50 text-violet-700 ring-violet-100";
-    case "application":
+    case "appointment_set":
+      return "bg-emerald-50 text-emerald-700 ring-emerald-100";
+    case "appointment_done":
+      return "bg-green-50 text-green-700 ring-green-100";
+    case "follow_up":
       return "bg-orange-50 text-orange-700 ring-orange-100";
+    case "listing_signed":
+      return "bg-neutral-900 text-white ring-neutral-900/10";
     case "closed":
       return "bg-green-50 text-green-700 ring-green-100";
     case "lost":
       return "bg-neutral-100 text-neutral-600 ring-neutral-200";
+    case "nurture":
+      return "bg-sky-50 text-sky-700 ring-sky-100";
     default:
       return "bg-neutral-100 text-neutral-700 ring-neutral-200";
   }
@@ -191,14 +185,14 @@ function getQualityClasses(quality: string | null) {
   }
 }
 
-function StatusPill({ status }: { status: string | null }) {
+function StagePill({ stage }: { stage: string | null }) {
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getStatusClasses(
-        status
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getStageClasses(
+        stage
       )}`}
     >
-      {labelize(status)}
+      {labelize(stage)}
     </span>
   );
 }
@@ -262,15 +256,13 @@ function SummaryCard({
 }: {
   label: string;
   value: number | string;
-  tone?: "default" | "urgent" | "priority" | "revenue";
+  tone?: "default" | "urgent" | "priority";
 }) {
   const toneClasses =
     tone === "urgent"
       ? "border-red-200 bg-red-50 text-red-700"
       : tone === "priority"
       ? "border-neutral-950/10 bg-neutral-950 text-white"
-      : tone === "revenue"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
       : "border-black/5 bg-white text-neutral-950";
 
   return (
@@ -283,42 +275,11 @@ function SummaryCard({
   );
 }
 
-function QueueCard({
-  label,
-  value,
-  href,
-  tone = "default",
-}: {
-  label: string;
-  value: number;
-  href: string;
-  tone?: "default" | "urgent" | "priority";
-}) {
-  const toneClasses =
-    tone === "urgent"
-      ? "border-red-200 bg-red-50 text-red-700"
-      : tone === "priority"
-      ? "border-neutral-950/10 bg-neutral-950 text-white"
-      : "border-black/5 bg-white text-neutral-950";
-
-  return (
-    <Link
-      href={href}
-      className={`rounded-2xl border p-4 transition hover:border-black/10 ${toneClasses}`}
-    >
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] opacity-80">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
-    </Link>
-  );
-}
-
 function followUpSortPriority(
-  lead: LeadRow,
-  isFollowUpOverdue: (lead: LeadRow) => boolean,
-  isFollowUpToday: (lead: LeadRow) => boolean,
-  isFollowUpScheduled: (lead: LeadRow) => boolean
+  lead: CrmLeadRow,
+  isFollowUpOverdue: (lead: CrmLeadRow) => boolean,
+  isFollowUpToday: (lead: CrmLeadRow) => boolean,
+  isFollowUpScheduled: (lead: CrmLeadRow) => boolean
 ) {
   if (isFollowUpOverdue(lead)) return 0;
   if (isFollowUpToday(lead)) return 1;
@@ -330,16 +291,16 @@ export default async function DashboardLeadsPage({
   searchParams,
 }: DashboardLeadsPageProps) {
   const resolvedSearchParams = searchParams ?? {};
-  const activeStatus = resolvedSearchParams.status?.toLowerCase() ?? "all";
+  const activeStage = resolvedSearchParams.stage?.toLowerCase() ?? "all";
   const activeQuality = resolvedSearchParams.quality?.toLowerCase() ?? "all";
   const activeFollowup = resolvedSearchParams.followup?.toLowerCase() ?? "all";
 
   const supabase = createSupabaseServiceClient();
 
   const { data, error } = await supabase
-    .from("leads")
+    .from("crm_leads")
     .select(
-      "id, created_at, name, email, phone, lead_type, status, lead_quality, follow_up_at, next_action, timeline, source, segment, commission_estimate, commission_actual"
+      "id, created_at, full_name, email, phone, property_address, stage, lead_quality, next_follow_up_at, timeline, source_detail, channel, priority, lead_score"
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -352,32 +313,32 @@ export default async function DashboardLeadsPage({
   tomorrow.setDate(today.getDate() + 1);
   const tomorrowMs = tomorrow.getTime();
 
-  function isClosedOrLost(lead: LeadRow) {
-    return lead.status === "closed" || lead.status === "lost";
+  function isClosedOrLost(lead: CrmLeadRow) {
+    return lead.stage === "closed" || lead.stage === "lost";
   }
 
-  function isFollowUpToday(lead: LeadRow) {
-    if (!lead.follow_up_at || isClosedOrLost(lead)) return false;
-    const time = safeTime(lead.follow_up_at);
+  function isFollowUpToday(lead: CrmLeadRow) {
+    if (!lead.next_follow_up_at || isClosedOrLost(lead)) return false;
+    const time = safeTime(lead.next_follow_up_at);
     if (time == null) return false;
     return time >= todayMs && time < tomorrowMs;
   }
 
-  function isFollowUpOverdue(lead: LeadRow) {
-    if (!lead.follow_up_at || isClosedOrLost(lead)) return false;
-    const time = safeTime(lead.follow_up_at);
+  function isFollowUpOverdue(lead: CrmLeadRow) {
+    if (!lead.next_follow_up_at || isClosedOrLost(lead)) return false;
+    const time = safeTime(lead.next_follow_up_at);
     if (time == null) return false;
     return time < todayMs;
   }
 
-  function isFollowUpScheduled(lead: LeadRow) {
-    if (!lead.follow_up_at || isClosedOrLost(lead)) return false;
-    const time = safeTime(lead.follow_up_at);
+  function isFollowUpScheduled(lead: CrmLeadRow) {
+    if (!lead.next_follow_up_at || isClosedOrLost(lead)) return false;
+    const time = safeTime(lead.next_follow_up_at);
     if (time == null) return false;
     return time >= tomorrowMs;
   }
 
-  const allLeads = ((data ?? []) as LeadRow[]).sort((a, b) => {
+  const allLeads = ((data ?? []) as CrmLeadRow[]).sort((a, b) => {
     const followUpDiff =
       followUpSortPriority(
         a,
@@ -394,8 +355,8 @@ export default async function DashboardLeadsPage({
 
     if (followUpDiff !== 0) return followUpDiff;
 
-    const aFollowUpTime = safeTime(a.follow_up_at);
-    const bFollowUpTime = safeTime(b.follow_up_at);
+    const aFollowUpTime = safeTime(a.next_follow_up_at);
+    const bFollowUpTime = safeTime(b.next_follow_up_at);
 
     if (aFollowUpTime != null && bFollowUpTime != null) {
       const followUpTimeDiff = aFollowUpTime - bFollowUpTime;
@@ -406,8 +367,8 @@ export default async function DashboardLeadsPage({
       return 1;
     }
 
-    const statusDiff = statusPriority(a.status) - statusPriority(b.status);
-    if (statusDiff !== 0) return statusDiff;
+    const stageDiff = stagePriority(a.stage) - stagePriority(b.stage);
+    if (stageDiff !== 0) return stageDiff;
 
     const qualityDiff =
       qualityPriority(a.lead_quality) - qualityPriority(b.lead_quality);
@@ -418,55 +379,29 @@ export default async function DashboardLeadsPage({
 
   const counts = {
     all: allLeads.length,
-    new: allLeads.filter((lead) => lead.status === "new").length,
-    contacted: allLeads.filter((lead) => lead.status === "contacted").length,
-    qualified: allLeads.filter((lead) => lead.status === "qualified").length,
-    showing: allLeads.filter((lead) => lead.status === "showing").length,
-    application: allLeads.filter((lead) => lead.status === "application").length,
-    closed: allLeads.filter((lead) => lead.status === "closed").length,
-    lost: allLeads.filter((lead) => lead.status === "lost").length,
-    priority_a: allLeads.filter((lead) => lead.lead_quality === "priority_a")
-      .length,
-    priority_b: allLeads.filter((lead) => lead.lead_quality === "priority_b")
-      .length,
-    priority_c: allLeads.filter((lead) => lead.lead_quality === "priority_c")
-      .length,
+    new: allLeads.filter((lead) => lead.stage === "new").length,
+    contacted: allLeads.filter((lead) => lead.stage === "contacted").length,
+    conversation: allLeads.filter((lead) => lead.stage === "conversation").length,
+    appointment_set: allLeads.filter((lead) => lead.stage === "appointment_set").length,
+    appointment_done: allLeads.filter((lead) => lead.stage === "appointment_done").length,
+    follow_up: allLeads.filter((lead) => lead.stage === "follow_up").length,
+    listing_signed: allLeads.filter((lead) => lead.stage === "listing_signed").length,
+    closed: allLeads.filter((lead) => lead.stage === "closed").length,
+    lost: allLeads.filter((lead) => lead.stage === "lost").length,
+    nurture: allLeads.filter((lead) => lead.stage === "nurture").length,
+    priority_a: allLeads.filter((lead) => lead.lead_quality === "priority_a").length,
+    priority_b: allLeads.filter((lead) => lead.lead_quality === "priority_b").length,
+    priority_c: allLeads.filter((lead) => lead.lead_quality === "priority_c").length,
     followup_today: allLeads.filter(isFollowUpToday).length,
     followup_overdue: allLeads.filter(isFollowUpOverdue).length,
     followup_scheduled: allLeads.filter(isFollowUpScheduled).length,
   };
 
-  const revenue = {
-    openEstimated: allLeads
-      .filter((lead) => !isClosedOrLost(lead))
-      .reduce((sum, lead) => sum + (lead.commission_estimate ?? 0), 0),
-    qualifiedEstimated: allLeads
-      .filter((lead) => lead.status === "qualified")
-      .reduce((sum, lead) => sum + (lead.commission_estimate ?? 0), 0),
-    showingEstimated: allLeads
-      .filter((lead) => lead.status === "showing")
-      .reduce((sum, lead) => sum + (lead.commission_estimate ?? 0), 0),
-    applicationEstimated: allLeads
-      .filter((lead) => lead.status === "application")
-      .reduce((sum, lead) => sum + (lead.commission_estimate ?? 0), 0),
-    closedActual: allLeads
-      .filter((lead) => lead.status === "closed")
-      .reduce((sum, lead) => sum + (lead.commission_actual ?? 0), 0),
-  };
-
-  const conversion = {
-    newToContacted: formatPercent(counts.contacted, counts.new),
-    contactedToQualified: formatPercent(counts.qualified, counts.contacted),
-    qualifiedToShowing: formatPercent(counts.showing, counts.qualified),
-    showingToApplication: formatPercent(counts.application, counts.showing),
-    applicationToClosed: formatPercent(counts.closed, counts.application),
-  };
-
   const leads = allLeads.filter((lead) => {
-    const matchesStatus =
-      activeStatus === "all"
+    const matchesStage =
+      activeStage === "all"
         ? true
-        : (lead.status ?? "").toLowerCase() === activeStatus;
+        : (lead.stage ?? "").toLowerCase() === activeStage;
 
     const matchesQuality =
       activeQuality === "all"
@@ -483,26 +418,26 @@ export default async function DashboardLeadsPage({
       matchesFollowup = isFollowUpScheduled(lead);
     }
 
-    return matchesStatus && matchesQuality && matchesFollowup;
+    return matchesStage && matchesQuality && matchesFollowup;
   });
 
   function buildFilterHref(next: {
-    status?: string;
+    stage?: string;
     quality?: string;
     followup?: string;
   }) {
-    const status = next.status ?? activeStatus;
+    const stage = next.stage ?? activeStage;
     const quality = next.quality ?? activeQuality;
     const followup = next.followup ?? activeFollowup;
 
     const params = new URLSearchParams();
 
-    if (status !== "all") params.set("status", status);
+    if (stage !== "all") params.set("stage", stage);
     if (quality !== "all") params.set("quality", quality);
     if (followup !== "all") params.set("followup", followup);
 
     const query = params.toString();
-    return query ? `/dashboard/leads?${query}` : "/dashboard/leads";
+    return query ? `/ops/leads?${query}` : "/ops/leads";
   }
 
   return (
@@ -510,17 +445,17 @@ export default async function DashboardLeadsPage({
       <section className="mx-auto max-w-7xl px-6 py-12">
         <div className="mb-8">
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-neutral-500">
-            Dashboard
+            Operations
           </p>
 
           <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-                Leads
+                CRM Leads
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-neutral-600">
-                Internal lead pipeline for LonestarLiving. Prioritize high-fit,
-                time-sensitive, and follow-up-critical opportunities first.
+                Internal CRM lead pipeline. Prioritize high-fit, time-sensitive,
+                and follow-up-critical opportunities first.
               </p>
             </div>
 
@@ -530,10 +465,10 @@ export default async function DashboardLeadsPage({
               </div>
 
               <Link
-                href="/dashboard/leads/new"
+                href="/ops/dashboard/crm"
                 className="inline-flex h-10 items-center justify-center rounded-full bg-neutral-950 px-5 text-sm font-medium text-white transition hover:bg-neutral-800"
               >
-                Add Lead
+                Open CRM
               </Link>
             </div>
           </div>
@@ -541,114 +476,50 @@ export default async function DashboardLeadsPage({
 
         {!error ? (
           <>
-            <div className="mb-6">
-              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                Action queue
-              </p>
-              <div className="grid gap-4 md:grid-cols-4">
-                <QueueCard
-                  label="Overdue Follow Ups"
-                  value={counts.followup_overdue}
-                  href="/dashboard/leads?followup=overdue"
-                  tone="urgent"
-                />
-                <QueueCard
-                  label="Follow Ups Today"
-                  value={counts.followup_today}
-                  href="/dashboard/leads?followup=today"
-                />
-                <QueueCard
-                  label="Priority A Leads"
-                  value={counts.priority_a}
-                  href="/dashboard/leads?quality=priority_a"
-                  tone="priority"
-                />
-                <QueueCard
-                  label="New Leads"
-                  value={counts.new}
-                  href="/dashboard/leads?status=new"
-                />
-              </div>
-            </div>
-
-            <div className="mb-6 grid gap-4 md:grid-cols-5">
+            <div className="mb-6 grid gap-4 md:grid-cols-3">
               <SummaryCard
-                label="Open Estimated Pipeline"
-                value={formatCurrency(revenue.openEstimated)}
-                tone="revenue"
+                label="Overdue Follow Ups"
+                value={counts.followup_overdue}
+                tone="urgent"
               />
               <SummaryCard
-                label="Qualified Est."
-                value={formatCurrency(revenue.qualifiedEstimated)}
-                tone="revenue"
+                label="Follow Ups Today"
+                value={counts.followup_today}
               />
               <SummaryCard
-                label="Showing Est."
-                value={formatCurrency(revenue.showingEstimated)}
-                tone="revenue"
-              />
-              <SummaryCard
-                label="Application Est."
-                value={formatCurrency(revenue.applicationEstimated)}
-                tone="revenue"
-              />
-              <SummaryCard
-                label="Closed Actual Revenue"
-                value={formatCurrency(revenue.closedActual)}
-                tone="revenue"
+                label="Priority A Leads"
+                value={counts.priority_a}
+                tone="priority"
               />
             </div>
 
             <div className="mb-6 grid gap-4 md:grid-cols-6">
               <SummaryCard label="All Leads" value={counts.all} />
               <SummaryCard label="New" value={counts.new} />
-              <SummaryCard label="Qualified" value={counts.qualified} />
-              <SummaryCard label="Priority A" value={counts.priority_a} />
+              <SummaryCard label="Contacted" value={counts.contacted} />
+              <SummaryCard label="Conversation" value={counts.conversation} />
               <SummaryCard label="Closed" value={counts.closed} />
               <SummaryCard label="Lost" value={counts.lost} />
             </div>
 
-            <div className="mb-6 grid gap-4 md:grid-cols-5">
-              <SummaryCard
-                label="New → Contacted"
-                value={conversion.newToContacted}
-              />
-              <SummaryCard
-                label="Contacted → Qualified"
-                value={conversion.contactedToQualified}
-              />
-              <SummaryCard
-                label="Qualified → Showing"
-                value={conversion.qualifiedToShowing}
-              />
-              <SummaryCard
-                label="Showing → Application"
-                value={conversion.showingToApplication}
-              />
-              <SummaryCard
-                label="Application → Closed"
-                value={conversion.applicationToClosed}
-              />
-            </div>
-
             <div className="mb-3">
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                Filter by status
+                Filter by stage
               </p>
               <div className="flex flex-wrap gap-2">
                 <FilterChip
                   label="All"
-                  href={buildFilterHref({ status: "all" })}
-                  active={activeStatus === "all"}
+                  href={buildFilterHref({ stage: "all" })}
+                  active={activeStage === "all"}
                   count={counts.all}
                 />
-                {STATUS_ORDER.map((status) => (
+                {STAGE_ORDER.map((stage) => (
                   <FilterChip
-                    key={status}
-                    label={labelize(status)}
-                    href={buildFilterHref({ status })}
-                    active={activeStatus === status}
-                    count={counts[status]}
+                    key={stage}
+                    label={labelize(stage)}
+                    href={buildFilterHref({ stage })}
+                    active={activeStage === stage}
+                    count={counts[stage]}
                   />
                 ))}
               </div>
@@ -727,16 +598,13 @@ export default async function DashboardLeadsPage({
                       Lead
                     </th>
                     <th className="border-b border-black/5 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">
-                      Type
+                      Property
                     </th>
                     <th className="border-b border-black/5 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">
                       Quality
                     </th>
                     <th className="border-b border-black/5 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">
-                      Status
-                    </th>
-                    <th className="border-b border-black/5 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">
-                      Next Action
+                      Stage
                     </th>
                     <th className="border-b border-black/5 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">
                       Follow Up
@@ -748,13 +616,10 @@ export default async function DashboardLeadsPage({
                       Source
                     </th>
                     <th className="border-b border-black/5 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">
-                      Segment
+                      Priority
                     </th>
                     <th className="border-b border-black/5 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">
-                      Est.
-                    </th>
-                    <th className="border-b border-black/5 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">
-                      Actual
+                      Score
                     </th>
                     <th className="border-b border-black/5 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">
                       Contact
@@ -764,7 +629,7 @@ export default async function DashboardLeadsPage({
 
                 <tbody>
                   {leads.map((lead) => {
-                    const isNew = lead.status === "new";
+                    const isNew = lead.stage === "new";
                     const isPriorityA = lead.lead_quality === "priority_a";
                     const overdue = isFollowUpOverdue(lead);
                     const dueToday = isFollowUpToday(lead);
@@ -794,10 +659,10 @@ export default async function DashboardLeadsPage({
                         <td className="border-b border-black/5 px-4 py-4">
                           <div className="min-w-0">
                             <Link
-                              href={`/dashboard/leads/${lead.id}`}
+                              href={`/ops/leads/${lead.id}`}
                               className="font-medium text-neutral-950 underline-offset-4 hover:underline"
                             >
-                              {lead.name}
+                              {lead.full_name || "Unnamed lead"}
                             </Link>
 
                             <div className="mt-1 flex flex-wrap gap-1.5">
@@ -827,7 +692,7 @@ export default async function DashboardLeadsPage({
                         </td>
 
                         <td className="border-b border-black/5 px-4 py-4 text-sm text-neutral-700">
-                          {labelize(lead.lead_type)}
+                          {lead.property_address || "—"}
                         </td>
 
                         <td className="border-b border-black/5 px-4 py-4 text-sm text-neutral-700">
@@ -835,29 +700,19 @@ export default async function DashboardLeadsPage({
                         </td>
 
                         <td className="border-b border-black/5 px-4 py-4 text-sm text-neutral-700">
-                          <StatusPill status={lead.status} />
-                        </td>
-
-                        <td className="border-b border-black/5 px-4 py-4 text-sm text-neutral-700">
-                          {lead.next_action ? (
-                            <div className="max-w-[280px] whitespace-pre-wrap leading-6 text-neutral-800">
-                              {lead.next_action}
-                            </div>
-                          ) : (
-                            <span className="text-neutral-400">—</span>
-                          )}
+                          <StagePill stage={lead.stage} />
                         </td>
 
                         <td className="border-b border-black/5 px-4 py-4 text-sm">
-                          {lead.follow_up_at ? (
+                          {lead.next_follow_up_at ? (
                             <div
                               className={
                                 overdue ? "text-red-700" : "text-neutral-700"
                               }
                             >
-                              <div>{formatDate(lead.follow_up_at)}</div>
+                              <div>{formatDate(lead.next_follow_up_at)}</div>
                               <div className="mt-1 text-xs text-neutral-400">
-                                {timeAgo(lead.follow_up_at)}
+                                {timeAgo(lead.next_follow_up_at)}
                               </div>
                             </div>
                           ) : (
@@ -870,19 +725,15 @@ export default async function DashboardLeadsPage({
                         </td>
 
                         <td className="border-b border-black/5 px-4 py-4 text-sm text-neutral-700">
-                          {labelize(lead.source)}
+                          {labelize(lead.source_detail || lead.channel)}
                         </td>
 
                         <td className="border-b border-black/5 px-4 py-4 text-sm text-neutral-700">
-                          {labelize(lead.segment)}
+                          {labelize(lead.priority)}
                         </td>
 
                         <td className="border-b border-black/5 px-4 py-4 text-sm text-neutral-700">
-                          {formatCurrency(lead.commission_estimate)}
-                        </td>
-
-                        <td className="border-b border-black/5 px-4 py-4 text-sm text-neutral-700">
-                          {formatCurrency(lead.commission_actual)}
+                          {lead.lead_score ?? "—"}
                         </td>
 
                         <td className="border-b border-black/5 px-4 py-4 text-sm text-neutral-600">

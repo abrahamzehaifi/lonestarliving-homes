@@ -5,22 +5,20 @@ import LeadQuickActions from "@/components/dashboard/LeadQuickActions";
 
 export const dynamic = "force-dynamic";
 
-type LeadRow = {
+type CrmLeadRow = {
   id: string;
-  created_at: string;
-  name: string;
-  email: string;
+  created_at: string | null;
+  full_name: string | null;
+  email: string | null;
   phone: string | null;
-  lead_type: string;
-  status: string | null;
+  property_address: string | null;
+  stage: string | null;
   lead_quality: string | null;
-  follow_up_at: string | null;
-  next_action: string | null;
+  next_follow_up_at: string | null;
   timeline: string | null;
-  source: string | null;
-  segment: string | null;
-  commission_estimate: number | null;
-  commission_actual: number | null;
+  source_detail: string | null;
+  priority: string | null;
+  lead_score: number | null;
 };
 
 function formatDate(value: string | null | undefined) {
@@ -46,6 +44,10 @@ function labelize(value: string | null | undefined) {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function formatText(value: string | null | undefined) {
+  return value && value.trim() ? value : "—";
+}
+
 function StatusPill({ status }: { status: string | null }) {
   return (
     <span className="inline-flex rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium">
@@ -54,7 +56,7 @@ function StatusPill({ status }: { status: string | null }) {
   );
 }
 
-function LeadCard({ lead }: { lead: LeadRow }) {
+function LeadCard({ lead }: { lead: CrmLeadRow }) {
   return (
     <div className="rounded-[1.5rem] border border-black/5 bg-white p-5">
       <div className="flex justify-between gap-3">
@@ -62,7 +64,7 @@ function LeadCard({ lead }: { lead: LeadRow }) {
           href={`/ops/leads/${lead.id}`}
           className="font-semibold hover:underline"
         >
-          {lead.name}
+          {formatText(lead.full_name)}
         </Link>
 
         <span className="text-xs text-neutral-500">
@@ -71,19 +73,21 @@ function LeadCard({ lead }: { lead: LeadRow }) {
       </div>
 
       <div className="mt-2 flex gap-2">
-        <StatusPill status={lead.status} />
+        <StatusPill status={lead.stage} />
       </div>
 
       <p className="mt-3 text-sm text-neutral-600">
-        {lead.next_action || "No next action"}
+        {formatText(lead.property_address)}
       </p>
 
       <p className="mt-1 text-xs text-neutral-500">
-        {lead.follow_up_at ? formatDate(lead.follow_up_at) : "No follow-up"}
+        {lead.next_follow_up_at
+          ? formatDate(lead.next_follow_up_at)
+          : "No follow-up"}
       </p>
 
       <div className="mt-4">
-        <LeadQuickActions leadId={lead.id} currentStatus={lead.status} />
+        <LeadQuickActions leadId={lead.id} currentStage={lead.stage} />
       </div>
 
       <div className="mt-4 flex gap-3">
@@ -123,28 +127,34 @@ function Section({
 export default async function OpsTodayPage() {
   const supabase = createSupabaseServiceClient();
 
-  const { data } = await supabase
-    .from("leads")
-    .select("*")
+  const { data, error } = await supabase
+    .from("crm_leads")
+    .select(
+      "id, created_at, full_name, email, phone, property_address, stage, lead_quality, next_follow_up_at, timeline, source_detail, priority, lead_score"
+    )
     .order("created_at", { ascending: false })
     .limit(100);
 
-  const leads = (data || []) as LeadRow[];
+  if (error) {
+    console.error("OPS TODAY LOAD ERROR:", error);
+  }
+
+  const leads = (data || []) as CrmLeadRow[];
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const overdue = leads.filter(
     (l) =>
-      l.follow_up_at &&
-      new Date(l.follow_up_at) < today &&
-      l.status !== "closed" &&
-      l.status !== "lost"
+      l.next_follow_up_at &&
+      new Date(l.next_follow_up_at) < today &&
+      l.stage !== "closed" &&
+      l.stage !== "lost"
   );
 
   const dueToday = leads.filter((l) => {
-    if (!l.follow_up_at) return false;
-    const d = new Date(l.follow_up_at);
+    if (!l.next_follow_up_at) return false;
+    const d = new Date(l.next_follow_up_at);
     return (
       d.getFullYear() === today.getFullYear() &&
       d.getMonth() === today.getMonth() &&
@@ -169,6 +179,13 @@ export default async function OpsTodayPage() {
           className="rounded-full border px-4 py-2 text-sm"
         >
           Pipeline
+        </Link>
+
+        <Link
+          href="/ops/dashboard/crm"
+          className="rounded-full border px-4 py-2 text-sm"
+        >
+          CRM
         </Link>
       </div>
 

@@ -10,9 +10,9 @@ export const metadata: Metadata = {
 type Language = "en" | "es" | "ar";
 
 type SearchPageProps = {
-  searchParams?: Promise<{
+  searchParams?: {
     lang?: string;
-  }>;
+  };
 };
 
 function getLanguage(value?: string): Language {
@@ -30,7 +30,6 @@ const copy = {
     primaryCta: "Request a Curated List",
     secondaryCta: "Back to Home",
   },
-
   es: {
     title: "Buscar viviendas en Houston",
     body:
@@ -40,7 +39,6 @@ const copy = {
     primaryCta: "Solicitar una lista seleccionada",
     secondaryCta: "Volver al inicio",
   },
-
   ar: {
     title: "ابحث عن منازل في هيوستن",
     body:
@@ -52,17 +50,13 @@ const copy = {
   },
 } as const;
 
-export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const resolvedSearchParams = (await searchParams) ?? {};
-  const lang = getLanguage(resolvedSearchParams.lang);
+export default function SearchPage({ searchParams }: SearchPageProps) {
+  const lang = getLanguage(searchParams?.lang);
   const t = copy[lang];
   const isArabic = lang === "ar";
 
   return (
-    <main
-      dir={isArabic ? "rtl" : "ltr"}
-      className="min-h-screen bg-white"
-    >
+    <main dir={isArabic ? "rtl" : "ltr"} className="min-h-screen bg-white">
       <div className="mx-auto max-w-3xl px-6 py-16">
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
           {t.title}
@@ -74,7 +68,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
         <div className="mt-8 flex flex-wrap gap-4">
           <Link
-            href={`/intake?type=buyer&segment=general&lang=${lang}`}
+            href={`/intake?type=buy&lang=${lang}`}
             className="rounded-xl bg-slate-900 px-6 py-3 font-medium text-white transition hover:opacity-90"
           >
             {t.primaryCta}

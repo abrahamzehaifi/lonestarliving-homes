@@ -2,8 +2,8 @@ import Link from "next/link";
 
 type Lead = {
   id: string;
-  full_name: string;
-  stage: string;
+  full_name: string | null;
+  stage: string | null;
   priority: string | null;
   lead_quality: "priority_a" | "priority_b" | "priority_c" | null;
   last_contacted_at: string | null;
@@ -33,6 +33,13 @@ function isOverdue(value: string | null) {
 
 function getLastTouchDays(lead: Lead) {
   return daysSince(lead.last_contacted_at) ?? daysSince(lead.created_at);
+}
+
+function formatStage(value: string | null) {
+  if (!value) return "Unassigned";
+  return value
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function isStale(lead: Lead) {
@@ -68,11 +75,11 @@ function getStaleReason(lead: Lead) {
   return "Needs review";
 }
 
-function formatDays(value: number | null) {
-  if (value === null) return "—";
-  if (value === 0) return "Today";
-  if (value === 1) return "1 day";
-  return `${value} days`;
+function formatLastTouch(age: number | null) {
+  if (age === null) return "—";
+  if (age === 0) return "Today";
+  if (age === 1) return "1 day ago";
+  return `${age} days ago`;
 }
 
 function staleScore(lead: Lead) {
@@ -135,12 +142,14 @@ export default function StaleLeadsPanel({
               >
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <div>
-                    <p className="font-medium text-neutral-950">{lead.full_name}</p>
+                    <p className="font-medium text-neutral-950">
+                      {lead.full_name || "Unnamed lead"}
+                    </p>
                     <p className="mt-1 text-sm text-neutral-600">
-                      {lead.stage} · {getStaleReason(lead)}
+                      {formatStage(lead.stage)} · {getStaleReason(lead)}
                     </p>
                     <p className="mt-1 text-xs text-neutral-500">
-                      Last touch: {formatDays(age)} ago
+                      Last touch: {formatLastTouch(age)}
                       {lead.source_detail ? ` · ${lead.source_detail}` : ""}
                     </p>
                   </div>

@@ -26,7 +26,14 @@ async function getSupabase() {
   );
 }
 
-function nextFollowUpFromOutcome(outcome: Outcome) {
+function revalidateCrmViews() {
+  revalidatePath("/ops/dashboard/crm");
+  revalidatePath("/ops/leads");
+  revalidatePath("/ops/pipeline");
+  revalidatePath("/ops/dashboard");
+}
+
+function nextFollowUpFromOutcome(outcome: Outcome): string | null {
   const now = new Date();
 
   const addHours = (hours: number) => {
@@ -48,12 +55,12 @@ function nextFollowUpFromOutcome(outcome: Outcome) {
   return null;
 }
 
-function stageFromOutcome(currentStage: string, outcome: Outcome) {
+function stageFromOutcome(currentStage: string, outcome: Outcome): string {
   if (outcome === "appointment_set") return "appointment_set";
   if (outcome === "lost") return "lost";
 
   if (
-    currentStage === "new_lead" &&
+    currentStage === "new" &&
     (outcome === "no_answer" ||
       outcome === "spoke" ||
       outcome === "interested")
@@ -64,7 +71,7 @@ function stageFromOutcome(currentStage: string, outcome: Outcome) {
   return currentStage;
 }
 
-function labelFromOutcome(outcome: Outcome) {
+function labelFromOutcome(outcome: Outcome): string {
   if (outcome === "no_answer") return "No answer";
   if (outcome === "spoke") return "Spoke";
   if (outcome === "interested") return "Interested";
@@ -79,7 +86,9 @@ export async function saveLeadOutcome(formData: FormData) {
   const outcome = String(formData.get("outcome") || "").trim() as Outcome;
   const notes = String(formData.get("notes") || "").trim();
 
-  if (!leadId) throw new Error("Missing lead id.");
+  if (!leadId) {
+    throw new Error("Missing lead id.");
+  }
 
   const validOutcomes: Outcome[] = [
     "no_answer",
@@ -99,8 +108,14 @@ export async function saveLeadOutcome(formData: FormData) {
     .eq("id", leadId)
     .single();
 
-  if (leadError || !lead) {
-    throw new Error("Lead not found.");
+  if (leadError) {
+    console.error("SAVE OUTCOME FETCH ERROR:", leadError);
+    return;
+  }
+
+  if (!lead) {
+    console.error("SAVE OUTCOME: lead not found:", leadId);
+    return;
   }
 
   const nextFollowUpAt = nextFollowUpFromOutcome(outcome);
@@ -119,7 +134,10 @@ export async function saveLeadOutcome(formData: FormData) {
     })
     .eq("id", leadId);
 
-  if (updateError) throw new Error(updateError.message);
+  if (updateError) {
+    console.error("SAVE OUTCOME UPDATE ERROR:", updateError);
+    return;
+  }
 
   const activityText = [
     `Outcome recorded: ${labelFromOutcome(outcome)}`,
@@ -135,7 +153,10 @@ export async function saveLeadOutcome(formData: FormData) {
     content: activityText,
   });
 
-  if (activityError) throw new Error(activityError.message);
+  if (activityError) {
+    console.error("SAVE OUTCOME ACTIVITY ERROR:", activityError);
+    return;
+  }
 
-  revalidatePath("/ops/dashboard/crm");
+  revalidateCrmViews();
 }

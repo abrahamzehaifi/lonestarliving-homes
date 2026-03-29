@@ -3,9 +3,9 @@ import Link from "next/link";
 type Language = "en" | "es" | "ar";
 
 type LandlordsPageProps = {
-  searchParams?: Promise<{
+  searchParams?: {
     lang?: string;
-  }>;
+  };
 };
 
 function getLanguage(value?: string): Language {
@@ -54,11 +54,10 @@ const copy = {
   },
 } as const;
 
-export default async function LandlordsPage({
+export default function LandlordsPage({
   searchParams,
 }: LandlordsPageProps) {
-  const resolvedSearchParams = (await searchParams) ?? {};
-  const lang = getLanguage(resolvedSearchParams.lang);
+  const lang = getLanguage(searchParams?.lang);
   const t = copy[lang];
   const isArabic = lang === "ar";
 

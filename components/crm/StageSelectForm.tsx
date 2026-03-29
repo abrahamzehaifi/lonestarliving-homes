@@ -1,19 +1,24 @@
 import { updateLeadStage } from "@/app/ops/dashboard/crm/actions";
 import { CRM_STAGES } from "@/lib/crm/stages";
 
+type StageSelectFormProps = {
+  id: string;
+  currentStage: string | null;
+};
+
 export default function StageSelectForm({
   id,
   currentStage,
-}: {
-  id: string;
-  currentStage: string;
-}) {
+}: StageSelectFormProps) {
+  const safeCurrentStage = currentStage || "new";
+
   return (
     <form action={updateLeadStage} className="flex gap-2">
       <input type="hidden" name="id" value={id} />
+
       <select
         name="stage"
-        defaultValue={currentStage}
+        defaultValue={safeCurrentStage}
         className="w-full rounded-xl border px-3 py-2 text-sm"
       >
         {CRM_STAGES.map((stage) => (
@@ -22,7 +27,11 @@ export default function StageSelectForm({
           </option>
         ))}
       </select>
-      <button type="submit" className="rounded-xl border px-3 py-2 text-sm">
+
+      <button
+        type="submit"
+        className="rounded-xl border px-3 py-2 text-sm transition hover:bg-neutral-50"
+      >
         Move
       </button>
     </form>

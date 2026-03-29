@@ -26,15 +26,17 @@ function isToday(value: string | null | undefined) {
   );
 }
 
-function countActivities(
-  activities: Activity[],
-  types: string[]
-) {
-  return activities.filter(
-    (activity) =>
-      isToday(activity.created_at) &&
-      types.includes(activity.activity_type)
-  ).length;
+function normalizeActivityType(value: string | null | undefined) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function countActivities(activities: Activity[], types: string[]) {
+  const normalizedTypes = new Set(types.map((t) => t.trim().toLowerCase()));
+
+  return activities.filter((activity) => {
+    const activityType = normalizeActivityType(activity.activity_type);
+    return isToday(activity.created_at) && normalizedTypes.has(activityType);
+  }).length;
 }
 
 function countStageMovesToday(leads: Lead[]) {
@@ -94,7 +96,7 @@ function MetricCard({
           className={`rounded-full px-2 py-1 text-xs font-medium ${
             complete
               ? "bg-emerald-100 text-emerald-700"
-              : "bg-white text-neutral-600 border border-neutral-200"
+              : "border border-neutral-200 bg-white text-neutral-600"
           }`}
         >
           {done}/{target}

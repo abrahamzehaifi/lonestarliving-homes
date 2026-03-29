@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 type Language = "en" | "es" | "ar";
 
 type RentThanksPageProps = {
-  searchParams?: Promise<{
+  searchParams?: {
     lang?: string;
-  }>;
+  };
 };
 
 function getLanguage(value?: string): Language {
@@ -78,11 +78,10 @@ const copy = {
   },
 } as const;
 
-export default async function RentThanksPage({
+export default function RentThanksPage({
   searchParams,
 }: RentThanksPageProps) {
-  const resolvedSearchParams = (await searchParams) ?? {};
-  const lang = getLanguage(resolvedSearchParams.lang);
+  const lang = getLanguage(searchParams?.lang);
   const t = copy[lang];
   const isArabic = lang === "ar";
 

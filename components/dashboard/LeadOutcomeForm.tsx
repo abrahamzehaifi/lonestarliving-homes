@@ -28,12 +28,14 @@ function toLocalInputValue(value: string | null) {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
-function normalizeMoneyInput(value: string) {
+function normalizeMoneyInput(value: string): number | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
 
   const num = Number(trimmed);
-  return Number.isFinite(num) ? num : NaN;
+  if (!Number.isFinite(num)) return NaN;
+
+  return num;
 }
 
 export default function LeadOutcomeForm({
@@ -144,7 +146,7 @@ export default function LeadOutcomeForm({
         }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const data = await res.json().catch(() => null);
 
       if (!res.ok) {
         setError(

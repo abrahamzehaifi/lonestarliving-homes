@@ -13,6 +13,11 @@ const STATUS_OPTIONS = [
   { value: "lost", label: "Lost" },
 ] as const;
 
+function normalizeStatus(value?: string | null) {
+  const status = String(value || "").trim().toLowerCase();
+  return STATUS_OPTIONS.some((option) => option.value === status) ? status : "new";
+}
+
 function getStatusClass(status: string) {
   switch (status) {
     case "new":
@@ -43,25 +48,30 @@ export default function LeadStatusInline({
   leadId,
   initialStatus,
 }: Props) {
-  const [status, setStatus] = useState(initialStatus || "new");
+  const [status, setStatus] = useState(normalizeStatus(initialStatus));
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
 
   function handleChange(nextStatus: string) {
     const previous = status;
     setStatus(nextStatus);
     setSaved(false);
+    setError("");
 
-    startTransition(async () => {
-      const result = await updateLeadStatus(leadId, nextStatus);
+    startTransition(() => {
+      void (async () => {
+        const result = await updateLeadStatus(leadId, nextStatus);
 
-      if (!result.ok) {
-        setStatus(previous);
-        return;
-      }
+        if (!result.ok) {
+          setStatus(previous);
+          setError(result.error || "Failed to save");
+          return;
+        }
 
-      setSaved(true);
-      window.setTimeout(() => setSaved(false), 1200);
+        setSaved(true);
+        window.setTimeout(() => setSaved(false), 1200);
+      })();
     });
   }
 
@@ -82,8 +92,8 @@ export default function LeadStatusInline({
         ))}
       </select>
 
-      <span className="min-w-[42px] text-xs text-neutral-500">
-        {isPending ? "Saving" : saved ? "Saved" : ""}
+      <span className="min-w-[52px] text-xs text-neutral-500">
+        {isPending ? "Saving" : saved ? "Saved" : error ? "Error" : ""}
       </span>
     </div>
   );

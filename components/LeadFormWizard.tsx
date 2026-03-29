@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import type { RentalFormState } from "@/lib/leadTypes";
 
 type Props = {
-  leadType: "rent";
   defaultAreasHint?: string;
 };
 
@@ -54,11 +53,10 @@ const initialState: RentalFormState = {
   contactConsent: true,
 };
 
-export default function LeadFormWizard({
-  leadType,
-  defaultAreasHint,
-}: Props) {
+export default function LeadFormWizard({ defaultAreasHint }: Props) {
   const router = useRouter();
+  const leadType = "rent";
+
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -91,7 +89,11 @@ export default function LeadFormWizard({
     }
 
     if (step === 4) {
-      return s.screeningAck === true && s.message.trim().length >= 5;
+      return (
+        s.screeningAck === true &&
+        s.contactConsent === true &&
+        s.message.trim().length >= 5
+      );
     }
 
     return false;

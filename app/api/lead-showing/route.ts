@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 function normalizeIsoDate(value: unknown) {
@@ -73,6 +74,15 @@ async function sendTelegramNotification(message: string) {
   }
 }
 
+function revalidateCrmViews(id: string) {
+  revalidatePath("/ops/dashboard/crm");
+  revalidatePath("/ops/leads");
+  revalidatePath(`/ops/leads/${id}`);
+  revalidatePath("/ops/pipeline");
+  revalidatePath("/ops/today");
+  revalidatePath("/ops/dashboard");
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => null);
@@ -90,13 +100,13 @@ export async function POST(req: Request) {
     const supabase = createSupabaseServiceClient();
 
     const { data: existingLead, error: existingLeadError } = await supabase
-      .from("leads")
-      .select("id, name, showing_at")
+      .from("crm_leads")
+      .select("id, full_name, showing_at")
       .eq("id", id)
       .maybeSingle();
 
     if (existingLeadError) {
-      console.error("lead-showing read failed:", existingLeadError);
+      console.error("crm lead showing read failed:", existingLeadError);
       return NextResponse.json(
         { ok: false, error: "Failed to load lead." },
         { status: 500 }
@@ -111,8 +121,8 @@ export async function POST(req: Request) {
     }
 
     const leadName =
-      typeof existingLead.name === "string" && existingLead.name.trim()
-        ? existingLead.name.trim()
+      typeof existingLead.full_name === "string" && existingLead.full_name.trim()
+        ? existingLead.full_name.trim()
         : "Unknown lead";
 
     const previousShowingAt =
@@ -139,7 +149,7 @@ export async function POST(req: Request) {
     }
 
     const { data: updatedLead, error: updateError } = await supabase
-      .from("leads")
+      .from("crm_leads")
       .update({
         showing_at: showingAt,
         updated_at: new Date().toISOString(),
@@ -149,7 +159,7 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (updateError) {
-      console.error("lead-showing update failed:", updateError);
+      console.error("crm lead showing update failed:", updateError);
       return NextResponse.json(
         { ok: false, error: "Failed to update showing." },
         { status: 500 }
@@ -171,6 +181,8 @@ export async function POST(req: Request) {
 
     const telegramRes = await sendTelegramNotification(message);
 
+    revalidateCrmViews(id);
+
     return NextResponse.json({
       ok: true,
       lead: {
@@ -183,7 +195,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (error) {
-    console.error("lead-showing route error:", error);
+    console.error("crm lead showing route error:", error);
 
     return NextResponse.json(
       { ok: false, error: "Invalid request." },

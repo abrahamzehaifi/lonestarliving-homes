@@ -37,6 +37,15 @@ type Activity = {
   created_at: string;
 };
 
+function labelize(value?: string | null) {
+  if (!value) return "—";
+
+  return value
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function PriorityBadge({ priority }: { priority?: string | null }) {
   if (!priority) return null;
 
@@ -50,7 +59,7 @@ function PriorityBadge({ priority }: { priority?: string | null }) {
           : "border border-neutral-200 bg-white text-neutral-700"
       }`}
     >
-      {isHigh ? "High Priority" : priority}
+      {isHigh ? "High Priority" : labelize(priority)}
     </span>
   );
 }
@@ -71,6 +80,7 @@ function toDateTimeLocal(value: string | null) {
   try {
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return "";
+
     return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
       .toISOString()
       .slice(0, 16);
@@ -126,13 +136,14 @@ export default function LeadDetailPanel({
         <div className="mt-3 space-y-1 text-sm">
           <p>Phone: {lead.phone || "—"}</p>
           <p>Email: {lead.email || "—"}</p>
-          <p>Stage: {lead.stage}</p>
+          <p>Stage: {labelize(lead.stage)}</p>
         </div>
 
         <div className="mt-4 rounded-xl bg-neutral-50 p-3 text-sm">
           <p className="font-medium">Lead Source</p>
           <p className="text-neutral-600">
-            {lead.source_detail || "—"}
+            {lead.source || "—"}
+            {lead.source_detail ? ` · ${lead.source_detail}` : ""}
             {lead.channel ? ` · ${lead.channel}` : ""}
           </p>
 
@@ -220,7 +231,7 @@ export default function LeadDetailPanel({
             className="w-full rounded-xl border px-3 py-2"
           />
 
-          <button className="rounded-xl bg-black px-4 py-2 text-white">
+          <button type="submit" className="rounded-xl bg-black px-4 py-2 text-white">
             Save
           </button>
         </form>
@@ -249,7 +260,7 @@ export default function LeadDetailPanel({
             className="min-h-[80px] w-full rounded-xl border px-3 py-2"
           />
 
-          <button className="rounded-xl border px-4 py-2">
+          <button type="submit" className="rounded-xl border px-4 py-2">
             Add Activity
           </button>
         </form>
@@ -266,10 +277,10 @@ export default function LeadDetailPanel({
               <div key={activity.id} className="rounded-xl border p-3">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-xs font-medium uppercase">
-                    {activity.activity_type}
+                    {labelize(activity.activity_type)}
                   </p>
                   <p className="text-xs text-neutral-500">
-                    {new Date(activity.created_at).toLocaleString()}
+                    {formatDate(activity.created_at)}
                   </p>
                 </div>
 

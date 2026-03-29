@@ -49,11 +49,13 @@ function queueScore(lead: Lead) {
   if (lead.lead_quality === "priority_b") score += 20;
 
   if (lead.priority === "high") score += 25;
-  if (lead.priority === "normal") score += 10;
+  if (lead.priority === "medium") score += 10;
 
-  if (lead.stage === "new_lead") score += 20;
+  if (lead.stage === "new") score += 20;
   if (lead.stage === "contacted") score += 15;
   if (lead.stage === "appointment_set") score += 18;
+  if (lead.stage === "conversation") score += 12;
+  if (lead.stage === "follow_up") score += 10;
 
   if (typeof lead.lead_score === "number") {
     score += Math.min(lead.lead_score, 50);
@@ -69,9 +71,11 @@ function queueScore(lead: Lead) {
 
 function getTaskLabel(lead: Lead) {
   if (isOverdue(lead.next_follow_up_at)) return "Overdue follow-up";
-  if (lead.stage === "new_lead") return "Make first contact";
+  if (lead.stage === "new") return "Make first contact";
   if (lead.stage === "contacted") return "Follow up";
+  if (lead.stage === "conversation") return "Advance conversation";
   if (lead.stage === "appointment_set") return "Confirm / advance appointment";
+  if (lead.stage === "follow_up") return "Resume follow-up";
   return "Review and move forward";
 }
 

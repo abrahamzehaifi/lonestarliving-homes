@@ -13,7 +13,7 @@ export type PetsStatus = "yes" | "no" | "service_animal" | "unknown";
 
 /**
  * Raw form state from UI inputs.
- * All numeric values remain strings until normalized.
+ * Numeric values remain strings until normalized.
  */
 export type RentalFormInput = {
   name: string;
@@ -49,7 +49,6 @@ export type NormalizedRentalLead = {
   areas: string;
   moveInDate: string | null;
   creditScoreBand?: CreditScoreBand;
-  creditScore: number | null;
   incomeMonthly: number | null;
 
   eviction: boolean | null;

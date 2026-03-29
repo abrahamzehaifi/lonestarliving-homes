@@ -2,24 +2,35 @@ import Link from "next/link";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import InlineStatusSelect from "./InlineStatusSelect";
 
-function formatArea(area?: string | null) {
-  if (!area) return "Unknown";
-  return area
-    .split("-")
-    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-    .join(" ");
+function formatText(value?: string | null) {
+  return value && String(value).trim() ? value : "-";
 }
 
-function formatCurrency(value?: number | null) {
-  if (!value) return "-";
-  return `$${value.toLocaleString()}`;
-}
+type CrmLead = {
+  id: string;
+  full_name: string | null;
+  property_address: string | null;
+  stage: string | null;
+  priority: string | null;
+  lead_score: number | null;
+  lead_quality: string | null;
+  motivation: string | null;
+  source_detail: string | null;
+  channel: string | null;
+  phone: string | null;
+  email: string | null;
+  timeline: string | null;
+  next_follow_up_at: string | null;
+  created_at: string | null;
+};
 
 function isToday(dateStr?: string | null) {
   if (!dateStr) return false;
 
   const today = new Date();
   const d = new Date(dateStr);
+
+  if (Number.isNaN(d.getTime())) return false;
 
   return (
     d.getFullYear() === today.getFullYear() &&
@@ -32,23 +43,30 @@ function isOverdue(dateStr?: string | null) {
   if (!dateStr) return false;
 
   const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return false;
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   return d.getTime() < today.getTime();
 }
 
+function formatStage(value?: string | null) {
+  if (!value) return "Unassigned";
+  return value
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function buildFilterHref(filters: {
-  area?: string | null;
-  status?: string | null;
-  quality?: string | null;
+  stage?: string | null;
+  priority?: string | null;
   followup?: string | null;
 }) {
   const params = new URLSearchParams();
 
-  if (filters.area) params.set("area", filters.area);
-  if (filters.status) params.set("status", filters.status);
-  if (filters.quality) params.set("quality", filters.quality);
+  if (filters.stage) params.set("stage", filters.stage);
+  if (filters.priority) params.set("priority", filters.priority);
   if (filters.followup) params.set("followup", filters.followup);
 
   const query = params.toString();
@@ -60,59 +78,56 @@ export default async function LeadsPage({
 }: {
   searchParams?:
     | Promise<{
-        area?: string;
-        status?: string;
-        quality?: string;
+        stage?: string;
+        priority?: string;
         followup?: string;
       }>
     | {
-        area?: string;
-        status?: string;
-        quality?: string;
+        stage?: string;
+        priority?: string;
         followup?: string;
       };
 }) {
   const sp =
     searchParams instanceof Promise ? await searchParams : searchParams;
 
-  const selectedArea = sp?.area?.toLowerCase() || null;
-  const selectedStatus = sp?.status?.toLowerCase() || null;
-  const selectedQuality = sp?.quality?.toLowerCase() || null;
+  const selectedStage = sp?.stage?.toLowerCase() || null;
+  const selectedPriority = sp?.priority?.toLowerCase() || null;
   const selectedFollowup = sp?.followup?.toLowerCase() || null;
 
   const supabase = createSupabaseServiceClient();
 
   let query = supabase
-    .from("leads")
+    .from("crm_leads")
     .select("*")
     .order("created_at", { ascending: false })
     .limit(100);
 
-  if (selectedArea) {
-    query = query.eq("area", selectedArea);
+  if (selectedStage) {
+    query = query.eq("stage", selectedStage);
   }
 
-  if (selectedStatus) {
-    query = query.eq("status", selectedStatus);
+  if (selectedPriority) {
+    query = query.eq("priority", selectedPriority);
   }
 
-  if (selectedQuality) {
-    query = query.eq("lead_quality", selectedQuality);
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("OPS LEADS LOAD ERROR:", error);
   }
 
-  const { data } = await query;
-
-  const leads = (data || []).filter((lead) => {
+  const leads = ((data || []) as CrmLead[]).filter((lead) => {
     if (selectedFollowup === "today") {
-      return isToday(lead.follow_up_at);
+      return isToday(lead.next_follow_up_at);
     }
 
     if (selectedFollowup === "overdue") {
       return (
-        isOverdue(lead.follow_up_at) &&
-        !isToday(lead.follow_up_at) &&
-        lead.status !== "closed" &&
-        lead.status !== "lost"
+        isOverdue(lead.next_follow_up_at) &&
+        !isToday(lead.next_follow_up_at) &&
+        lead.stage !== "closed" &&
+        lead.stage !== "lost"
       );
     }
 
@@ -120,56 +135,51 @@ export default async function LeadsPage({
   });
 
   const { data: allLeads } = await supabase
-    .from("leads")
-    .select("area, status, lead_quality");
+    .from("crm_leads")
+    .select("stage, priority");
 
-  const areaCounts: Record<string, number> = {};
-  const statusCounts: Record<string, number> = {};
-  const qualityCounts: Record<string, number> = {};
+  const stageCounts: Record<string, number> = {};
+  const priorityCounts: Record<string, number> = {};
 
   allLeads?.forEach((lead) => {
-    if (lead.area) {
-      const key = String(lead.area).toLowerCase();
-      areaCounts[key] = (areaCounts[key] || 0) + 1;
+    if (lead.stage) {
+      const key = String(lead.stage).toLowerCase();
+      stageCounts[key] = (stageCounts[key] || 0) + 1;
     }
 
-    if (lead.status) {
-      const key = String(lead.status).toLowerCase();
-      statusCounts[key] = (statusCounts[key] || 0) + 1;
-    }
-
-    if (lead.lead_quality) {
-      const key = String(lead.lead_quality).toLowerCase();
-      qualityCounts[key] = (qualityCounts[key] || 0) + 1;
+    if (lead.priority) {
+      const key = String(lead.priority).toLowerCase();
+      priorityCounts[key] = (priorityCounts[key] || 0) + 1;
     }
   });
 
-  const sortedAreas = Object.entries(areaCounts).sort((a, b) => b[1] - a[1]);
-
-  const statusOrder = [
+  const stageOrder = [
     "new",
     "contacted",
-    "qualified",
-    "showing",
-    "application",
+    "conversation",
+    "appointment_set",
+    "appointment_done",
+    "follow_up",
+    "listing_signed",
     "closed",
     "lost",
+    "nurture",
   ];
 
-  const sortedStatuses = statusOrder
-    .filter((status) => statusCounts[status])
-    .map((status) => [status, statusCounts[status]] as const);
+  const sortedStages = stageOrder
+    .filter((stage) => stageCounts[stage])
+    .map((stage) => [stage, stageCounts[stage]] as const);
 
-  const qualityOrder = ["priority_a", "priority_b", "priority_c"];
+  const priorityOrder = ["high", "medium", "low"];
 
-  const sortedQualities = qualityOrder
-    .filter((quality) => qualityCounts[quality])
-    .map((quality) => [quality, qualityCounts[quality]] as const);
+  const sortedPriorities = priorityOrder
+    .filter((priority) => priorityCounts[priority])
+    .map((priority) => [priority, priorityCounts[priority]] as const);
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-12">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-3xl font-semibold tracking-tight">Leads</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">CRM Leads</h1>
 
         <div className="flex flex-wrap gap-3">
           <Link
@@ -185,21 +195,27 @@ export default async function LeadsPage({
           >
             Pipeline
           </Link>
+
+          <Link
+            href="/ops/dashboard/crm"
+            className="rounded-full border px-4 py-2 text-sm"
+          >
+            CRM
+          </Link>
         </div>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-black/5 bg-white p-5">
-        <p className="text-sm font-medium text-neutral-500">Filter by area</p>
+      <div className="mt-4 rounded-2xl border border-black/5 bg-white p-5">
+        <p className="text-sm font-medium text-neutral-500">Filter by stage</p>
 
         <div className="mt-3 flex flex-wrap gap-2">
           <Link
             href={buildFilterHref({
-              status: selectedStatus,
-              quality: selectedQuality,
+              priority: selectedPriority,
               followup: selectedFollowup,
             })}
             className={`rounded-full border px-3 py-1 text-xs font-medium ${
-              !selectedArea
+              !selectedStage
                 ? "border-neutral-900 bg-neutral-900 text-white"
                 : "border-black/10 bg-neutral-50 text-neutral-700"
             }`}
@@ -207,39 +223,39 @@ export default async function LeadsPage({
             All
           </Link>
 
-          {sortedAreas.map(([area, count]) => (
+          {sortedStages.map(([stage, count]) => (
             <Link
-              key={area}
+              key={stage}
               href={buildFilterHref({
-                area,
-                status: selectedStatus,
-                quality: selectedQuality,
+                stage,
+                priority: selectedPriority,
                 followup: selectedFollowup,
               })}
               className={`rounded-full border px-3 py-1 text-xs font-medium ${
-                selectedArea === area
+                selectedStage === stage
                   ? "border-neutral-900 bg-neutral-900 text-white"
                   : "border-black/10 bg-neutral-50 text-neutral-700 hover:bg-white"
               }`}
             >
-              {formatArea(area)} ({count})
+              {formatStage(stage)} ({count})
             </Link>
           ))}
         </div>
       </div>
 
       <div className="mt-4 rounded-2xl border border-black/5 bg-white p-5">
-        <p className="text-sm font-medium text-neutral-500">Filter by status</p>
+        <p className="text-sm font-medium text-neutral-500">
+          Filter by priority
+        </p>
 
         <div className="mt-3 flex flex-wrap gap-2">
           <Link
             href={buildFilterHref({
-              area: selectedArea,
-              quality: selectedQuality,
+              stage: selectedStage,
               followup: selectedFollowup,
             })}
             className={`rounded-full border px-3 py-1 text-xs font-medium ${
-              !selectedStatus
+              !selectedPriority
                 ? "border-neutral-900 bg-neutral-900 text-white"
                 : "border-black/10 bg-neutral-50 text-neutral-700"
             }`}
@@ -247,62 +263,21 @@ export default async function LeadsPage({
             All
           </Link>
 
-          {sortedStatuses.map(([status, count]) => (
+          {sortedPriorities.map(([priority, count]) => (
             <Link
-              key={status}
+              key={priority}
               href={buildFilterHref({
-                area: selectedArea,
-                status,
-                quality: selectedQuality,
+                stage: selectedStage,
+                priority,
                 followup: selectedFollowup,
               })}
               className={`rounded-full border px-3 py-1 text-xs font-medium ${
-                selectedStatus === status
+                selectedPriority === priority
                   ? "border-neutral-900 bg-neutral-900 text-white"
                   : "border-black/10 bg-neutral-50 text-neutral-700 hover:bg-white"
               }`}
             >
-              {status.replace(/_/g, " ")} ({count})
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-4 rounded-2xl border border-black/5 bg-white p-5">
-        <p className="text-sm font-medium text-neutral-500">Filter by quality</p>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Link
-            href={buildFilterHref({
-              area: selectedArea,
-              status: selectedStatus,
-              followup: selectedFollowup,
-            })}
-            className={`rounded-full border px-3 py-1 text-xs font-medium ${
-              !selectedQuality
-                ? "border-neutral-900 bg-neutral-900 text-white"
-                : "border-black/10 bg-neutral-50 text-neutral-700"
-            }`}
-          >
-            All
-          </Link>
-
-          {sortedQualities.map(([quality, count]) => (
-            <Link
-              key={quality}
-              href={buildFilterHref({
-                area: selectedArea,
-                status: selectedStatus,
-                quality,
-                followup: selectedFollowup,
-              })}
-              className={`rounded-full border px-3 py-1 text-xs font-medium ${
-                selectedQuality === quality
-                  ? "border-neutral-900 bg-neutral-900 text-white"
-                  : "border-black/10 bg-neutral-50 text-neutral-700 hover:bg-white"
-              }`}
-            >
-              {quality.replace(/_/g, " ")} ({count})
+              {formatStage(priority)} ({count})
             </Link>
           ))}
         </div>
@@ -316,9 +291,8 @@ export default async function LeadsPage({
         <div className="mt-3 flex flex-wrap gap-2">
           <Link
             href={buildFilterHref({
-              area: selectedArea,
-              status: selectedStatus,
-              quality: selectedQuality,
+              stage: selectedStage,
+              priority: selectedPriority,
             })}
             className={`rounded-full border px-3 py-1 text-xs font-medium ${
               !selectedFollowup
@@ -331,9 +305,8 @@ export default async function LeadsPage({
 
           <Link
             href={buildFilterHref({
-              area: selectedArea,
-              status: selectedStatus,
-              quality: selectedQuality,
+              stage: selectedStage,
+              priority: selectedPriority,
               followup: "today",
             })}
             className={`rounded-full border px-3 py-1 text-xs font-medium ${
@@ -347,9 +320,8 @@ export default async function LeadsPage({
 
           <Link
             href={buildFilterHref({
-              area: selectedArea,
-              status: selectedStatus,
-              quality: selectedQuality,
+              stage: selectedStage,
+              priority: selectedPriority,
               followup: "overdue",
             })}
             className={`rounded-full border px-3 py-1 text-xs font-medium ${
@@ -368,12 +340,12 @@ export default async function LeadsPage({
           <thead>
             <tr className="border-b text-left text-xs uppercase tracking-[0.12em] text-neutral-500">
               <th className="px-4 py-3">Name</th>
-              <th>Type</th>
-              <th>Area</th>
-              <th>Budget</th>
-              <th>Status</th>
-              <th>Quality</th>
+              <th>Property</th>
+              <th>Stage</th>
+              <th>Priority</th>
+              <th>Score</th>
               <th>Timeline</th>
+              <th>Follow-up</th>
               <th>Created</th>
             </tr>
           </thead>
@@ -386,30 +358,30 @@ export default async function LeadsPage({
                     href={`/ops/leads/${lead.id}`}
                     className="hover:underline"
                   >
-                    {lead.name}
+                    {formatText(lead.full_name)}
                   </Link>
                 </td>
 
-                <td>{lead.lead_type || "-"}</td>
-
-                <td>
-                  <span className="rounded-full bg-neutral-100 px-2 py-1 text-xs font-medium">
-                    {formatArea(lead.area)}
-                  </span>
-                </td>
-
-                <td>{formatCurrency(lead.budget)}</td>
+                <td>{formatText(lead.property_address)}</td>
 
                 <td>
                   <InlineStatusSelect
                     leadId={lead.id}
-                    currentStatus={lead.status}
+                    currentStage={lead.stage}
                   />
                 </td>
 
-                <td>{lead.lead_quality || "-"}</td>
+                <td>{formatText(lead.priority)}</td>
 
-                <td>{lead.timeline || "-"}</td>
+                <td>{lead.lead_score ?? "-"}</td>
+
+                <td>{formatText(lead.timeline)}</td>
+
+                <td>
+                  {lead.next_follow_up_at
+                    ? new Date(lead.next_follow_up_at).toLocaleDateString()
+                    : "-"}
+                </td>
 
                 <td>
                   {lead.created_at

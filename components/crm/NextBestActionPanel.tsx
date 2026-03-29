@@ -42,12 +42,21 @@ function formatDateTime(value: string | null) {
   }
 }
 
+function formatStage(value: string) {
+  return value
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function getActionLabel(lead: Lead) {
   if (isOverdue(lead.next_follow_up_at)) return "Call now";
-  if (lead.stage === "new_lead") return "First contact";
+  if (lead.stage === "new") return "First contact";
   if (lead.stage === "contacted") return "Follow up";
+  if (lead.stage === "conversation") return "Continue conversation";
   if (lead.stage === "appointment_set") return "Confirm appointment";
+  if (lead.stage === "appointment_done") return "Review next steps";
   if (lead.stage === "listing_signed") return "Advance listing";
+  if (lead.stage === "follow_up") return "Re-engage lead";
   return "Review lead";
 }
 
@@ -95,7 +104,7 @@ export default function NextBestActionPanel({
 
               <div className="mt-4 space-y-1 text-sm text-neutral-700">
                 <p>
-                  <span className="font-medium">Stage:</span> {topLead.stage}
+                  <span className="font-medium">Stage:</span> {formatStage(topLead.stage)}
                 </p>
                 <p>
                   <span className="font-medium">Follow-up:</span>{" "}

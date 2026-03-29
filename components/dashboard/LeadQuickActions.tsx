@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 type Props = {
   leadId: string;
-  currentStatus: string | null;
+  currentStage: string | null;
 };
 
 function toLocalDateTime(daysFromNow: number) {
@@ -19,14 +19,13 @@ function toLocalDateTime(daysFromNow: number) {
   const day = String(date.getDate()).padStart(2, "0");
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
-  const seconds = "00";
 
-  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
 export default function LeadQuickActions({
   leadId,
-  currentStatus,
+  currentStage,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -66,16 +65,19 @@ export default function LeadQuickActions({
     setSuccess("");
 
     try {
-      await postJson("/api/lead-follow-up", {
+      await postJson("/api/crm/follow-up", {
         id: leadId,
-        followUpAt: toLocalDateTime(daysFromNow),
+        next_follow_up_at:
+          daysFromNow === -1 ? null : toLocalDateTime(daysFromNow),
       });
 
-      refreshWithMessage(
-        daysFromNow === 0
-          ? "Follow-up set for today."
-          : "Follow-up set for tomorrow."
-      );
+      if (daysFromNow === -1) {
+        refreshWithMessage("Follow-up cleared.");
+      } else if (daysFromNow === 0) {
+        refreshWithMessage("Follow-up set for today.");
+      } else {
+        refreshWithMessage("Follow-up set for tomorrow.");
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to update follow-up."
@@ -83,30 +85,17 @@ export default function LeadQuickActions({
     }
   }
 
-  async function handleClearFollowUp() {
-    setError("");
-    setSuccess("");
-
-    try {
-      await postJson("/api/lead-follow-up", {
-        id: leadId,
-        followUpAt: null,
-      });
-
-      refreshWithMessage("Follow-up cleared.");
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to clear follow-up."
-      );
-    }
-  }
-
-  async function handleStatus(
-    status: "contacted" | "qualified" | "showing" | "lost"
+  async function handleStage(
+    stage:
+      | "contacted"
+      | "conversation"
+      | "appointment_set"
+      | "lost"
+      | "nurture"
   ) {
-    if (currentStatus === status) {
+    if (currentStage === stage) {
       setError("");
-      setSuccess(`Already marked ${status}.`);
+      setSuccess(`Already marked ${stage.replace(/_/g, " ")}.`);
       return;
     }
 
@@ -114,15 +103,15 @@ export default function LeadQuickActions({
     setSuccess("");
 
     try {
-      await postJson("/api/lead-status", {
+      await postJson("/api/crm/stage", {
         id: leadId,
-        status,
+        stage,
       });
 
-      refreshWithMessage(`Marked ${status}.`);
+      refreshWithMessage(`Marked ${stage.replace(/_/g, " ")}.`);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to update status."
+        err instanceof Error ? err.message : "Failed to update stage."
       );
     }
   }
@@ -151,7 +140,7 @@ export default function LeadQuickActions({
         <button
           type="button"
           disabled={isPending}
-          onClick={() => void handleClearFollowUp()}
+          onClick={() => void handleFollowUp(-1)}
           className="inline-flex h-8 items-center justify-center rounded-full border border-black/10 bg-white px-3 text-xs font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Clear Follow-Up
@@ -160,7 +149,7 @@ export default function LeadQuickActions({
         <button
           type="button"
           disabled={isPending}
-          onClick={() => void handleStatus("contacted")}
+          onClick={() => void handleStage("contacted")}
           className="inline-flex h-8 items-center justify-center rounded-full border border-amber-200 bg-amber-50 px-3 text-xs font-medium text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Contacted
@@ -169,25 +158,34 @@ export default function LeadQuickActions({
         <button
           type="button"
           disabled={isPending}
-          onClick={() => void handleStatus("qualified")}
+          onClick={() => void handleStage("conversation")}
           className="inline-flex h-8 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 px-3 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Qualified
+          Conversation
         </button>
 
         <button
           type="button"
           disabled={isPending}
-          onClick={() => void handleStatus("showing")}
+          onClick={() => void handleStage("appointment_set")}
           className="inline-flex h-8 items-center justify-center rounded-full border border-violet-200 bg-violet-50 px-3 text-xs font-medium text-violet-700 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Showing
+          Appointment Set
         </button>
 
         <button
           type="button"
           disabled={isPending}
-          onClick={() => void handleStatus("lost")}
+          onClick={() => void handleStage("nurture")}
+          className="inline-flex h-8 items-center justify-center rounded-full border border-sky-200 bg-sky-50 px-3 text-xs font-medium text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Nurture
+        </button>
+
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => void handleStage("lost")}
           className="inline-flex h-8 items-center justify-center rounded-full border border-red-200 bg-red-50 px-3 text-xs font-medium text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Mark Lost

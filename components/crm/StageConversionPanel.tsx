@@ -12,13 +12,17 @@ type StageStats = {
 };
 
 const STAGE_ORDER = [
-  { key: "new_lead", label: "New Lead" },
+  { key: "new", label: "New" },
   { key: "contacted", label: "Contacted" },
+  { key: "conversation", label: "Conversation" },
   { key: "appointment_set", label: "Appointment Set" },
+  { key: "appointment_done", label: "Appointment Done" },
+  { key: "follow_up", label: "Follow-Up" },
   { key: "listing_signed", label: "Listing Signed" },
   { key: "closed", label: "Closed" },
   { key: "lost", label: "Lost" },
-];
+  { key: "nurture", label: "Nurture" },
+] as const;
 
 function buildStageStats(leads: Lead[]): StageStats[] {
   return STAGE_ORDER.map((stage) => ({
@@ -40,7 +44,7 @@ export default function StageConversionPanel({
 }) {
   const stats = buildStageStats(leads);
 
-  const newLeadCount = stats.find((s) => s.key === "new_lead")?.count ?? 0;
+  const newCount = stats.find((s) => s.key === "new")?.count ?? 0;
   const contactedCount = stats.find((s) => s.key === "contacted")?.count ?? 0;
   const appointmentCount =
     stats.find((s) => s.key === "appointment_set")?.count ?? 0;
@@ -48,8 +52,11 @@ export default function StageConversionPanel({
   const closedCount = stats.find((s) => s.key === "closed")?.count ?? 0;
   const lostCount = stats.find((s) => s.key === "lost")?.count ?? 0;
 
-  const highQualityCount = leads.filter(
-    (lead) => lead.lead_quality === "priority_a" || lead.priority === "high"
+  const highQualityActiveCount = leads.filter(
+    (lead) =>
+      lead.stage !== "closed" &&
+      lead.stage !== "lost" &&
+      (lead.lead_quality === "priority_a" || lead.priority === "high")
   ).length;
 
   return (
@@ -86,7 +93,7 @@ export default function StageConversionPanel({
       <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           label="New → Contacted"
-          value={pct(contactedCount, newLeadCount)}
+          value={pct(contactedCount, newCount)}
         />
         <MetricCard
           label="Contacted → Appointment"
@@ -105,7 +112,10 @@ export default function StageConversionPanel({
       <div className="mt-4 grid gap-3 md:grid-cols-3">
         <MetricCard label="Closed" value={String(closedCount)} />
         <MetricCard label="Lost" value={String(lostCount)} />
-        <MetricCard label="High quality active" value={String(highQualityCount)} />
+        <MetricCard
+          label="High quality active"
+          value={String(highQualityActiveCount)}
+        />
       </div>
     </section>
   );

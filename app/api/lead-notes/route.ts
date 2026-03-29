@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 function normalizeNote(value: unknown) {
@@ -35,13 +36,13 @@ export async function POST(req: Request) {
     const supabase = createSupabaseServiceClient();
 
     const { data: existingLead, error: existingLeadError } = await supabase
-      .from("leads")
+      .from("crm_leads")
       .select("id")
       .eq("id", leadId)
       .maybeSingle();
 
     if (existingLeadError) {
-      console.error("lead-notes read failed:", existingLeadError);
+      console.error("crm-notes lead read failed:", existingLeadError);
       return NextResponse.json(
         { ok: false, error: "Failed to load lead." },
         { status: 500 }
@@ -55,69 +56,50 @@ export async function POST(req: Request) {
       );
     }
 
-    const now = new Date().toISOString();
-
-    const { data: insertedNote, error: insertError } = await supabase
-      .from("lead_notes")
+    const { data: insertedActivity, error: insertError } = await supabase
+      .from("crm_activities")
       .insert({
         lead_id: leadId,
-        note,
-        created_at: now,
-        updated_at: now,
+        activity_type: "note",
+        content: note,
       })
-      .select("id, note, created_at, updated_at")
+      .select("id, activity_type, content, created_at")
       .maybeSingle();
 
     if (insertError) {
-      console.error("lead-notes insert failed:", insertError);
+      console.error("crm-notes insert failed:", insertError);
       return NextResponse.json(
         { ok: false, error: "Failed to save note." },
         { status: 500 }
       );
     }
 
-    if (!insertedNote) {
+    if (!insertedActivity) {
       return NextResponse.json(
         { ok: false, error: "Note was not created." },
         { status: 500 }
       );
     }
 
-    const preview =
-      note.length > 180 ? `${note.slice(0, 180).trim()}…` : note;
-
-    const { error: eventError } = await supabase.from("lead_events").insert({
-      lead_id: leadId,
-      event_type: "note_added",
-      event_label: "Note added",
-      event_data: {
-        note_preview: preview,
-        note_id: insertedNote.id,
-      },
-    });
-
-    if (eventError) {
-      console.error("lead-notes event insert failed:", eventError);
-    }
+    revalidatePath("/ops/dashboard/crm");
+    revalidatePath("/ops/leads");
+    revalidatePath(`/ops/leads/${leadId}`);
 
     return NextResponse.json({
       ok: true,
       note: {
-        id: insertedNote.id,
-        note: insertedNote.note,
-        created_at: insertedNote.created_at,
-        updated_at: insertedNote.updated_at,
-      },
-      timeline: {
-        note_added: !eventError,
+        id: insertedActivity.id,
+        activity_type: insertedActivity.activity_type,
+        note: insertedActivity.content,
+        created_at: insertedActivity.created_at,
       },
     });
   } catch (error) {
-    console.error("lead-notes route error:", error);
+    console.error("crm-notes route error:", error);
 
     return NextResponse.json(
-      { ok: false, error: "Invalid request." },
-      { status: 400 }
+      { ok: false, error: "Server error." },
+      { status: 500 }
     );
   }
 }

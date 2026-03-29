@@ -42,24 +42,24 @@ export async function POST(req: Request) {
     const supabase = createSupabaseServiceClient();
 
     const { data: existingLead, error: existingLeadError } = await supabase
-      .from("leads")
+      .from("crm_leads")
       .select(
-        "id, status, closed_at, commission_actual, outcome_notes, commission_estimate, name"
+        "id, stage, closed_at, commission_actual, outcome_notes, commission_estimate, full_name"
       )
       .eq("id", id)
       .maybeSingle();
 
     if (existingLeadError) {
-      console.error("lead-close read failed:", existingLeadError);
+      console.error("crm lead close read failed:", existingLeadError);
       return NextResponse.json(
-        { ok: false, error: "Failed to load lead." },
+        { ok: false, error: "Failed to load CRM lead." },
         { status: 500 }
       );
     }
 
     if (!existingLead) {
       return NextResponse.json(
-        { ok: false, error: "Lead not found." },
+        { ok: false, error: "CRM lead not found." },
         { status: 404 }
       );
     }
@@ -73,68 +73,74 @@ export async function POST(req: Request) {
       outcomeNotes ?? existingLead.outcome_notes ?? null;
 
     const { data: updatedLead, error: updateError } = await supabase
-      .from("leads")
+      .from("crm_leads")
       .update({
-        status: "closed",
+        stage: "closed",
         closed_at: existingLead.closed_at ?? nowIso,
         commission_actual: nextCommissionActual,
         outcome_notes: nextOutcomeNotes,
-        updated_at: nowIso,
       })
       .eq("id", id)
       .select(
-        "id, status, closed_at, commission_actual, outcome_notes, updated_at"
+        "id, stage, closed_at, commission_actual, outcome_notes"
       )
       .maybeSingle();
 
     if (updateError) {
-      console.error("lead-close update failed:", updateError);
+      console.error("crm lead close update failed:", updateError);
       return NextResponse.json(
-        { ok: false, error: "Failed to close lead." },
+        { ok: false, error: "Failed to close CRM lead." },
         { status: 500 }
       );
     }
 
     if (!updatedLead) {
       return NextResponse.json(
-        { ok: false, error: "Lead not found after update." },
+        { ok: false, error: "CRM lead not found after update." },
         { status: 404 }
       );
     }
 
-    const { error: eventError } = await supabase.from("lead_events").insert({
-      lead_id: id,
-      event_type: "deal_closed",
-      event_label: "Deal closed",
-      event_data: {
-        previous_status: existingLead.status,
-        closed_at: updatedLead.closed_at,
-        commission_actual: updatedLead.commission_actual,
-        commission_estimate: existingLead.commission_estimate ?? null,
-        outcome_notes: updatedLead.outcome_notes,
-      },
-    });
+    const { error: activityError } = await supabase
+      .from("crm_activities")
+      .insert({
+        lead_id: id,
+        activity_type: "deal_closed",
+        content: [
+          "Deal closed",
+          `Previous stage: ${existingLead.stage ?? "-"}`,
+          `Closed at: ${updatedLead.closed_at ?? "-"}`,
+          `Commission actual: ${
+            updatedLead.commission_actual !== null &&
+            updatedLead.commission_actual !== undefined
+              ? updatedLead.commission_actual
+              : "-"
+          }`,
+          nextOutcomeNotes ? `Outcome notes: ${nextOutcomeNotes}` : null,
+        ]
+          .filter(Boolean)
+          .join(" | "),
+      });
 
-    if (eventError) {
-      console.error("lead-close event insert failed:", eventError);
+    if (activityError) {
+      console.error("crm lead close activity insert failed:", activityError);
     }
 
     return NextResponse.json({
       ok: true,
       lead: {
         id: updatedLead.id,
-        status: updatedLead.status,
+        stage: updatedLead.stage,
         closed_at: updatedLead.closed_at,
         commission_actual: updatedLead.commission_actual,
         outcome_notes: updatedLead.outcome_notes,
-        updated_at: updatedLead.updated_at ?? null,
       },
       timeline: {
-        deal_closed: !eventError,
+        deal_closed: !activityError,
       },
     });
   } catch (err) {
-    console.error("lead-close route crashed:", err);
+    console.error("crm lead close route crashed:", err);
     return NextResponse.json(
       { ok: false, error: "Server error." },
       { status: 500 }

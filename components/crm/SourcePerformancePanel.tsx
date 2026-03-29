@@ -31,8 +31,11 @@ function normalizeSource(lead: Lead) {
 
   if (channel === "organic") return "organic";
   if (channel === "direct") return "direct";
+  if (channel === "referral") return "referral";
+  if (channel === "outbound") return "outbound";
 
-  if (sourceDetail) return sourceDetail;
+  // Avoid overly fragmented buckets from random source_detail strings
+  if (sourceDetail) return "other_tagged";
   if (channel) return channel;
 
   return "other";
@@ -50,6 +53,8 @@ function buildBuckets(leads: Lead[]): SourceBucket[] {
 
   for (const lead of leads) {
     const key = normalizeSource(lead);
+    const stage = (lead.stage || "").trim().toLowerCase();
+    const priority = (lead.priority || "").trim().toLowerCase();
 
     if (!map.has(key)) {
       map.set(key, {
@@ -72,19 +77,19 @@ function buildBuckets(leads: Lead[]): SourceBucket[] {
       bucket.priorityA += 1;
     }
 
-    if (lead.priority === "high") {
+    if (priority === "high") {
       bucket.highPriority += 1;
     }
 
-    if (lead.stage === "appointment_set") {
+    if (stage === "appointment_set" || stage === "appointment_done") {
       bucket.appointments += 1;
     }
 
-    if (lead.stage === "closed") {
+    if (stage === "closed") {
       bucket.closed += 1;
     }
 
-    if (lead.stage === "lost") {
+    if (stage === "lost") {
       bucket.lost += 1;
     }
   }
@@ -93,6 +98,7 @@ function buildBuckets(leads: Lead[]): SourceBucket[] {
     if (b.priorityA !== a.priorityA) return b.priorityA - a.priorityA;
     if (b.highPriority !== a.highPriority) return b.highPriority - a.highPriority;
     if (b.appointments !== a.appointments) return b.appointments - a.appointments;
+    if (b.closed !== a.closed) return b.closed - a.closed;
     return b.total - a.total;
   });
 }

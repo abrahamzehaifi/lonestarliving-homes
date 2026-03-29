@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 type Language = "en" | "es" | "ar";
 
 type SellPageProps = {
-  searchParams?: Promise<{
+  searchParams?: {
     lang?: string;
-  }>;
+  };
 };
 
 const copy = {
@@ -64,8 +64,7 @@ const copy = {
 } as const;
 
 export default async function SellPage({ searchParams }: SellPageProps) {
-  const resolvedSearchParams = (await searchParams) ?? {};
-  const lang: Language = await getPreferredSiteLang(resolvedSearchParams.lang);
+  const lang: Language = await getPreferredSiteLang(searchParams?.lang);
   const t = copy[lang];
   const isArabic = lang === "ar";
 
@@ -96,7 +95,7 @@ export default async function SellPage({ searchParams }: SellPageProps) {
 
       <div className="mt-8 flex flex-wrap gap-3">
         <Link
-          href={`/intake?type=seller&lang=${lang}`}
+          href={`/intake?type=sell&lang=${lang}`}
           className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:opacity-90"
         >
           {t.primary}

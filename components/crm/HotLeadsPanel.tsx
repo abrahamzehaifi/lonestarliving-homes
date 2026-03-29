@@ -15,6 +15,17 @@ type Lead = {
   email: string | null;
 };
 
+function normalize(value?: string | null) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function formatStage(value?: string | null) {
+  if (!value) return "Unassigned";
+  return value
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function isOverdue(value: string | null) {
   if (!value) return false;
 
@@ -34,24 +45,30 @@ function daysSince(value: string | null) {
 }
 
 function isSellerSide(lead: Lead) {
-  const source = (lead.source_detail || "").toLowerCase();
-  return Boolean(lead.property_address) ||
+  const source = normalize(lead.source_detail);
+
+  return (
+    Boolean(lead.property_address?.trim()) ||
     source.includes("expired") ||
     source.includes("withdrawn") ||
     source.includes("terminated") ||
     source.includes("seller") ||
-    source.includes("landlord");
+    source.includes("landlord")
+  );
 }
 
 function hotLeadScore(lead: Lead) {
+  const stage = normalize(lead.stage);
+  const priority = normalize(lead.priority);
+
   let score = 0;
 
-  if (lead.stage === "closed" || lead.stage === "lost") return -9999;
+  if (stage === "closed" || stage === "lost") return -9999;
 
   if (isOverdue(lead.next_follow_up_at)) score += 60;
   if (lead.lead_quality === "priority_a") score += 40;
-  if (lead.priority === "high") score += 30;
-  if (lead.stage === "appointment_set") score += 25;
+  if (priority === "high") score += 30;
+  if (stage === "appointment_set") score += 25;
   if (isSellerSide(lead)) score += 20;
   if (typeof lead.lead_score === "number") score += Math.min(lead.lead_score, 50);
 
@@ -62,26 +79,32 @@ function hotLeadScore(lead: Lead) {
 }
 
 function isHotLead(lead: Lead) {
-  if (lead.stage === "closed" || lead.stage === "lost") return false;
+  const stage = normalize(lead.stage);
+  const priority = normalize(lead.priority);
+
+  if (stage === "closed" || stage === "lost") return false;
 
   return (
     isOverdue(lead.next_follow_up_at) ||
     lead.lead_quality === "priority_a" ||
-    lead.priority === "high" ||
-    lead.stage === "appointment_set" ||
+    priority === "high" ||
+    stage === "appointment_set" ||
     isSellerSide(lead)
   );
 }
 
 function reasonText(lead: Lead) {
+  const stage = normalize(lead.stage);
+  const priority = normalize(lead.priority);
+
   const reasons: string[] = [];
 
   if (isOverdue(lead.next_follow_up_at)) reasons.push("overdue");
   if (lead.lead_quality === "priority_a") reasons.push("priority A");
-  if (lead.priority === "high") reasons.push("high priority");
-  if (lead.stage === "appointment_set") reasons.push("appointment set");
+  if (priority === "high") reasons.push("high priority");
+  if (stage === "appointment_set") reasons.push("appointment set");
   if (isSellerSide(lead)) reasons.push("seller-side");
-  if (lead.source_detail) reasons.push(lead.source_detail);
+  if (lead.source_detail?.trim()) reasons.push(lead.source_detail.trim());
 
   return reasons.join(" · ");
 }
@@ -146,7 +169,7 @@ export default function HotLeadsPanel({
                       </span>
                     ) : null}
 
-                    {lead.priority === "high" ? (
+                    {normalize(lead.priority) === "high" ? (
                       <span className="rounded-full bg-neutral-900 px-2 py-1 text-xs font-medium text-white">
                         High
                       </span>
@@ -154,11 +177,11 @@ export default function HotLeadsPanel({
                   </div>
 
                   <p className="mt-2 font-medium text-neutral-950">
-                    {lead.full_name}
+                    {lead.full_name?.trim() || "Unnamed lead"}
                   </p>
 
                   <p className="mt-1 text-sm text-neutral-700">
-                    {lead.stage}
+                    {formatStage(lead.stage)}
                     {lead.property_address ? ` · ${lead.property_address}` : ""}
                   </p>
 

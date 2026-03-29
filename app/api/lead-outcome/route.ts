@@ -73,11 +73,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (
-      body?.closed_at != null &&
-      body?.closed_at !== "" &&
-      closedAt === null
-    ) {
+    if (body?.closed_at != null && body?.closed_at !== "" && closedAt === null) {
       return NextResponse.json(
         { ok: false, error: "Invalid closed date." },
         { status: 400 }
@@ -87,7 +83,7 @@ export async function POST(req: Request) {
     const supabase = createSupabaseServiceClient();
 
     const { data: existingLead, error: existingLeadError } = await supabase
-      .from("leads")
+      .from("crm_leads")
       .select(
         "id, closed_at, commission_estimate, commission_actual, outcome_notes"
       )
@@ -95,7 +91,7 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (existingLeadError) {
-      console.error("lead-outcome read failed:", existingLeadError);
+      console.error("crm lead outcome read failed:", existingLeadError);
       return NextResponse.json(
         { ok: false, error: "Database read failed." },
         { status: 500 }
@@ -170,7 +166,7 @@ export async function POST(req: Request) {
     }
 
     const { data: updatedLead, error: updateError } = await supabase
-      .from("leads")
+      .from("crm_leads")
       .update({
         closed_at: closedAt,
         commission_estimate: commissionEstimate,
@@ -185,7 +181,7 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (updateError) {
-      console.error("lead-outcome update failed:", updateError);
+      console.error("crm lead outcome update failed:", updateError);
       return NextResponse.json(
         { ok: false, error: "Database update failed." },
         { status: 500 }
@@ -218,7 +214,7 @@ export async function POST(req: Request) {
       });
 
       if (error) {
-        console.error("lead-outcome closed_at event insert failed:", error);
+        console.error("crm lead closed_at event insert failed:", error);
       } else {
         timelineResults.lead_closed = true;
       }
@@ -236,10 +232,7 @@ export async function POST(req: Request) {
       });
 
       if (error) {
-        console.error(
-          "lead-outcome commission_estimate event insert failed:",
-          error
-        );
+        console.error("crm lead commission_estimate event insert failed:", error);
       } else {
         timelineResults.commission_estimate_updated = true;
       }
@@ -257,10 +250,7 @@ export async function POST(req: Request) {
       });
 
       if (error) {
-        console.error(
-          "lead-outcome commission_actual event insert failed:",
-          error
-        );
+        console.error("crm lead commission_actual event insert failed:", error);
       } else {
         timelineResults.commission_actual_updated = true;
       }
@@ -290,7 +280,7 @@ export async function POST(req: Request) {
       });
 
       if (error) {
-        console.error("lead-outcome notes event insert failed:", error);
+        console.error("crm lead notes event insert failed:", error);
       } else {
         timelineResults.outcome_notes_updated = true;
       }
@@ -309,7 +299,7 @@ export async function POST(req: Request) {
       timeline: timelineResults,
     });
   } catch (err) {
-    console.error("lead-outcome route crashed:", err);
+    console.error("crm lead outcome route crashed:", err);
     return NextResponse.json(
       { ok: false, error: "Server error." },
       { status: 500 }

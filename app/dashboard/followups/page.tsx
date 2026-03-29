@@ -1,18 +1,18 @@
 import Link from "next/link";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
-type LeadRow = {
+type CrmLeadRow = {
   id: string;
-  name: string;
-  email: string;
+  full_name: string | null;
+  email: string | null;
   phone: string | null;
-  lead_type: string;
-  status: string | null;
+  property_address: string | null;
+  stage: string | null;
   lead_quality: string | null;
-  follow_up_at: string | null;
+  next_follow_up_at: string | null;
   timeline: string | null;
-  source: string | null;
-  segment: string | null;
+  source_detail: string | null;
+  priority: string | null;
 };
 
 function formatDate(value: string) {
@@ -61,6 +61,10 @@ function timeAgo(value: string) {
   }
 }
 
+function formatText(value: string | null | undefined) {
+  return value && value.trim() ? value : "—";
+}
+
 function labelize(value: string | null | undefined) {
   if (!value) return "—";
 
@@ -72,22 +76,28 @@ function labelize(value: string | null | undefined) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function getStatusClasses(status: string | null) {
-  switch (status) {
+function getStageClasses(stage: string | null) {
+  switch (stage) {
     case "new":
       return "bg-blue-50 text-blue-700 ring-blue-100";
     case "contacted":
       return "bg-amber-50 text-amber-700 ring-amber-100";
-    case "qualified":
-      return "bg-emerald-50 text-emerald-700 ring-emerald-100";
-    case "showing":
+    case "conversation":
       return "bg-violet-50 text-violet-700 ring-violet-100";
-    case "application":
+    case "appointment_set":
+      return "bg-emerald-50 text-emerald-700 ring-emerald-100";
+    case "appointment_done":
+      return "bg-teal-50 text-teal-700 ring-teal-100";
+    case "follow_up":
       return "bg-orange-50 text-orange-700 ring-orange-100";
+    case "listing_signed":
+      return "bg-indigo-50 text-indigo-700 ring-indigo-100";
     case "closed":
       return "bg-green-50 text-green-700 ring-green-100";
     case "lost":
       return "bg-neutral-100 text-neutral-600 ring-neutral-200";
+    case "nurture":
+      return "bg-slate-100 text-slate-700 ring-slate-200";
     default:
       return "bg-neutral-100 text-neutral-700 ring-neutral-200";
   }
@@ -106,14 +116,14 @@ function getQualityClasses(quality: string | null) {
   }
 }
 
-function StatusPill({ status }: { status: string | null }) {
+function StagePill({ stage }: { stage: string | null }) {
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getStatusClasses(
-        status
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getStageClasses(
+        stage
       )}`}
     >
-      {labelize(status)}
+      {labelize(stage)}
     </span>
   );
 }
@@ -144,7 +154,7 @@ function QueueSection({
 }: {
   title: string;
   description: string;
-  leads: LeadRow[];
+  leads: CrmLeadRow[];
   tone?: "default" | "urgent";
 }) {
   const toneClasses =
@@ -184,34 +194,36 @@ function QueueSection({
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <Link
-                      href={`/dashboard/leads/${lead.id}`}
+                      href={`/ops/leads/${lead.id}`}
                       className="text-base font-semibold tracking-tight text-neutral-950 underline-offset-4 hover:underline"
                     >
-                      {lead.name}
+                      {formatText(lead.full_name)}
                     </Link>
-                    <StatusPill status={lead.status} />
+                    <StagePill stage={lead.stage} />
                     <QualityPill quality={lead.lead_quality} />
                   </div>
 
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-neutral-600">
-                    <span>{labelize(lead.lead_type)}</span>
-                    <span>{labelize(lead.segment)}</span>
-                    <span>{labelize(lead.source)}</span>
+                    <span>{formatText(lead.property_address)}</span>
+                    <span>{labelize(lead.priority)}</span>
+                    <span>{labelize(lead.source_detail)}</span>
                     <span>{labelize(lead.timeline)}</span>
                   </div>
 
                   <div className="mt-3 space-y-1 text-sm text-neutral-700">
-                    <div className="break-all">{lead.email}</div>
-                    <div>{lead.phone || "—"}</div>
+                    <div className="break-all">{formatText(lead.email)}</div>
+                    <div>{formatText(lead.phone)}</div>
                   </div>
                 </div>
 
                 <div className="shrink-0 text-sm">
                   <div className="font-medium text-neutral-950">
-                    {lead.follow_up_at ? formatDate(lead.follow_up_at) : "—"}
+                    {lead.next_follow_up_at
+                      ? formatDate(lead.next_follow_up_at)
+                      : "—"}
                   </div>
                   <div className="mt-1 text-neutral-500">
-                    {lead.follow_up_at ? timeAgo(lead.follow_up_at) : ""}
+                    {lead.next_follow_up_at ? timeAgo(lead.next_follow_up_at) : ""}
                   </div>
                 </div>
               </div>
@@ -227,17 +239,17 @@ export default async function DashboardFollowUpsPage() {
   const supabase = createSupabaseServiceClient();
 
   const { data, error } = await supabase
-    .from("leads")
+    .from("crm_leads")
     .select(
-      "id, name, email, phone, lead_type, status, lead_quality, follow_up_at, timeline, source, segment"
+      "id, full_name, email, phone, property_address, stage, lead_quality, next_follow_up_at, timeline, source_detail, priority"
     )
-    .not("follow_up_at", "is", null)
-    .neq("status", "closed")
-    .neq("status", "lost")
-    .order("follow_up_at", { ascending: true })
+    .not("next_follow_up_at", "is", null)
+    .neq("stage", "closed")
+    .neq("stage", "lost")
+    .order("next_follow_up_at", { ascending: true })
     .limit(200);
 
-  const leads = (data ?? []) as LeadRow[];
+  const leads = (data ?? []) as CrmLeadRow[];
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -246,19 +258,19 @@ export default async function DashboardFollowUpsPage() {
   tomorrow.setDate(today.getDate() + 1);
 
   const overdue = leads.filter((lead) => {
-    if (!lead.follow_up_at) return false;
-    return new Date(lead.follow_up_at) < today;
+    if (!lead.next_follow_up_at) return false;
+    return new Date(lead.next_follow_up_at) < today;
   });
 
   const dueToday = leads.filter((lead) => {
-    if (!lead.follow_up_at) return false;
-    const date = new Date(lead.follow_up_at);
+    if (!lead.next_follow_up_at) return false;
+    const date = new Date(lead.next_follow_up_at);
     return date >= today && date < tomorrow;
   });
 
   const upcoming = leads.filter((lead) => {
-    if (!lead.follow_up_at) return false;
-    return new Date(lead.follow_up_at) >= tomorrow;
+    if (!lead.next_follow_up_at) return false;
+    return new Date(lead.next_follow_up_at) >= tomorrow;
   });
 
   return (
@@ -267,7 +279,7 @@ export default async function DashboardFollowUpsPage() {
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-neutral-500">
-              Dashboard
+              Operations
             </p>
             <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
               Follow-up queue
@@ -279,10 +291,10 @@ export default async function DashboardFollowUpsPage() {
           </div>
 
           <Link
-            href="/dashboard"
+            href="/ops/dashboard/crm"
             className="inline-flex h-11 items-center justify-center rounded-full border border-black/10 px-5 text-sm font-medium text-neutral-900 transition hover:border-black/20 hover:bg-white"
           >
-            Back to dashboard
+            Back to CRM
           </Link>
         </div>
 

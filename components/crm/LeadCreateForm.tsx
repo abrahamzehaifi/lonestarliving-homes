@@ -13,6 +13,7 @@ export default function LeadCreateForm() {
       <div className="grid gap-3 md:grid-cols-6">
         <input
           name="full_name"
+          type="text"
           placeholder="Seller name"
           className="rounded-xl border px-3 py-2 md:col-span-1"
           required
@@ -20,24 +21,31 @@ export default function LeadCreateForm() {
 
         <input
           name="phone"
+          type="tel"
           placeholder="Phone"
           className="rounded-xl border px-3 py-2 md:col-span-1"
         />
 
         <input
           name="email"
+          type="email"
           placeholder="Email"
           className="rounded-xl border px-3 py-2 md:col-span-1"
         />
 
         <input
           name="property_address"
+          type="text"
           placeholder="Property address"
           className="rounded-xl border px-3 py-2 md:col-span-2"
           required
         />
 
-        <select name="source" className="rounded-xl border px-3 py-2">
+        <select
+          name="source"
+          defaultValue="manual"
+          className="rounded-xl border px-3 py-2"
+        >
           <option value="expired">Expired</option>
           <option value="withdrawn">Withdrawn</option>
           <option value="terminated">Terminated</option>
@@ -61,11 +69,12 @@ export default function LeadCreateForm() {
 
         <select
           name="priority"
-          defaultValue="normal"
+          defaultValue="medium"
           className="rounded-xl border px-3 py-2"
         >
           <option value="high">High priority</option>
-          <option value="normal">Normal priority</option>
+          <option value="medium">Medium priority</option>
+          <option value="low">Low priority</option>
         </select>
 
         <input
@@ -79,6 +88,7 @@ export default function LeadCreateForm() {
 
         <input
           name="source_detail"
+          type="text"
           placeholder="Source detail (e.g. expired_batch_1)"
           className="rounded-xl border px-3 py-2"
         />
@@ -87,11 +97,12 @@ export default function LeadCreateForm() {
       <div className="mt-3 grid gap-3 md:grid-cols-3">
         <input
           name="channel"
+          type="text"
           placeholder="Channel (e.g. outbound, referral, organic)"
           className="rounded-xl border px-3 py-2"
         />
 
-        <div className="md:col-span-2 flex items-center justify-end">
+        <div className="flex items-center justify-end md:col-span-2">
           <button
             type="submit"
             className="rounded-xl bg-black px-4 py-2 text-white transition hover:bg-neutral-800"

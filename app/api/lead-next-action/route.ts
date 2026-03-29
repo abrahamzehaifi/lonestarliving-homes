@@ -27,13 +27,13 @@ export async function POST(req: Request) {
     const supabase = createSupabaseServiceClient();
 
     const { data: existingLead, error: existingLeadError } = await supabase
-      .from("leads")
+      .from("crm_leads")
       .select("id, next_action")
       .eq("id", id)
       .maybeSingle();
 
     if (existingLeadError) {
-      console.error("lead-next-action read failed:", existingLeadError);
+      console.error("crm next-action read failed:", existingLeadError);
       return NextResponse.json(
         { ok: false, error: "Failed to load lead." },
         { status: 500 }
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     }
 
     const { data: updatedLead, error: updateError } = await supabase
-      .from("leads")
+      .from("crm_leads")
       .update({
         next_action: nextAction,
         updated_at: new Date().toISOString(),
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (updateError) {
-      console.error("lead-next-action update failed:", updateError);
+      console.error("crm next-action update failed:", updateError);
       return NextResponse.json(
         { ok: false, error: "Failed to update next action." },
         { status: 500 }
@@ -91,18 +91,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const { error: eventError } = await supabase.from("lead_events").insert({
+    const { error: activityError } = await supabase.from("crm_activities").insert({
       lead_id: id,
-      event_type: "next_action_updated",
-      event_label: nextAction ? "Next action updated" : "Next action cleared",
-      event_data: {
-        from: previousNextAction,
-        to: nextAction,
-      },
+      activity_type: "next_action_updated",
+      content: nextAction
+        ? `Next action updated from "${previousNextAction ?? "-"}" to "${nextAction}".`
+        : `Next action cleared. Previous value: "${previousNextAction ?? "-"}".`,
     });
 
-    if (eventError) {
-      console.error("lead-next-action event insert failed:", eventError);
+    if (activityError) {
+      console.error("crm next-action activity insert failed:", activityError);
     }
 
     return NextResponse.json({
@@ -113,11 +111,11 @@ export async function POST(req: Request) {
         updated_at: updatedLead.updated_at ?? null,
       },
       timeline: {
-        next_action_updated: !eventError,
+        next_action_updated: !activityError,
       },
     });
   } catch (error) {
-    console.error("lead-next-action route error:", error);
+    console.error("crm next-action route error:", error);
 
     return NextResponse.json(
       { ok: false, error: "Invalid request." },

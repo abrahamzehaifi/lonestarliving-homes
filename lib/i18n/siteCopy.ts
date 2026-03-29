@@ -39,7 +39,7 @@ export const siteCopy: Record<
       buy: "Buy",
       sell: "Sell",
       landlords: "Landlords",
-      apply: "Apply",
+      apply: "Get Started",
     },
     header: {
       name: "Abraham Zehaifi",
@@ -55,26 +55,26 @@ export const siteCopy: Record<
       spanish: "Español",
       arabic: "العربية",
       description:
-        "Houston real estate guidance for renters, relocation clients, buyers, sellers, landlords, and niche housing searches including Texas Medical Center and Rice University.",
+        "Houston real estate guidance for renters, buyers, sellers, landlords, and relocation clients.",
     },
   },
 
   es: {
     nav: {
       rent: "Rentas",
-      medical: "Vivienda Centro Médico",
-      rice: "Vivienda Estudiantil Rice",
+      medical: "Vivienda en el Centro Médico",
+      rice: "Vivienda para Estudiantes de Rice",
       relocation: "Reubicación",
       buy: "Comprar",
       sell: "Vender",
       landlords: "Propietarios",
-      apply: "Aplicar",
+      apply: "Comenzar",
     },
     header: {
       name: "Abraham Zehaifi",
-      title: "Texas REALTOR® | Patrocinado por 5th Stream Realty LLC",
+      title: "Texas REALTOR® | Brokered by 5th Stream Realty LLC",
       call: "Llamar",
-      email: "Correo electrónico",
+      email: "Correo",
     },
     footer: {
       contact: "Contacto",
@@ -84,7 +84,7 @@ export const siteCopy: Record<
       spanish: "Español",
       arabic: "العربية",
       description:
-        "Orientación inmobiliaria en Houston para inquilinos, reubicación, compradores, vendedores, propietarios y búsquedas de vivienda especializadas.",
+        "Orientación inmobiliaria en Houston para inquilinos, compradores, vendedores, propietarios y clientes en reubicación.",
     },
   },
 
@@ -97,11 +97,11 @@ export const siteCopy: Record<
       buy: "شراء",
       sell: "بيع",
       landlords: "المُلّاك",
-      apply: "تقديم",
+      apply: "ابدأ الآن",
     },
     header: {
       name: "Abraham Zehaifi",
-      title: "Texas REALTOR® | برعاية 5th Stream Realty LLC",
+      title: "Texas REALTOR® | Brokered by 5th Stream Realty LLC",
       call: "اتصل",
       email: "البريد الإلكتروني",
     },
@@ -113,7 +113,7 @@ export const siteCopy: Record<
       spanish: "Español",
       arabic: "العربية",
       description:
-        "إرشاد عقاري في هيوستن للمستأجرين والمنتقلين والمشترين والبائعين والمُلّاك.",
+        "إرشاد عقاري في هيوستن للمستأجرين والمشترين والبائعين والمُلّاك والعملاء المنتقلين.",
     },
   },
 };

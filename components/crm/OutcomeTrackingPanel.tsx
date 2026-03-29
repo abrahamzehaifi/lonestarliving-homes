@@ -8,6 +8,50 @@ type Lead = {
   outcome_notes?: string | null;
 };
 
+type Outcome =
+  | "no_answer"
+  | "spoke"
+  | "interested"
+  | "appointment_set"
+  | "lost";
+
+const OUTCOME_OPTIONS: Array<{
+  value: Outcome;
+  label: string;
+  className?: string;
+}> = [
+  {
+    value: "no_answer",
+    label: "No answer",
+    className:
+      "border border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50",
+  },
+  {
+    value: "spoke",
+    label: "Spoke",
+    className:
+      "border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100",
+  },
+  {
+    value: "interested",
+    label: "Interested",
+    className:
+      "border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100",
+  },
+  {
+    value: "appointment_set",
+    label: "Appointment set",
+    className:
+      "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100",
+  },
+  {
+    value: "lost",
+    label: "Lost",
+    className:
+      "border border-red-200 bg-red-50 text-red-700 hover:bg-red-100",
+  },
+];
+
 function formatDateTime(value: string | null | undefined) {
   if (!value) return "Not set";
 
@@ -23,6 +67,14 @@ function formatDateTime(value: string | null | undefined) {
   }
 }
 
+function formatOutcome(value: string | null | undefined) {
+  if (!value) return "None";
+
+  return value
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function OutcomeButton({
   leadId,
   outcome,
@@ -30,7 +82,7 @@ function OutcomeButton({
   className,
 }: {
   leadId: string;
-  outcome: "no_answer" | "spoke" | "interested" | "appointment_set" | "lost";
+  outcome: Outcome;
   label: string;
   className: string;
 }) {
@@ -68,7 +120,7 @@ export default function OutcomeTrackingPanel({
         </div>
 
         <div className="text-right text-xs text-neutral-500">
-          <p>Last outcome: {lead.last_outcome || "None"}</p>
+          <p>Last outcome: {formatOutcome(lead.last_outcome)}</p>
           <p className="mt-1">
             Updated: {formatDateTime(lead.last_outcome_at)}
           </p>
@@ -76,52 +128,32 @@ export default function OutcomeTrackingPanel({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <OutcomeButton
-          leadId={lead.id}
-          outcome="no_answer"
-          label="No answer"
-          className="border border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50"
-        />
-        <OutcomeButton
-          leadId={lead.id}
-          outcome="spoke"
-          label="Spoke"
-          className="border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
-        />
-        <OutcomeButton
-          leadId={lead.id}
-          outcome="interested"
-          label="Interested"
-          className="border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
-        />
-        <OutcomeButton
-          leadId={lead.id}
-          outcome="appointment_set"
-          label="Appointment set"
-          className="border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-        />
-        <OutcomeButton
-          leadId={lead.id}
-          outcome="lost"
-          label="Lost"
-          className="border border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
-        />
+        {OUTCOME_OPTIONS.map((option) => (
+          <OutcomeButton
+            key={option.value}
+            leadId={lead.id}
+            outcome={option.value}
+            label={option.label}
+            className={option.className || ""}
+          />
+        ))}
       </div>
 
       <div className="mt-4">
         <form action={saveLeadOutcome} className="space-y-3">
           <input type="hidden" name="leadId" value={lead.id} />
+
           <div className="flex flex-wrap gap-2">
             <select
               name="outcome"
               defaultValue="spoke"
               className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700"
             >
-              <option value="no_answer">No answer</option>
-              <option value="spoke">Spoke</option>
-              <option value="interested">Interested</option>
-              <option value="appointment_set">Appointment set</option>
-              <option value="lost">Lost</option>
+              {OUTCOME_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
 
             <button

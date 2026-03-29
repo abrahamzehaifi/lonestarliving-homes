@@ -36,14 +36,18 @@ export default function LeadOutcomeFields({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const [closedAtValue, setClosedAtValue] = useState(toDatetimeLocalValue(closedAt));
+  const [closedAtValue, setClosedAtValue] = useState(
+    toDatetimeLocalValue(closedAt)
+  );
   const [commissionEstimateValue, setCommissionEstimateValue] = useState(
     commissionEstimate?.toString() ?? ""
   );
   const [commissionActualValue, setCommissionActualValue] = useState(
     commissionActual?.toString() ?? ""
   );
-  const [outcomeNotesValue, setOutcomeNotesValue] = useState(outcomeNotes ?? "");
+  const [outcomeNotesValue, setOutcomeNotesValue] = useState(
+    outcomeNotes ?? ""
+  );
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -67,6 +71,8 @@ export default function LeadOutcomeFields({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    if (isPending) return;
 
     setError("");
     setSuccess("");

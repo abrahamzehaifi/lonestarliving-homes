@@ -52,8 +52,6 @@ function FooterLanguageLink({
 export default function SiteFooter() {
   const pathname = usePathname();
   const rawSearchParams = useSearchParams();
-  const searchParams = new URLSearchParams(rawSearchParams.toString());
-
   const lang = getSiteLang(rawSearchParams.get("lang"));
   const copy = siteCopy[lang];
 
@@ -76,19 +74,19 @@ export default function SiteFooter() {
 
             <div className="mt-5 flex flex-wrap items-center gap-2">
               <FooterLanguageLink
-                href={buildHref(pathname, searchParams, "en")}
+                href={buildHref(pathname, rawSearchParams, "en")}
               >
                 {copy.footer.english}
               </FooterLanguageLink>
 
               <FooterLanguageLink
-                href={buildHref(pathname, searchParams, "es")}
+                href={buildHref(pathname, rawSearchParams, "es")}
               >
                 {copy.footer.spanish}
               </FooterLanguageLink>
 
               <FooterLanguageLink
-                href={buildHref(pathname, searchParams, "ar")}
+                href={buildHref(pathname, rawSearchParams, "ar")}
               >
                 {copy.footer.arabic}
               </FooterLanguageLink>
@@ -155,7 +153,16 @@ export default function SiteFooter() {
 
               <p>5th Stream Realty LLC</p>
               <p>(214) 868-0707</p>
-              <p>https://5thstream.com</p>
+              <p>
+                <a
+                  href="https://5thstream.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="transition hover:text-black"
+                >
+                  5thstream.com
+                </a>
+              </p>
               <p>7941 Katy Fwy #787, Houston, TX 77024</p>
             </div>
           </div>

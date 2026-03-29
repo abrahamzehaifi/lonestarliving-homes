@@ -8,9 +8,9 @@ export const metadata: Metadata = {
 type Language = "en" | "es" | "ar";
 
 type ThanksPageProps = {
-  searchParams?: Promise<{
+  searchParams?: {
     lang?: string;
-  }>;
+  };
 };
 
 function getLanguage(value?: string): Language {
@@ -25,14 +25,12 @@ const copy = {
     body:
       "Your request has been received. The details will be reviewed and the most appropriate next step will be determined shortly.",
   },
-
   es: {
     eyebrow: "Solicitud recibida",
     title: "Gracias.",
     body:
       "Su solicitud ha sido recibida. Los detalles serán revisados y se determinará el siguiente paso más apropiado en breve.",
   },
-
   ar: {
     eyebrow: "تم استلام الطلب",
     title: "شكرًا.",
@@ -41,9 +39,8 @@ const copy = {
   },
 } as const;
 
-export default async function ThanksPage({ searchParams }: ThanksPageProps) {
-  const resolvedSearchParams = (await searchParams) ?? {};
-  const lang = getLanguage(resolvedSearchParams.lang);
+export default function ThanksPage({ searchParams }: ThanksPageProps) {
+  const lang = getLanguage(searchParams?.lang);
   const t = copy[lang];
   const isArabic = lang === "ar";
 

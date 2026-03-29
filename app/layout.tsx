@@ -43,14 +43,14 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="bg-[#f5f5f3] text-neutral-900 antialiased">
-        <div className="min-h-screen">
+        <div className="flex min-h-screen flex-col">
           <Suspense fallback={<HeaderFallback />}>
             <SiteHeader />
           </Suspense>
 
-          <main>{children}</main>
+          <main className="flex-1">{children}</main>
 
           <Suspense fallback={<FooterFallback />}>
             <SiteFooter />

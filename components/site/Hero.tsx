@@ -14,14 +14,6 @@ export default function Hero() {
 
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/65 to-slate-950/90" />
 
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.03] mix-blend-overlay"
-        style={{
-          backgroundImage:
-            "url('https://grainy-gradients.vercel.app/noise.svg')",
-        }}
-      />
-
       <div className="relative mx-auto max-w-6xl px-6 py-24 md:py-32">
         <p className="text-xs uppercase tracking-[0.32em] text-white/70 md:text-sm">
           Houston Real Estate
@@ -40,13 +32,13 @@ export default function Hero() {
         </p>
 
         <p className="mt-4 text-sm text-white/55">
-          Serving Houston • Buying, selling, renting, leasing • Arabic, English,
-          Español
+          Serving Houston with representation for buying, selling, renting, and
+          leasing.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-4">
           <Link
-            href={buildHref("/intake", { service: "tenant" }, lang)}
+            href={buildHref("/intake", { type: "tenant" }, lang)}
             className="inline-flex h-11 items-center justify-center rounded-xl bg-white px-6 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-white/90 active:scale-[0.99]"
           >
             Get Started

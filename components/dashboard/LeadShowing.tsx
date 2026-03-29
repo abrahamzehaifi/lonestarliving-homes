@@ -14,15 +14,10 @@ function toLocalInputValue(value: string | null) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
 
-  const pad = (n: number) => String(n).padStart(2, "0");
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60_000);
 
-  const year = date.getFullYear();
-  const month = pad(date.getMonth() + 1);
-  const day = pad(date.getDate());
-  const hours = pad(date.getHours());
-  const minutes = pad(date.getMinutes());
-
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
+  return local.toISOString().slice(0, 16);
 }
 
 export default function LeadShowing({ leadId, showingAt }: Props) {
@@ -32,27 +27,24 @@ export default function LeadShowing({ leadId, showingAt }: Props) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const hasChanged = value !== toLocalInputValue(showingAt);
+
   useEffect(() => {
     setValue(toLocalInputValue(showingAt));
   }, [showingAt]);
 
   useEffect(() => {
     if (!success) return;
-
-    const timeout = window.setTimeout(() => {
-      setSuccess("");
-    }, 2000);
-
-    return () => window.clearTimeout(timeout);
+    const timeout = setTimeout(() => setSuccess(""), 2000);
+    return () => clearTimeout(timeout);
   }, [success]);
 
-  async function saveShowing(nextValue: string | null) {
+  function saveShowing(nextValue: string | null) {
     if (isPending) return;
 
-    const current = toLocalInputValue(showingAt);
     const normalizedNext = nextValue ?? "";
 
-    if (normalizedNext === current) {
+    if (!hasChanged) {
       setError("");
       setSuccess("No changes to save.");
       return;
@@ -61,37 +53,35 @@ export default function LeadShowing({ leadId, showingAt }: Props) {
     setError("");
     setSuccess("");
 
-    try {
-      const res = await fetch("/api/lead-showing", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: leadId,
-          showingAt: normalizedNext || null,
-        }),
-      });
+    startTransition(() => {
+      void (async () => {
+        try {
+          const res = await fetch("/api/lead-showing", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: leadId,
+              showingAt: normalizedNext || null,
+            }),
+          });
 
-      const data = await res.json().catch(() => ({}));
+          const data = await res.json().catch(() => ({}));
 
-      if (!res.ok) {
-        setError(
-          typeof data?.error === "string"
-            ? data.error
-            : "Failed to update showing."
-        );
-        return;
-      }
+          if (!res.ok) {
+            setError(data?.error || "Failed to update showing.");
+            return;
+          }
 
-      setSuccess(normalizedNext ? "Showing scheduled." : "Showing cleared.");
+          setSuccess(
+            normalizedNext ? "Showing scheduled." : "Showing cleared."
+          );
 
-      startTransition(() => {
-        router.refresh();
-      });
-    } catch {
-      setError("Network error while updating showing.");
-    }
+          router.refresh();
+        } catch {
+          setError("Network error while updating showing.");
+        }
+      })();
+    });
   }
 
   return (
@@ -102,14 +92,14 @@ export default function LeadShowing({ leadId, showingAt }: Props) {
           value={value}
           disabled={isPending}
           onChange={(e) => setValue(e.target.value)}
-          className="min-w-[240px] rounded-xl border border-black/10 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-black/20 disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-w-[240px] rounded-xl border border-black/10 bg-white px-3 py-2 text-sm text-neutral-900"
         />
 
         <button
           type="button"
-          disabled={isPending}
-          onClick={() => void saveShowing(value || null)}
-          className="inline-flex h-10 items-center justify-center rounded-full bg-neutral-950 px-4 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={isPending || !hasChanged}
+          onClick={() => saveShowing(value || null)}
+          className="rounded-full bg-neutral-950 px-4 py-2 text-sm text-white disabled:opacity-60"
         >
           {isPending ? "Saving..." : "Save"}
         </button>
@@ -119,16 +109,16 @@ export default function LeadShowing({ leadId, showingAt }: Props) {
           disabled={isPending || !value}
           onClick={() => {
             setValue("");
-            void saveShowing(null);
+            saveShowing(null);
           }}
-          className="inline-flex h-10 items-center justify-center rounded-full border border-black/10 px-4 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-full border px-4 py-2 text-sm disabled:opacity-60"
         >
           Clear
         </button>
       </div>
 
-      {success ? <p className="text-xs text-emerald-600">{success}</p> : null}
-      {error ? <p className="text-xs text-red-600">{error}</p> : null}
+      {success && <p className="text-xs text-emerald-600">{success}</p>}
+      {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   );
 }

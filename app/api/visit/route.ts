@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
+function cleanText(value: unknown, max = 500): string | null {
+  const s = String(value ?? "").trim();
+  if (!s) return null;
+  return s.length > max ? s.slice(0, max) : s;
+}
+
 function getClientIp(req: Request): string | null {
   const xff = req.headers.get("x-forwarded-for");
   if (xff) return xff.split(",")[0]?.trim() || null;
@@ -13,41 +19,39 @@ export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => null);
 
-    const path =
-      typeof body?.path === "string" && body.path.trim()
-        ? body.path.trim()
-        : "/";
+    const path = cleanText(body?.path, 1000) || "/";
+    const referrer = cleanText(body?.referrer, 2000);
 
-    const referrer =
-      typeof body?.referrer === "string" && body.referrer.trim()
-        ? body.referrer.trim()
-        : null;
-
-    const visitSource =
-      typeof body?.visitSource === "string" && body.visitSource.trim()
-        ? body.visitSource.trim()
-        : "website";
+    const rawVisitSource = cleanText(body?.visitSource, 80)?.toLowerCase();
+    const allowedVisitSources = ["website", "organic", "direct", "referral", "campaign"];
+    const visitSource = allowedVisitSources.includes(rawVisitSource || "")
+      ? rawVisitSource
+      : "website";
 
     const ip = getClientIp(req);
-    const userAgent = req.headers.get("user-agent");
+    const userAgent = cleanText(req.headers.get("user-agent"), 1000);
 
-    const country = req.headers.get("x-vercel-ip-country");
-    const region = req.headers.get("x-vercel-ip-country-region");
-    const city = req.headers.get("x-vercel-ip-city");
+    const country = cleanText(req.headers.get("x-vercel-ip-country"), 50);
+    const region = cleanText(req.headers.get("x-vercel-ip-country-region"), 50);
+    const city = cleanText(req.headers.get("x-vercel-ip-city"), 120);
 
     const supabase = createSupabaseServiceClient();
 
     let knownLabel: string | null = null;
 
     if (ip) {
-      const { data: knownIp } = await supabase
+      const { data: knownIp, error: knownIpError } = await supabase
         .from("known_ips")
         .select("label")
         .eq("ip", ip)
         .eq("active", true)
         .maybeSingle();
 
-      knownLabel = knownIp?.label ?? null;
+      if (knownIpError) {
+        console.error("known_ips lookup failed:", knownIpError);
+      } else {
+        knownLabel = cleanText(knownIp?.label, 120);
+      }
     }
 
     const { error } = await supabase.from("site_visits").insert({
@@ -55,21 +59,21 @@ export async function POST(req: Request) {
       referrer,
       ip,
       user_agent: userAgent,
-      country: country ?? null,
-      region: region ?? null,
-      city: city ?? null,
+      country,
+      region,
+      city,
       known_label: knownLabel,
       visit_source: visitSource,
     });
 
     if (error) {
       console.error("visit logging failed:", error);
-      return NextResponse.json({ ok: false }, { status: 500 });
+      return NextResponse.json({ ok: true, logged: false });
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, logged: true });
   } catch (error) {
     console.error("visit route error:", error);
-    return NextResponse.json({ ok: false }, { status: 400 });
+    return NextResponse.json({ ok: true, logged: false });
   }
 }

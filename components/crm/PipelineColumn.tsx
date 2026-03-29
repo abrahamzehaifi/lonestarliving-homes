@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import StageSelectForm from "@/components/crm/StageSelectForm";
 
@@ -44,7 +45,6 @@ function isOverdue(value: string | null) {
 
 function cardClasses(lead: Lead, selected: boolean) {
   const overdue = isOverdue(lead.next_follow_up_at);
-
   const base =
     "rounded-2xl border p-3 transition shadow-sm hover:shadow-md";
 
@@ -75,7 +75,7 @@ function Badge({
   children,
   className,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   className: string;
 }) {
   return (
@@ -141,11 +141,7 @@ function SourceBadge({
   const value = [sourceDetail, channel].filter(Boolean).join(" · ");
   if (!value) return null;
 
-  return (
-    <p className="text-xs text-neutral-500">
-      Source: {value}
-    </p>
-  );
+  return <p className="text-xs text-neutral-500">Source: {value}</p>;
 }
 
 function QuickActions({

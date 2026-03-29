@@ -40,10 +40,11 @@ function lastTouchDays(lead: Lead) {
 }
 
 function isSellerSideLead(lead: Lead) {
+  const stage = (lead.stage || "").toLowerCase();
   const source = (lead.source_detail || "").toLowerCase();
   const hasAddress = Boolean(lead.property_address?.trim());
 
-  if (lead.stage === "listing_signed") return true;
+  if (stage === "listing_signed") return true;
   if (hasAddress) return true;
   if (source.includes("expired")) return true;
   if (source.includes("withdrawn")) return true;
@@ -55,10 +56,13 @@ function isSellerSideLead(lead: Lead) {
 }
 
 function opportunityScore(lead: Lead) {
+  const stage = (lead.stage || "").toLowerCase();
+  const source = (lead.source_detail || "").toLowerCase();
+
   let score = 0;
 
   if (!isSellerSideLead(lead)) return -9999;
-  if (lead.stage === "closed" || lead.stage === "lost") return -9999;
+  if (stage === "closed" || stage === "lost") return -9999;
 
   if (lead.property_address) score += 40;
   if (lead.lead_quality === "priority_a") score += 30;
@@ -66,16 +70,15 @@ function opportunityScore(lead: Lead) {
   if (lead.priority === "high") score += 20;
   if (typeof lead.lead_score === "number") score += Math.min(lead.lead_score, 50);
 
-  const source = (lead.source_detail || "").toLowerCase();
   if (source.includes("expired")) score += 35;
   if (source.includes("withdrawn")) score += 20;
   if (source.includes("terminated")) score += 20;
   if (source.includes("referral")) score += 15;
 
-  if (lead.stage === "new_lead") score += 15;
-  if (lead.stage === "contacted") score += 12;
-  if (lead.stage === "appointment_set") score += 18;
-  if (lead.stage === "listing_signed") score += 25;
+  if (stage === "new") score += 15;
+  if (stage === "contacted") score += 12;
+  if (stage === "appointment_set") score += 18;
+  if (stage === "listing_signed") score += 25;
 
   if (isOverdue(lead.next_follow_up_at)) score += 30;
 

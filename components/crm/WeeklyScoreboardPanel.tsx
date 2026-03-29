@@ -57,7 +57,9 @@ function countLeadTouchesForDay(leads: Lead[], day: Date) {
 }
 
 function countLeadsByStage(leads: Lead[], stage: string) {
-  return leads.filter((lead) => lead.stage === stage).length;
+  return leads.filter(
+    (lead) => String(lead.stage || "").trim().toLowerCase() === stage
+  ).length;
 }
 
 function sum(values: number[]) {
@@ -106,6 +108,7 @@ export default function WeeklyScoreboardPanel({
   const appointmentsThisWeek = sum(appointmentSeries);
   const touchesThisWeek = sum(touchSeries);
 
+  // Compare first 3 days vs last 3 days, intentionally skipping the middle day
   const firstHalfCalls = sum(callSeries.slice(0, 3));
   const secondHalfCalls = sum(callSeries.slice(4, 7));
 
@@ -187,7 +190,10 @@ export default function WeeklyScoreboardPanel({
           </thead>
           <tbody>
             {days.map((day, index) => (
-              <tr key={day.toISOString()} className="rounded-2xl bg-neutral-50 text-sm text-neutral-800">
+              <tr
+                key={day.toISOString()}
+                className="rounded-2xl bg-neutral-50 text-sm text-neutral-800"
+              >
                 <td className="rounded-l-xl px-3 py-3 font-medium">
                   {labelForDate(day)}
                 </td>

@@ -1,4 +1,3 @@
-// app/api/lead/route.ts
 import { NextResponse } from "next/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { Resend } from "resend";
@@ -12,6 +11,7 @@ type Segment =
   | "apartment_locator"
   | "general"
   | "other";
+type Language = "en" | "es" | "ar";
 
 type NormalizedLead = {
   leadType: LeadType;
@@ -26,8 +26,8 @@ type NormalizedLead = {
   sourceDetail?: string;
   channel?: string;
   segment?: Segment;
-  preferredLanguage?: string;
-  lang?: string;
+  preferredLanguage?: Language;
+  lang?: Language;
   area?: string;
   sourcePage?: string;
   sourcePath?: string;
@@ -154,7 +154,7 @@ function coerceSegment(v: unknown): Segment | undefined {
   return undefined;
 }
 
-function coerceLang(v: unknown): string | undefined {
+function coerceLang(v: unknown): Language | undefined {
   const x = cleanString(v, 12).toLowerCase();
   if (x === "en" || x === "es" || x === "ar") return x;
   return undefined;
@@ -239,11 +239,7 @@ function normalizeLead(raw: unknown): NormalizeLeadResult {
   }
 
   const leadType: LeadType = leadTypeRaw;
-
-  const normalizedLang =
-    coerceLang(body.lang) ??
-    coerceLang(body.preferredLanguage) ??
-    "en";
+  const normalizedLang = coerceLang(body.lang) ?? coerceLang(body.preferredLanguage) ?? "en";
 
   const lead: NormalizedLead = {
     leadType,
@@ -258,8 +254,7 @@ function normalizeLead(raw: unknown): NormalizeLeadResult {
       cleanString(body.source_detail, 120).toLowerCase() || undefined,
     channel: cleanString(body.channel, 80).toLowerCase() || undefined,
     segment: inferSegmentFromContext(body),
-    preferredLanguage:
-      cleanString(body.preferredLanguage, 12).toLowerCase() || normalizedLang,
+    preferredLanguage: normalizedLang,
     lang: normalizedLang,
     area: getNestedArea(body),
     sourcePage: cleanString(body.source_page, 500) || undefined,
@@ -337,29 +332,12 @@ function routeLead(lead: NormalizedLead): { reasons: string[] } {
 
   reasons.push(`lead_type_${lead.leadType}`);
 
-  if (lead.segment) {
-    reasons.push(`segment_${lead.segment}`);
-  }
-
-  if (lead.lang) {
-    reasons.push(`lang_${lead.lang}`);
-  }
-
-  if (lead.area) {
-    reasons.push(`area_${lead.area}`);
-  }
-
-  if (lead.sourceDetail) {
-    reasons.push(`source_detail_${lead.sourceDetail}`);
-  }
-
-  if (lead.channel) {
-    reasons.push(`channel_${lead.channel}`);
-  }
-
-  if (lead.priority) {
-    reasons.push(`priority_${lead.priority}`);
-  }
+  if (lead.segment) reasons.push(`segment_${lead.segment}`);
+  if (lead.lang) reasons.push(`lang_${lead.lang}`);
+  if (lead.area) reasons.push(`area_${lead.area}`);
+  if (lead.sourceDetail) reasons.push(`source_detail_${lead.sourceDetail}`);
+  if (lead.channel) reasons.push(`channel_${lead.channel}`);
+  if (lead.priority) reasons.push(`priority_${lead.priority}`);
 
   if (lead.leadType === "rent") {
     if ((lead.budget ?? 0) >= 1800) {
@@ -480,6 +458,14 @@ function scoreLeadQuality(
     qualityReasons.push("channel_organic");
   }
 
+  if ((lead.leadScore ?? 0) >= 80) {
+    score += 2;
+    qualityReasons.push("lead_score_80_plus");
+  } else if ((lead.leadScore ?? 0) >= 60) {
+    score += 1;
+    qualityReasons.push("lead_score_60_plus");
+  }
+
   if (lead.leadScore !== undefined) {
     qualityReasons.push(`lead_score_${lead.leadScore}`);
   }
@@ -493,25 +479,11 @@ function scoreLeadQuality(
     qualityReasons.push("detailed_message");
   }
 
-  if (lead.segment === "medical_center") {
-    qualityReasons.push("niche_medical_center");
-  }
-
-  if (lead.segment === "rice_student") {
-    qualityReasons.push("niche_rice_student");
-  }
-
-  if (lead.segment === "relocation") {
-    qualityReasons.push("niche_relocation");
-  }
-
-  if (lead.lang) {
-    qualityReasons.push(`lang_${lead.lang}`);
-  }
-
-  if (lead.area) {
-    qualityReasons.push(`area_${lead.area}`);
-  }
+  if (lead.segment === "medical_center") qualityReasons.push("niche_medical_center");
+  if (lead.segment === "rice_student") qualityReasons.push("niche_rice_student");
+  if (lead.segment === "relocation") qualityReasons.push("niche_relocation");
+  if (lead.lang) qualityReasons.push(`lang_${lead.lang}`);
+  if (lead.area) qualityReasons.push(`area_${lead.area}`);
 
   if (score >= 5) {
     return { leadQuality: "priority_a", qualityReasons };
@@ -551,8 +523,8 @@ function sanitizeRawForStorage(raw: unknown) {
     source_detail: cleanString(body.source_detail, 120) || null,
     channel: cleanString(body.channel, 80) || null,
     segment: cleanString(body.segment, 80) || null,
-    preferredLanguage: cleanString(body.preferredLanguage, 12) || null,
-    lang: cleanString(body.lang, 12) || null,
+    preferredLanguage: coerceLang(body.preferredLanguage) ?? null,
+    lang: coerceLang(body.lang) ?? null,
     area: cleanString(body.area, 120) || null,
     source_page: cleanString(body.source_page, 500) || null,
     source_path: cleanString(body.source_path, 1000) || null,
@@ -586,64 +558,126 @@ function sanitizeRawForStorage(raw: unknown) {
   };
 }
 
-async function persistLeadToSupabase(
+function getNextFollowUpAt(lead: NormalizedLead, leadQuality: LeadQuality): string {
+  const now = new Date();
+
+  const addHours = (hours: number) => {
+    const d = new Date(now);
+    d.setHours(d.getHours() + hours);
+    return d.toISOString();
+  };
+
+  const addDays = (days: number) => {
+    const d = new Date(now);
+    d.setDate(d.getDate() + days);
+    return d.toISOString();
+  };
+
+  if (lead.priority === "high" || leadQuality === "priority_a") {
+    return addHours(24);
+  }
+
+  if (
+    lead.timeline === "asap" ||
+    lead.timeline === "30_days" ||
+    lead.timeline === "within_30_days"
+  ) {
+    return addDays(2);
+  }
+
+  return addDays(3);
+}
+
+function buildPropertyAddressForCrm(lead: NormalizedLead): string {
+  if (lead.propertyAddress) return lead.propertyAddress;
+
+  if (lead.leadType === "rent" || lead.leadType === "buy") {
+    const parts = [lead.area, lead.areas].filter(Boolean);
+    if (parts.length) return parts.join(" | ");
+  }
+
+  if (lead.leadType === "landlord") {
+    const parts = [lead.propertyArea, lead.propertyType].filter(Boolean);
+    if (parts.length) return parts.join(" | ");
+  }
+
+  return "Not provided";
+}
+
+function buildMotivationForCrm(lead: NormalizedLead): string {
+  if (lead.priority === "high") return "high";
+
+  if (
+    lead.timeline === "asap" ||
+    lead.timeline === "30_days" ||
+    lead.timeline === "within_30_days"
+  ) {
+    return "high";
+  }
+
+  if (lead.sellerGoal === "fast_sale") return "high";
+  if (lead.readyToLease === "yes") return "high";
+
+  return "medium";
+}
+
+function buildPainPointForCrm(lead: NormalizedLead): string | null {
+  const notes: string[] = [];
+
+  if (lead.message) notes.push(`Message: ${lead.message}`);
+  if (lead.intent) notes.push(`Intent: ${lead.intent}`);
+  if (lead.financingStatus) notes.push(`Financing: ${lead.financingStatus}`);
+  if (lead.sellerGoal) notes.push(`Seller goal: ${lead.sellerGoal}`);
+  if (lead.readyToLease) notes.push(`Ready to lease: ${lead.readyToLease}`);
+  if (lead.segment) notes.push(`Segment: ${lead.segment}`);
+  if (lead.sourcePage) notes.push(`Source page: ${lead.sourcePage}`);
+  if (lead.sourcePath) notes.push(`Source path: ${lead.sourcePath}`);
+  if (lead.ref) notes.push(`Ref: ${lead.ref}`);
+
+  if (!notes.length) return null;
+  return notes.join(" | ");
+}
+
+async function persistLeadToCrm(
   supabase: ReturnType<typeof createSupabaseServiceClient>,
   lead: NormalizedLead,
-  reasons: string[],
   leadQuality: LeadQuality,
-  qualityReasons: string[],
   raw: unknown
 ) {
   const safeRaw = sanitizeRawForStorage(raw);
 
+  const payload = {
+    full_name: lead.name,
+    property_address: buildPropertyAddressForCrm(lead),
+    phone: lead.phone,
+    email: lead.email,
+    source: lead.source ?? "website",
+    source_detail: lead.sourceDetail ?? null,
+    channel: lead.channel ?? null,
+    motivation: buildMotivationForCrm(lead),
+    priority: lead.priority ?? "medium",
+    lead_score: lead.leadScore ?? null,
+    lead_quality: leadQuality,
+    stage: "new",
+    next_follow_up_at: getNextFollowUpAt(lead, leadQuality),
+    timeline: lead.timeline ?? null,
+    pain_point: buildPainPointForCrm(lead),
+    cma_notes:
+      lead.leadType === "sell"
+        ? `Seller intake | Goal: ${lead.sellerGoal ?? "-"} | Address: ${lead.propertyAddress ?? "-"}`
+        : lead.leadType === "buy"
+        ? `Buyer intake | Price range: ${lead.priceRange ?? "-"} | Financing: ${lead.financingStatus ?? "-"}`
+        : lead.leadType === "rent"
+        ? `Rental intake | Budget: ${lead.budget ?? "-"} | Move-in: ${lead.moveInDate ?? "-"} | Areas: ${lead.areas ?? "-"}`
+        : lead.leadType === "landlord"
+        ? `Landlord intake | Area: ${lead.propertyArea ?? "-"} | Type: ${lead.propertyType ?? "-"} | Ready: ${lead.readyToLease ?? "-"}`
+        : `General intake | Type: ${lead.leadType}`,
+    raw: safeRaw,
+  };
+
   const { data, error } = await supabase
-    .from("leads")
-    .insert({
-      segment: lead.segment ?? "general",
-      lead_type: lead.leadType,
-      reasons,
-      lead_quality: leadQuality,
-      quality_reasons: qualityReasons,
-      status: "new",
-
-      name: lead.name,
-      email: lead.email,
-      phone: lead.phone,
-      message: lead.message ?? null,
-
-      intent: lead.intent ?? null,
-      timeline: lead.timeline ?? null,
-      source: lead.source ?? "website",
-      source_detail: lead.sourceDetail ?? null,
-      channel: lead.channel ?? null,
-      preferred_language: lead.preferredLanguage ?? null,
-      lang: lead.lang ?? null,
-      area: lead.area ?? null,
-      source_page: lead.sourcePage ?? null,
-      source_path: lead.sourcePath ?? null,
-      contact_consent: lead.contactConsent ?? null,
-      lead_score: lead.leadScore ?? null,
-      priority: lead.priority ?? null,
-
-      budget: lead.budget ?? null,
-      move_in_date: lead.moveInDate ?? null,
-      areas: lead.areas ?? null,
-
-      price_range: lead.priceRange ?? null,
-      financing_status: lead.financingStatus ?? null,
-
-      property_address: lead.propertyAddress ?? null,
-      seller_goal: lead.sellerGoal ?? null,
-
-      property_area: lead.propertyArea ?? null,
-      property_type: lead.propertyType ?? null,
-      ready_to_lease: lead.readyToLease ?? null,
-
-      ip: lead.ip ?? null,
-      user_agent: lead.userAgent ?? null,
-
-      raw: safeRaw,
-    })
+    .from("crm_leads")
+    .insert(payload)
     .select("id")
     .single();
 
@@ -651,7 +685,7 @@ async function persistLeadToSupabase(
   return { ok: true as const, id: data?.id as string | undefined };
 }
 
-async function insertLeadCreatedEvent(
+async function insertCrmLeadCreatedActivity(
   supabase: ReturnType<typeof createSupabaseServiceClient>,
   params: {
     leadId: string;
@@ -661,32 +695,29 @@ async function insertLeadCreatedEvent(
     qualityReasons: string[];
   }
 ) {
-  const { error } = await supabase.from("lead_events").insert({
+  const contentLines = [
+    `Lead created from website intake.`,
+    `Type: ${params.lead.leadType}`,
+    `Segment: ${params.lead.segment ?? "general"}`,
+    `Quality: ${params.leadQuality}`,
+    `Reasons: ${params.reasons.join(", ") || "—"}`,
+    `Quality reasons: ${params.qualityReasons.join(", ") || "—"}`,
+    `Source: ${params.lead.source ?? "website"}`,
+    `Source detail: ${params.lead.sourceDetail ?? "—"}`,
+    `Channel: ${params.lead.channel ?? "—"}`,
+    `Timeline: ${params.lead.timeline ?? "—"}`,
+    `Language: ${params.lead.lang ?? "—"}`,
+    `Area: ${params.lead.area ?? "—"}`,
+  ];
+
+  const { error } = await supabase.from("crm_activities").insert({
     lead_id: params.leadId,
-    event_type: "lead_created",
-    event_label: "Lead submitted",
-    event_data: {
-      lead_type: params.lead.leadType,
-      segment: params.lead.segment ?? "general",
-      quality: params.leadQuality,
-      reasons: params.reasons,
-      quality_reasons: params.qualityReasons,
-      source: params.lead.source ?? "website",
-      source_detail: params.lead.sourceDetail ?? null,
-      channel: params.lead.channel ?? null,
-      lead_score: params.lead.leadScore ?? null,
-      priority: params.lead.priority ?? null,
-      timeline: params.lead.timeline ?? null,
-      lang: params.lead.lang ?? null,
-      area: params.lead.area ?? null,
-      source_page: params.lead.sourcePage ?? null,
-      source_path: params.lead.sourcePath ?? null,
-      ref: params.lead.ref ?? null,
-    },
+    activity_type: "lead_created",
+    content: contentLines.join(" | "),
   });
 
   if (error) {
-    console.error("lead_events insert failed:", error);
+    console.error("crm_activities insert failed:", error);
     return { ok: false as const, error };
   }
 
@@ -709,8 +740,8 @@ function formatLeadSummary(
 
   const lines: string[] = [];
 
-  lines.push(`${icon} New lead (${lead.leadType.toUpperCase()}) — ${lead.name}`);
-  if (id) lines.push(`Lead ID: ${id}`);
+  lines.push(`${icon} New CRM lead (${lead.leadType.toUpperCase()}) — ${lead.name}`);
+  if (id) lines.push(`CRM Lead ID: ${id}`);
   if (lead.priority) lines.push(`Priority: ${lead.priority}`);
   if (lead.leadScore !== undefined) lines.push(`Lead score: ${lead.leadScore}`);
   lines.push(`Segment: ${lead.segment ?? "general"}`);
@@ -897,22 +928,20 @@ export async function POST(req: Request) {
 
   const supabase = createSupabaseServiceClient();
 
-  const persisted = await persistLeadToSupabase(
+  const persisted = await persistLeadToCrm(
     supabase,
     lead,
-    reasons,
     leadQuality,
-    qualityReasons,
     raw
   );
 
   if (!persisted.ok) {
-    console.error("Lead insert failed:", persisted.error);
-    return jsonError(500, "Failed to save lead.", persisted.error);
+    console.error("CRM lead insert failed:", persisted.error);
+    return jsonError(500, "Failed to save CRM lead.", persisted.error);
   }
 
   if (persisted.id) {
-    await insertLeadCreatedEvent(supabase, {
+    await insertCrmLeadCreatedActivity(supabase, {
       leadId: persisted.id,
       lead,
       leadQuality,
@@ -929,7 +958,7 @@ export async function POST(req: Request) {
     persisted.id ?? null
   );
 
-  const subject = `New Lead (${lead.leadType.toUpperCase()}) — ${lead.name}`;
+  const subject = `New CRM Lead (${lead.leadType.toUpperCase()}) — ${lead.name}`;
 
   const [telegramResult, emailResult] = await Promise.allSettled([
     sendTelegramNotification(summary),

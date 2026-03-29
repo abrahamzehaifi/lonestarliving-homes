@@ -2,12 +2,37 @@
 
 import { useState } from "react";
 
-export default function LeadActions({ lead }: { lead: any }) {
-  const [status, setStatus] = useState(lead.status || "new");
-  const [notes, setNotes] = useState(lead.notes || "");
-  const [nextAction, setNextAction] = useState(lead.next_action || "");
+const STAGE_OPTIONS = [
+  { value: "new", label: "New" },
+  { value: "contacted", label: "Contacted" },
+  { value: "conversation", label: "Conversation" },
+  { value: "appointment_set", label: "Appointment Set" },
+  { value: "appointment_done", label: "Appointment Done" },
+  { value: "follow_up", label: "Follow-Up" },
+  { value: "listing_signed", label: "Listing Signed" },
+  { value: "closed", label: "Closed" },
+  { value: "lost", label: "Lost" },
+  { value: "nurture", label: "Nurture" },
+];
+
+type LeadActionsProps = {
+  lead: {
+    id: string;
+    stage?: string | null;
+    next_follow_up_at?: string | null;
+    timeline?: string | null;
+    pain_point?: string | null;
+    cma_notes?: string | null;
+  };
+};
+
+export default function LeadActions({ lead }: LeadActionsProps) {
+  const [stage, setStage] = useState(lead.stage || "new");
+  const [timeline, setTimeline] = useState(lead.timeline || "");
+  const [painPoint, setPainPoint] = useState(lead.pain_point || "");
+  const [cmaNotes, setCmaNotes] = useState(lead.cma_notes || "");
   const [followUp, setFollowUp] = useState(
-    lead.follow_up_at ? lead.follow_up_at.slice(0, 16) : ""
+    lead.next_follow_up_at ? lead.next_follow_up_at.slice(0, 16) : ""
   );
 
   const [saving, setSaving] = useState(false);
@@ -17,26 +42,34 @@ export default function LeadActions({ lead }: { lead: any }) {
     setSaving(true);
     setMsg("");
 
-    const res = await fetch("/api/leads/update", {
-      method: "POST",
-      body: JSON.stringify({
-        id: lead.id,
-        status,
-        notes,
-        next_action: nextAction,
-        follow_up_at: followUp || null,
-      }),
-    });
+    try {
+      const res = await fetch("/api/crm/update-lead", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: lead.id,
+          stage,
+          timeline: timeline || null,
+          pain_point: painPoint || null,
+          cma_notes: cmaNotes || null,
+          next_follow_up_at: followUp || null,
+        }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      setMsg(data.error || "Error saving");
-    } else {
-      setMsg("Saved");
+      if (!res.ok) {
+        setMsg(data.error || "Error saving");
+      } else {
+        setMsg("Saved");
+      }
+    } catch {
+      setMsg("Error saving");
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(false);
   }
 
   return (
@@ -47,25 +80,22 @@ export default function LeadActions({ lead }: { lead: any }) {
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <div>
-          <label className="text-xs text-neutral-500">Status</label>
+          <label className="text-xs text-neutral-500">Stage</label>
           <select
             className="mt-1 w-full rounded-xl border p-2 text-sm"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
+            value={stage}
+            onChange={(e) => setStage(e.target.value)}
           >
-            <option value="new">New</option>
-            <option value="contacted">Contacted</option>
-            <option value="showing">Showing</option>
-            <option value="application">Application</option>
-            <option value="closed">Closed</option>
-            <option value="lost">Lost</option>
+            {STAGE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
 
         <div>
-          <label className="text-xs text-neutral-500">
-            Follow-up date
-          </label>
+          <label className="text-xs text-neutral-500">Follow-up date</label>
           <input
             type="datetime-local"
             className="mt-1 w-full rounded-xl border p-2 text-sm"
@@ -74,30 +104,39 @@ export default function LeadActions({ lead }: { lead: any }) {
           />
         </div>
 
-        <div className="md:col-span-2">
-          <label className="text-xs text-neutral-500">
-            Next action
-          </label>
+        <div>
+          <label className="text-xs text-neutral-500">Timeline</label>
           <input
             className="mt-1 w-full rounded-xl border p-2 text-sm"
-            value={nextAction}
-            onChange={(e) => setNextAction(e.target.value)}
-            placeholder="Call, send listings, schedule showing..."
+            value={timeline}
+            onChange={(e) => setTimeline(e.target.value)}
+            placeholder="Ex: within 2 weeks"
+          />
+        </div>
+
+        <div>
+          <label className="text-xs text-neutral-500">Pain point</label>
+          <input
+            className="mt-1 w-full rounded-xl border p-2 text-sm"
+            value={painPoint}
+            onChange={(e) => setPainPoint(e.target.value)}
+            placeholder="Ex: no offers, price resistance"
           />
         </div>
 
         <div className="md:col-span-2">
-          <label className="text-xs text-neutral-500">Notes</label>
+          <label className="text-xs text-neutral-500">CMA notes</label>
           <textarea
-            className="mt-1 w-full rounded-xl border p-2 text-sm min-h-[120px]"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            className="mt-1 min-h-[120px] w-full rounded-xl border p-2 text-sm"
+            value={cmaNotes}
+            onChange={(e) => setCmaNotes(e.target.value)}
           />
         </div>
       </div>
 
       <div className="mt-4 flex items-center gap-4">
         <button
+          type="button"
           onClick={handleSave}
           disabled={saving}
           className="rounded-full bg-neutral-900 px-5 py-2 text-sm text-white"

@@ -2,85 +2,49 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
-import LeadStatusSelect from "@/components/dashboard/LeadStatusSelect";
-import LeadNotes from "@/components/dashboard/LeadNotes";
-import LeadFollowUp from "@/components/dashboard/LeadFollowUp";
-import LeadNextAction from "@/components/dashboard/LeadNextAction";
-import LeadShowing from "@/components/dashboard/LeadShowing";
-import LeadOutcomeForm from "@/components/dashboard/LeadOutcomeForm";
 
 export const dynamic = "force-dynamic";
 
 type LeadQuality = "priority_a" | "priority_b" | "priority_c";
 
-type LeadDetail = {
+type CrmLeadDetail = {
   id: string;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
 
-  name: string;
-  email: string;
+  full_name: string | null;
+  email: string | null;
   phone: string | null;
 
-  segment: string | null;
-  lead_type: string;
-  reasons: string[] | null;
-
-  status: string | null;
+  stage: string | null;
   lead_quality: LeadQuality | string | null;
-  quality_reasons: string[] | null;
-
-  follow_up_at: string | null;
-  showing_at: string | null;
-  next_action: string | null;
-  closed_at: string | null;
-
-  commission_estimate: number | null;
-  commission_actual: number | null;
-  outcome_notes: string | null;
-
-  intent: string | null;
-  timeline: string | null;
-  source: string | null;
-  preferred_language: string | null;
-  message: string | null;
-
-  credit_score: number | null;
-  budget: number | null;
-  income_monthly: number | null;
-  move_in_date: string | null;
-  areas: string | null;
-  pets: string | null;
-  eviction: boolean | null;
-  broken_lease: boolean | null;
-  screening_profile: string | null;
-  screening_ack: boolean | null;
-  contact_consent: boolean | null;
-
-  price_range: string | null;
-  financing_status: string | null;
+  priority: string | null;
+  lead_score: number | null;
 
   property_address: string | null;
-  seller_goal: string | null;
+  motivation: string | null;
+  source_detail: string | null;
+  channel: string | null;
+  timeline: string | null;
+  pain_point: string | null;
 
-  property_area: string | null;
-  property_type: string | null;
-  ready_to_lease: string | null;
+  next_follow_up_at: string | null;
+  last_contacted_at: string | null;
+
+  price_expectation: number | null;
+  market_low: number | null;
+  market_high: number | null;
+  recommended_price: number | null;
+  cma_notes: string | null;
+
+  closed_at: string | null;
 };
 
-type LeadNote = {
+type LeadActivity = {
   id: string;
-  note: string;
-  created_at: string;
-  updated_at: string;
-};
-
-type LeadEvent = {
-  id: string;
-  event_type: string;
-  event_label: string | null;
-  event_data: Record<string, unknown> | null;
-  created_at: string;
+  activity_type: string | null;
+  content: string | null;
+  created_at: string | null;
 };
 
 function safeDate(value: string | null | undefined) {
@@ -100,21 +64,6 @@ function formatDateTime(value: string | null | undefined) {
       year: "numeric",
       hour: "numeric",
       minute: "2-digit",
-    }).format(parsed);
-  } catch {
-    return value ?? "—";
-  }
-}
-
-function formatDateOnly(value: string | null | undefined) {
-  const parsed = safeDate(value);
-  if (!parsed) return "—";
-
-  try {
-    return new Intl.DateTimeFormat("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
     }).format(parsed);
   } catch {
     return value ?? "—";
@@ -173,27 +122,28 @@ function labelize(value: string | null | undefined) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function formatBoolean(value: boolean | null | undefined) {
-  if (value == null) return "—";
-  return value ? "Yes" : "No";
-}
-
 function getStatusClasses(status: string | null) {
   switch (status) {
     case "new":
       return "bg-blue-50 text-blue-700 ring-blue-100";
     case "contacted":
       return "bg-amber-50 text-amber-700 ring-amber-100";
-    case "qualified":
-      return "bg-emerald-50 text-emerald-700 ring-emerald-100";
-    case "showing":
+    case "conversation":
       return "bg-violet-50 text-violet-700 ring-violet-100";
-    case "application":
+    case "appointment_set":
+      return "bg-emerald-50 text-emerald-700 ring-emerald-100";
+    case "appointment_done":
+      return "bg-teal-50 text-teal-700 ring-teal-100";
+    case "follow_up":
       return "bg-orange-50 text-orange-700 ring-orange-100";
+    case "listing_signed":
+      return "bg-fuchsia-50 text-fuchsia-700 ring-fuchsia-100";
     case "closed":
       return "bg-green-50 text-green-700 ring-green-100";
     case "lost":
       return "bg-neutral-100 text-neutral-600 ring-neutral-200";
+    case "nurture":
+      return "bg-sky-50 text-sky-700 ring-sky-100";
     default:
       return "bg-neutral-100 text-neutral-700 ring-neutral-200";
   }
@@ -310,35 +260,16 @@ function SummaryCard({
   );
 }
 
-function TagList({ values }: { values: string[] | null | undefined }) {
-  if (!values || values.length === 0) {
-    return <span>—</span>;
-  }
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      {values.map((value) => (
-        <span
-          key={value}
-          className="inline-flex rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-700"
-        >
-          {labelize(value)}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function TimelineItem({ event }: { event: LeadEvent }) {
+function TimelineItem({ event }: { event: LeadActivity }) {
   return (
     <div className="rounded-2xl border border-black/5 bg-neutral-50 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-neutral-950">
-            {event.event_label || labelize(event.event_type)}
+            {labelize(event.activity_type)}
           </p>
-          <p className="mt-1 text-xs uppercase tracking-[0.14em] text-neutral-500">
-            {labelize(event.event_type)}
+          <p className="mt-2 text-sm leading-7 text-neutral-700">
+            {event.content || "—"}
           </p>
         </div>
 
@@ -351,32 +282,8 @@ function TimelineItem({ event }: { event: LeadEvent }) {
           </p>
         </div>
       </div>
-
-      {event.event_data ? (
-        <div className="mt-3 rounded-xl border border-black/5 bg-white p-3">
-          <pre className="whitespace-pre-wrap break-words text-xs leading-6 text-neutral-600">
-            {JSON.stringify(event.event_data, null, 2)}
-          </pre>
-        </div>
-      ) : null}
     </div>
   );
-}
-
-function isRentalLead(leadType: string | null | undefined) {
-  return leadType === "rent";
-}
-
-function isBuyerLead(leadType: string | null | undefined) {
-  return leadType === "buy";
-}
-
-function isSellerLead(leadType: string | null | undefined) {
-  return leadType === "sell";
-}
-
-function isLandlordLead(leadType: string | null | undefined) {
-  return leadType === "landlord";
 }
 
 export default async function DashboardLeadDetailPage({
@@ -388,53 +295,8 @@ export default async function DashboardLeadDetailPage({
   const supabase = createSupabaseServiceClient();
 
   const { data, error } = await supabase
-    .from("leads")
-    .select(
-      `
-      id,
-      created_at,
-      updated_at,
-      name,
-      email,
-      phone,
-      segment,
-      lead_type,
-      reasons,
-      status,
-      lead_quality,
-      quality_reasons,
-      follow_up_at,
-      showing_at,
-      next_action,
-      closed_at,
-      commission_estimate,
-      commission_actual,
-      outcome_notes,
-      intent,
-      timeline,
-      source,
-      preferred_language,
-      message,
-      credit_score,
-      budget,
-      income_monthly,
-      move_in_date,
-      areas,
-      pets,
-      eviction,
-      broken_lease,
-      screening_profile,
-      screening_ack,
-      contact_consent,
-      price_range,
-      financing_status,
-      property_address,
-      seller_goal,
-      property_area,
-      property_type,
-      ready_to_lease
-      `
-    )
+    .from("crm_leads")
+    .select("*")
     .eq("id", id)
     .single();
 
@@ -442,40 +304,25 @@ export default async function DashboardLeadDetailPage({
     notFound();
   }
 
-  const { data: notesData, error: notesError } = await supabase
-    .from("lead_notes")
-    .select("id, note, created_at, updated_at")
+  const { data: activitiesData, error: activitiesError } = await supabase
+    .from("crm_activities")
+    .select("id, activity_type, content, created_at")
     .eq("lead_id", id)
     .order("created_at", { ascending: false });
 
-  if (notesError) {
-    console.error("lead detail notes load failed:", notesError);
+  if (activitiesError) {
+    console.error("crm lead detail activities load failed:", activitiesError);
   }
 
-  const { data: eventsData, error: eventsError } = await supabase
-    .from("lead_events")
-    .select("id, event_type, event_label, event_data, created_at")
-    .eq("lead_id", id)
-    .order("created_at", { ascending: false });
-
-  if (eventsError) {
-    console.error("lead detail events load failed:", eventsError);
-  }
-
-  const notes = (notesData ?? []) as LeadNote[];
-  const events = (eventsData ?? []) as LeadEvent[];
-  const lead = data as LeadDetail;
+  const lead = data as CrmLeadDetail;
+  const activities = (activitiesData ?? []) as LeadActivity[];
 
   const createdAgo = timeAgo(lead.created_at);
-  const followUpAgo = timeAgo(lead.follow_up_at);
-  const isRental = isRentalLead(lead.lead_type);
-  const isBuyer = isBuyerLead(lead.lead_type);
-  const isSeller = isSellerLead(lead.lead_type);
-  const isLandlord = isLandlordLead(lead.lead_type);
+  const followUpAgo = timeAgo(lead.next_follow_up_at);
 
   const hasUrgentFollowUp =
-    lead.follow_up_at && safeDate(lead.follow_up_at)
-      ? safeDate(lead.follow_up_at)!.getTime() < new Date().setHours(0, 0, 0, 0)
+    lead.next_follow_up_at && safeDate(lead.next_follow_up_at)
+      ? safeDate(lead.next_follow_up_at)!.getTime() < new Date().setHours(0, 0, 0, 0)
       : false;
 
   return (
@@ -484,20 +331,19 @@ export default async function DashboardLeadDetailPage({
         <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-neutral-500">
-              Dashboard
+              CRM
             </p>
 
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-                {lead.name}
+                {lead.full_name || "Unnamed lead"}
               </h1>
-              <StatusPill status={lead.status} />
+              <StatusPill status={lead.stage} />
               <QualityPill quality={lead.lead_quality} />
             </div>
 
             <p className="mt-3 max-w-3xl text-sm leading-7 text-neutral-600">
-              Operational lead record for qualification, follow-up, notes, and
-              transaction movement.
+              Operational CRM record for qualification, follow-up, notes, and deal movement.
             </p>
 
             <div className="mt-3 text-sm text-neutral-500">
@@ -507,30 +353,34 @@ export default async function DashboardLeadDetailPage({
           </div>
 
           <Link
-            href="/dashboard/leads"
+            href="/ops/leads"
             className="inline-flex h-11 items-center justify-center rounded-full border border-black/10 px-5 text-sm font-medium text-neutral-900 transition hover:border-black/20 hover:bg-white"
           >
-            Back to leads
+            Back to CRM Leads
           </Link>
         </div>
 
         <div className="mb-6 grid gap-4 md:grid-cols-6">
-          <SummaryCard label="Lead Type" value={labelize(lead.lead_type)} />
-          <SummaryCard label="Status" value={<StatusPill status={lead.status} />} />
+          <SummaryCard label="Stage" value={<StatusPill status={lead.stage} />} />
           <SummaryCard
             label="Lead Quality"
             value={<QualityPill quality={lead.lead_quality} />}
             tone={lead.lead_quality === "priority_a" ? "priority" : "default"}
           />
-          <SummaryCard label="Segment" value={labelize(lead.segment)} />
+          <SummaryCard label="Priority" value={labelize(lead.priority)} />
+          <SummaryCard label="Lead Score" value={lead.lead_score ?? "—"} />
           <SummaryCard
             label="Next Follow Up"
-            value={lead.follow_up_at ? formatDateTime(lead.follow_up_at) : "—"}
+            value={
+              lead.next_follow_up_at
+                ? formatDateTime(lead.next_follow_up_at)
+                : "—"
+            }
             tone={hasUrgentFollowUp ? "urgent" : "default"}
           />
           <SummaryCard
-            label="Commission Estimate"
-            value={formatCurrency(lead.commission_estimate)}
+            label="Recommended Price"
+            value={formatCurrency(lead.recommended_price)}
             tone="revenue"
           />
         </div>
@@ -538,49 +388,16 @@ export default async function DashboardLeadDetailPage({
         <div className="grid gap-6">
           <Section
             title="Lead overview"
-            description="High-level intake details, priority context, and pipeline controls."
+            description="High-level CRM details and qualification context."
           >
             <DetailRow label="Created" value={formatDateTime(lead.created_at)} />
             <DetailRow label="Updated" value={formatDateTime(lead.updated_at)} />
-            <DetailRow label="Lead Type" value={labelize(lead.lead_type)} />
-            <DetailRow label="Intent" value={labelize(lead.intent)} />
+            <DetailRow label="Property Address" value={lead.property_address || "—"} />
+            <DetailRow label="Motivation" value={labelize(lead.motivation)} />
             <DetailRow label="Timeline" value={labelize(lead.timeline)} />
-            <DetailRow label="Source" value={labelize(lead.source)} />
-            <DetailRow label="Segment" value={labelize(lead.segment)} />
-            <DetailRow
-              label="Preferred Language"
-              value={labelize(lead.preferred_language)}
-            />
-            <DetailRow
-              label="Routing Reasons"
-              value={<TagList values={lead.reasons} />}
-            />
-            <DetailRow
-              label="Quality Reasons"
-              value={<TagList values={lead.quality_reasons} />}
-            />
-
-            <div className="grid gap-1 sm:grid-cols-[180px_1fr] sm:gap-4">
-              <div className="text-sm font-medium text-neutral-500">Status</div>
-              <div>
-                <LeadStatusSelect leadId={lead.id} currentStatus={lead.status} />
-              </div>
-            </div>
-
-            <div className="grid gap-1 sm:grid-cols-[180px_1fr] sm:gap-4">
-              <div className="text-sm font-medium text-neutral-500">
-                Next Follow Up
-              </div>
-              <div>
-                <LeadFollowUp leadId={lead.id} followUpAt={lead.follow_up_at} />
-                {lead.follow_up_at ? (
-                  <p className="mt-2 text-xs text-neutral-500">
-                    {followUpAgo ? `${followUpAgo} • ` : ""}
-                    {formatDateTime(lead.follow_up_at)}
-                  </p>
-                ) : null}
-              </div>
-            </div>
+            <DetailRow label="Pain Point" value={lead.pain_point || "—"} />
+            <DetailRow label="Channel" value={labelize(lead.channel)} />
+            <DetailRow label="Source Detail" value={lead.source_detail || "—"} />
           </Section>
 
           <Section
@@ -620,251 +437,51 @@ export default async function DashboardLeadDetailPage({
             />
 
             <DetailRow
-              label="Consent To Contact"
-              value={formatBoolean(lead.contact_consent)}
+              label="Last Contacted"
+              value={formatDateTime(lead.last_contacted_at)}
             />
           </Section>
 
-          {isRental ? (
-            <Section
-              title="Rental qualification"
-              description="Leasing-specific intake fields used to qualify, search inventory, and move toward showings and application."
-            >
-              <DetailRow label="Budget" value={formatCurrency(lead.budget)} />
-              <DetailRow
-                label="Monthly Income"
-                value={formatCurrency(lead.income_monthly)}
-              />
-              <DetailRow label="Credit Score" value={lead.credit_score ?? "—"} />
-              <DetailRow
-                label="Move-in Date"
-                value={formatDateOnly(lead.move_in_date)}
-              />
-              <DetailRow label="Areas" value={lead.areas || "—"} />
-              <DetailRow label="Pets" value={lead.pets || "—"} />
-              <DetailRow
-                label="Screening Profile"
-                value={labelize(lead.screening_profile)}
-              />
-              <DetailRow
-                label="Screening Acknowledged"
-                value={formatBoolean(lead.screening_ack)}
-              />
-              <DetailRow
-                label="Prior Eviction"
-                value={formatBoolean(lead.eviction)}
-              />
-              <DetailRow
-                label="Broken Lease"
-                value={formatBoolean(lead.broken_lease)}
-              />
-            </Section>
-          ) : null}
-
-          {isBuyer ? (
-            <Section
-              title="Buyer qualification"
-              description="Purchase-specific criteria and financing readiness."
-            >
-              <DetailRow label="Price Range" value={lead.price_range || "—"} />
-              <DetailRow
-                label="Financing Status"
-                value={labelize(lead.financing_status)}
-              />
-              <DetailRow label="Areas" value={lead.areas || "—"} />
-            </Section>
-          ) : null}
-
-          {isSeller ? (
-            <Section
-              title="Seller qualification"
-              description="Seller-specific property and objective details."
-            >
-              <DetailRow
-                label="Property Address"
-                value={lead.property_address || "—"}
-              />
-              <DetailRow label="Seller Goal" value={labelize(lead.seller_goal)} />
-            </Section>
-          ) : null}
-
-          {isLandlord ? (
-            <Section
-              title="Landlord qualification"
-              description="Landlord-specific property and readiness details."
-            >
-              <DetailRow label="Property Area" value={lead.property_area || "—"} />
-              <DetailRow
-                label="Property Type"
-                value={labelize(lead.property_type)}
-              />
-              <DetailRow
-                label="Ready To Lease"
-                value={labelize(lead.ready_to_lease)}
-              />
-            </Section>
-          ) : null}
-
-          {!isRental && !isBuyer && !isSeller && !isLandlord ? (
-            <Section
-              title="Qualification details"
-              description="General structured intake fields for this lead."
-            >
-              <DetailRow label="Budget" value={formatCurrency(lead.budget)} />
-              <DetailRow
-                label="Monthly Income"
-                value={formatCurrency(lead.income_monthly)}
-              />
-              <DetailRow label="Credit Score" value={lead.credit_score ?? "—"} />
-              <DetailRow
-                label="Move-in Date"
-                value={formatDateOnly(lead.move_in_date)}
-              />
-              <DetailRow label="Areas" value={lead.areas || "—"} />
-              <DetailRow label="Pets" value={lead.pets || "—"} />
-              <DetailRow
-                label="Screening Profile"
-                value={labelize(lead.screening_profile)}
-              />
-              <DetailRow
-                label="Price Range"
-                value={lead.price_range || "—"}
-              />
-              <DetailRow
-                label="Financing Status"
-                value={labelize(lead.financing_status)}
-              />
-              <DetailRow
-                label="Property Address"
-                value={lead.property_address || "—"}
-              />
-              <DetailRow
-                label="Seller Goal"
-                value={labelize(lead.seller_goal)}
-              />
-              <DetailRow label="Property Area" value={lead.property_area || "—"} />
-              <DetailRow
-                label="Property Type"
-                value={labelize(lead.property_type)}
-              />
-              <DetailRow
-                label="Ready To Lease"
-                value={labelize(lead.ready_to_lease)}
-              />
-            </Section>
-          ) : null}
-
           <Section
-            title="Showing"
-            description="Schedule, move, or clear the showing step for this lead."
+            title="Pricing and CMA"
+            description="Pricing strategy and market positioning notes."
           >
             <DetailRow
-              label="Scheduled"
-              value={lead.showing_at ? formatDateTime(lead.showing_at) : "—"}
+              label="Price Expectation"
+              value={formatCurrency(lead.price_expectation)}
             />
-
-            <div className="grid gap-1 sm:grid-cols-[180px_1fr] sm:gap-4">
-              <div className="text-sm font-medium text-neutral-500">Update</div>
-              <div>
-                <LeadShowing leadId={lead.id} showingAt={lead.showing_at} />
-              </div>
-            </div>
-          </Section>
-
-          <Section
-            title="Next action"
-            description="Define the immediate next step so the lead remains operationally clear."
-          >
+            <DetailRow label="Market Low" value={formatCurrency(lead.market_low)} />
+            <DetailRow label="Market High" value={formatCurrency(lead.market_high)} />
             <DetailRow
-              label="Current"
+              label="Recommended Price"
+              value={formatCurrency(lead.recommended_price)}
+            />
+            <DetailRow
+              label="CMA Notes"
               value={
-                lead.next_action ? (
+                lead.cma_notes ? (
                   <div className="whitespace-pre-wrap text-sm leading-7 text-neutral-900">
-                    {lead.next_action}
+                    {lead.cma_notes}
                   </div>
                 ) : (
                   "—"
                 )
               }
             />
-
-            <div className="grid gap-1 sm:grid-cols-[180px_1fr] sm:gap-4">
-              <div className="text-sm font-medium text-neutral-500">Update</div>
-              <div>
-                <LeadNextAction
-                  leadId={lead.id}
-                  nextAction={lead.next_action}
-                />
-              </div>
-            </div>
-          </Section>
-
-          <Section
-            title="Outcome and revenue"
-            description="Closed-deal tracking, revenue visibility, and outcome notes."
-          >
-            <DetailRow
-              label="Closed At"
-              value={lead.closed_at ? formatDateTime(lead.closed_at) : "—"}
-            />
-            <DetailRow
-              label="Commission Estimate"
-              value={formatCurrency(lead.commission_estimate)}
-            />
-            <DetailRow
-              label="Commission Actual"
-              value={formatCurrency(lead.commission_actual)}
-            />
-            <DetailRow
-              label="Outcome Notes"
-              value={
-                lead.outcome_notes ? (
-                  <div className="whitespace-pre-wrap text-sm leading-7 text-neutral-900">
-                    {lead.outcome_notes}
-                  </div>
-                ) : (
-                  "—"
-                )
-              }
-            />
-
-            <div className="grid gap-1 sm:grid-cols-[180px_1fr] sm:gap-4">
-              <div className="text-sm font-medium text-neutral-500">Update</div>
-              <div>
-                <LeadOutcomeForm
-                  leadId={lead.id}
-                  closedAt={lead.closed_at}
-                  commissionEstimate={lead.commission_estimate}
-                  commissionActual={lead.commission_actual}
-                  outcomeNotes={lead.outcome_notes}
-                />
-              </div>
-            </div>
-          </Section>
-
-          <Section
-            title="Original message"
-            description="Original submission text captured from the intake form."
-          >
-            <div className="rounded-2xl border border-black/5 bg-neutral-50 p-5">
-              <div className="whitespace-pre-wrap text-sm leading-7 text-neutral-900">
-                {lead.message || "—"}
-              </div>
-            </div>
           </Section>
 
           <Section
             title="Timeline"
-            description="Operational history for this lead."
+            description="CRM activity history for this lead."
           >
-            {events.length === 0 ? (
-              <p className="text-sm text-neutral-600">No timeline events yet.</p>
+            {activities.length === 0 ? (
+              <p className="text-sm text-neutral-600">No activity yet.</p>
             ) : (
-              events.map((event) => <TimelineItem key={event.id} event={event} />)
+              activities.map((activity) => (
+                <TimelineItem key={activity.id} event={activity} />
+              ))
             )}
           </Section>
-
-          <LeadNotes leadId={lead.id} notes={notes} />
         </div>
       </section>
     </main>

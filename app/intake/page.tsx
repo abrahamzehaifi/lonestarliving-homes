@@ -7,13 +7,20 @@ type Intent = "tenant" | "buyer" | "seller" | "landlord" | "other";
 function coerceIntent(v?: string): Intent {
   const x = (v ?? "").trim().toLowerCase();
 
-  if (
-    x === "tenant" ||
-    x === "buyer" ||
-    x === "seller" ||
-    x === "landlord"
-  ) {
-    return x;
+  if (x === "tenant" || x === "rent" || x === "renter") {
+    return "tenant";
+  }
+
+  if (x === "buyer" || x === "buy") {
+    return "buyer";
+  }
+
+  if (x === "seller" || x === "sell") {
+    return "seller";
+  }
+
+  if (x === "landlord") {
+    return "landlord";
   }
 
   return "other";
@@ -47,19 +54,21 @@ function cleanChannel(v?: string) {
   return value || "";
 }
 
-export default async function IntakePage({
-  searchParams,
-}: {
-  searchParams?: Promise<{
+type IntakePageProps = {
+  searchParams?: {
     lang?: string;
     service?: string;
     type?: string;
     area?: string;
     src?: string;
     channel?: string;
-  }>;
-}) {
-  const sp = (await searchParams) ?? {};
+  };
+};
+
+export default async function IntakePage({
+  searchParams,
+}: IntakePageProps) {
+  const sp = searchParams ?? {};
 
   const lang: Language = await getPreferredSiteLang(sp.lang);
   const intent = coerceIntent(sp.service ?? sp.type);

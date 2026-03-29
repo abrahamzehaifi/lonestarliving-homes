@@ -3,41 +3,37 @@ import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 export const dynamic = "force-dynamic";
 
-type LeadRow = {
+type CrmLeadRow = {
   id: string;
-  name: string;
-  email: string;
-  phone: string | null;
-  lead_type: string | null;
-  status: string | null;
+  full_name: string | null;
+  property_address: string | null;
+  stage: string | null;
+  priority: string | null;
+  lead_score: number | null;
   lead_quality: string | null;
-  area: string | null;
-  budget: number | null;
-  next_action: string | null;
-  follow_up_at: string | null;
-  created_at: string;
+  motivation: string | null;
+  source_detail: string | null;
+  channel: string | null;
+  phone: string | null;
+  email: string | null;
+  timeline: string | null;
+  next_follow_up_at: string | null;
+  created_at: string | null;
 };
 
 const pipelineStages = [
   { key: "new", label: "New" },
   { key: "contacted", label: "Contacted" },
-  { key: "qualified", label: "Qualified" },
-  { key: "showing", label: "Showing" },
-  { key: "application", label: "Application" },
+  { key: "conversation", label: "Conversation" },
+  { key: "appointment_set", label: "Appointment Set" },
+  { key: "appointment_done", label: "Appointment Done" },
+  { key: "follow_up", label: "Follow-Up" },
+  { key: "listing_signed", label: "Listing Signed" },
   { key: "closed", label: "Closed" },
 ] as const;
 
-function formatArea(area?: string | null) {
-  if (!area) return "Unknown";
-  return area
-    .split("-")
-    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-    .join(" ");
-}
-
-function formatCurrency(value?: number | null) {
-  if (!value) return "-";
-  return `$${Number(value).toLocaleString()}`;
+function formatText(value?: string | null) {
+  return value && String(value).trim() ? value : "-";
 }
 
 function formatDate(value?: string | null) {
@@ -53,6 +49,13 @@ function formatDate(value?: string | null) {
   }
 }
 
+function formatStage(value?: string | null) {
+  if (!value) return "Unassigned";
+  return value
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function getQualityLabel(quality?: string | null) {
   if (quality === "priority_a") return "Priority A";
   if (quality === "priority_b") return "Priority B";
@@ -60,7 +63,7 @@ function getQualityLabel(quality?: string | null) {
   return "—";
 }
 
-function LeadMiniCard({ lead }: { lead: LeadRow }) {
+function LeadMiniCard({ lead }: { lead: CrmLeadRow }) {
   return (
     <Link
       href={`/ops/leads/${lead.id}`}
@@ -68,7 +71,7 @@ function LeadMiniCard({ lead }: { lead: LeadRow }) {
     >
       <div className="flex items-start justify-between gap-3">
         <p className="text-sm font-semibold tracking-tight text-neutral-950">
-          {lead.name}
+          {formatText(lead.full_name)}
         </p>
 
         <span className="rounded-full bg-neutral-100 px-2 py-1 text-[10px] font-medium text-neutral-700">
@@ -77,19 +80,23 @@ function LeadMiniCard({ lead }: { lead: LeadRow }) {
       </div>
 
       <p className="mt-2 text-xs text-neutral-600">
-        {lead.lead_type || "-"} • {formatArea(lead.area)}
+        {formatText(lead.property_address)}
       </p>
 
       <p className="mt-1 text-xs text-neutral-500">
-        Budget: {formatCurrency(lead.budget)}
+        {formatStage(lead.stage)} • {formatText(lead.priority)}
       </p>
 
       <p className="mt-3 line-clamp-2 text-xs leading-5 text-neutral-700">
-        {lead.next_action || "No next action"}
+        {formatText(lead.timeline)}
       </p>
 
       <div className="mt-3 flex items-center justify-between text-[11px] text-neutral-500">
-        <span>{lead.follow_up_at ? `FU ${formatDate(lead.follow_up_at)}` : "No follow-up"}</span>
+        <span>
+          {lead.next_follow_up_at
+            ? `FU ${formatDate(lead.next_follow_up_at)}`
+            : "No follow-up"}
+        </span>
         <span>{formatDate(lead.created_at)}</span>
       </div>
     </Link>
@@ -100,23 +107,23 @@ export default async function OpsPipelinePage() {
   const supabase = createSupabaseServiceClient();
 
   const { data, error } = await supabase
-    .from("leads")
+    .from("crm_leads")
     .select(
-      "id, name, email, phone, lead_type, status, lead_quality, area, budget, next_action, follow_up_at, created_at"
+      "id, full_name, property_address, stage, priority, lead_score, lead_quality, motivation, source_detail, channel, phone, email, timeline, next_follow_up_at, created_at"
     )
     .order("created_at", { ascending: false })
     .limit(200);
 
-  const leads = ((data ?? []) as LeadRow[]).filter(
-    (lead) => lead.status !== "lost"
+  const leads = ((data ?? []) as CrmLeadRow[]).filter(
+    (lead) => lead.stage !== "lost"
   );
 
   const grouped = Object.fromEntries(
     pipelineStages.map((stage) => [
       stage.key,
-      leads.filter((lead) => (lead.status || "new") === stage.key),
+      leads.filter((lead) => (lead.stage || "new") === stage.key),
     ])
-  ) as Record<(typeof pipelineStages)[number]["key"], LeadRow[]>;
+  ) as Record<(typeof pipelineStages)[number]["key"], CrmLeadRow[]>;
 
   return (
     <main className="min-h-screen bg-[#f5f5f3] text-neutral-950">
@@ -149,6 +156,13 @@ export default async function OpsPipelinePage() {
             >
               Full lead queue
             </Link>
+
+            <Link
+              href="/ops/dashboard/crm"
+              className="inline-flex h-11 items-center justify-center rounded-full border border-black/10 px-5 text-sm font-medium text-neutral-900 transition hover:border-black/20 hover:bg-white"
+            >
+              CRM
+            </Link>
           </div>
         </div>
 
@@ -158,7 +172,7 @@ export default async function OpsPipelinePage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <div className="grid min-w-[1400px] grid-cols-6 gap-5">
+            <div className="grid min-w-[1800px] grid-cols-8 gap-5">
               {pipelineStages.map((stage) => {
                 const stageLeads = grouped[stage.key] || [];
 

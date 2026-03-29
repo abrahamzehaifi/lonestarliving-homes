@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 type Language = "en" | "es" | "ar";
 
 type RentPageProps = {
-  searchParams?: Promise<{
+  searchParams?: {
     lang?: string;
-  }>;
+  };
 };
 
 const copy = {
@@ -264,8 +264,7 @@ function ServiceCard({
 }
 
 export default async function RentPage({ searchParams }: RentPageProps) {
-  const resolvedSearchParams = (await searchParams) ?? {};
-  const lang: Language = await getPreferredSiteLang(resolvedSearchParams.lang);
+  const lang: Language = await getPreferredSiteLang(searchParams?.lang);
   const t = copy[lang];
   const isArabic = lang === "ar";
 

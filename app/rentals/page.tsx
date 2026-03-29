@@ -4,9 +4,9 @@ import { getPreferredSiteLang } from "@/lib/i18n/getLangServer";
 type Language = "en" | "es" | "ar";
 
 type RentalsPageProps = {
-  searchParams?: Promise<{
+  searchParams?: {
     lang?: string;
-  }>;
+  };
 };
 
 const copy = {
@@ -256,8 +256,7 @@ function ServiceCard({
 export default async function RentalsPage({
   searchParams,
 }: RentalsPageProps) {
-  const resolvedSearchParams = (await searchParams) ?? {};
-  const lang: Language = await getPreferredSiteLang(resolvedSearchParams.lang);
+  const lang: Language = await getPreferredSiteLang(searchParams?.lang);
   const t = copy[lang];
   const isArabic = lang === "ar";
 

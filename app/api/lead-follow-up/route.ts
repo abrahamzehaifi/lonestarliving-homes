@@ -28,13 +28,13 @@ export async function POST(req: Request) {
     const supabase = createSupabaseServiceClient();
 
     const { data: existingLead, error: existingLeadError } = await supabase
-      .from("leads")
-      .select("id, follow_up_at")
+      .from("crm_leads")
+      .select("id, next_follow_up_at")
       .eq("id", id)
       .maybeSingle();
 
     if (existingLeadError) {
-      console.error("lead-follow-up read failed:", existingLeadError);
+      console.error("crm lead follow-up read failed:", existingLeadError);
       return NextResponse.json(
         { ok: false, error: "Failed to load lead." },
         { status: 500 }
@@ -49,16 +49,16 @@ export async function POST(req: Request) {
     }
 
     const previousFollowUpAt =
-      typeof existingLead.follow_up_at === "string"
-        ? existingLead.follow_up_at
-        : existingLead.follow_up_at ?? null;
+      typeof existingLead.next_follow_up_at === "string"
+        ? existingLead.next_follow_up_at
+        : existingLead.next_follow_up_at ?? null;
 
     if (previousFollowUpAt === followUpAt) {
       return NextResponse.json({
         ok: true,
         lead: {
           id,
-          follow_up_at: followUpAt,
+          next_follow_up_at: followUpAt,
         },
         timeline: {
           follow_up_scheduled: false,
@@ -67,17 +67,17 @@ export async function POST(req: Request) {
     }
 
     const { data: updatedLead, error: updateError } = await supabase
-      .from("leads")
+      .from("crm_leads")
       .update({
-        follow_up_at: followUpAt,
+        next_follow_up_at: followUpAt,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
-      .select("id, follow_up_at, updated_at")
+      .select("id, next_follow_up_at, updated_at")
       .maybeSingle();
 
     if (updateError) {
-      console.error("lead-follow-up update failed:", updateError);
+      console.error("crm lead follow-up update failed:", updateError);
       return NextResponse.json(
         { ok: false, error: "Failed to update follow-up." },
         { status: 500 }
@@ -91,35 +91,31 @@ export async function POST(req: Request) {
       );
     }
 
-    const { error: eventError } = await supabase.from("lead_events").insert({
+    const { error: activityError } = await supabase.from("crm_activities").insert({
       lead_id: id,
-      event_type: followUpAt ? "follow_up_scheduled" : "follow_up_cleared",
-      event_label: followUpAt
-        ? "Follow-up scheduled"
-        : "Follow-up cleared",
-      event_data: {
-        from: previousFollowUpAt,
-        to: followUpAt,
-      },
+      activity_type: followUpAt ? "follow_up_scheduled" : "follow_up_cleared",
+      content: followUpAt
+        ? `Follow-up scheduled. From: ${previousFollowUpAt ?? "-"} | To: ${followUpAt}`
+        : `Follow-up cleared. Previous: ${previousFollowUpAt ?? "-"}`,
     });
 
-    if (eventError) {
-      console.error("lead-follow-up event insert failed:", eventError);
+    if (activityError) {
+      console.error("crm follow-up activity insert failed:", activityError);
     }
 
     return NextResponse.json({
       ok: true,
       lead: {
         id: updatedLead.id,
-        follow_up_at: updatedLead.follow_up_at ?? null,
+        next_follow_up_at: updatedLead.next_follow_up_at ?? null,
         updated_at: updatedLead.updated_at ?? null,
       },
       timeline: {
-        follow_up_scheduled: !eventError,
+        follow_up_scheduled: !activityError,
       },
     });
   } catch (error) {
-    console.error("lead-follow-up route error:", error);
+    console.error("crm follow-up route error:", error);
 
     return NextResponse.json(
       { ok: false, error: "Invalid request." },

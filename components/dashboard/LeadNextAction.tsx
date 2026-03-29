@@ -56,7 +56,7 @@ export default function LeadNextAction({ leadId, nextAction }: Props) {
         }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const data = await res.json().catch(() => null);
 
       if (!res.ok) {
         setError(
@@ -81,7 +81,11 @@ export default function LeadNextAction({ leadId, nextAction }: Props) {
     <div className="space-y-3">
       <textarea
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => {
+          setValue(e.target.value);
+          if (error) setError("");
+          if (success) setSuccess("");
+        }}
         rows={4}
         disabled={isPending}
         placeholder="Example: Call today at 4pm, send 3 Medical Center options, confirm tour Saturday."

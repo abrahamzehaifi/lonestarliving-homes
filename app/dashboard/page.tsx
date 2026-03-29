@@ -1,20 +1,23 @@
 import Link from "next/link";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
-type LeadStatus =
+type LeadStage =
   | "new"
   | "contacted"
-  | "qualified"
-  | "showing"
-  | "application"
+  | "conversation"
+  | "appointment_set"
+  | "appointment_done"
+  | "follow_up"
+  | "listing_signed"
   | "closed"
-  | "lost";
+  | "lost"
+  | "nurture";
 
 type LeadCountRow = {
-  status: string | null;
+  stage: string | null;
   lead_quality: string | null;
-  source: string | null;
-  segment: string | null;
+  priority: string | null;
+  source_detail: string | null;
 };
 
 type FollowUpRow = {
@@ -77,8 +80,8 @@ function ActionCard({
   );
 }
 
-function countByStatus(rows: LeadCountRow[], status: LeadStatus) {
-  return rows.filter((row) => row.status === status).length;
+function countByStage(rows: LeadCountRow[], stage: LeadStage) {
+  return rows.filter((row) => row.stage === stage).length;
 }
 
 function countByQuality(rows: LeadCountRow[], quality: string) {
@@ -96,7 +99,7 @@ function labelize(value: string | null | undefined) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function groupCounts(rows: LeadCountRow[], key: "source" | "segment") {
+function groupCounts(rows: LeadCountRow[], key: "source_detail" | "priority") {
   const counts = new Map<string, number>();
 
   for (const row of rows) {
@@ -114,20 +117,23 @@ export default async function DashboardPage() {
   const supabase = createSupabaseServiceClient();
 
   const { data, error } = await supabase
-    .from("leads")
-    .select("status, lead_quality, source, segment")
+    .from("crm_leads")
+    .select("stage, lead_quality, priority, source_detail")
     .limit(500);
 
   const rows = (data ?? []) as LeadCountRow[];
 
   const totalLeads = rows.length;
-  const newLeads = countByStatus(rows, "new");
-  const contactedLeads = countByStatus(rows, "contacted");
-  const qualifiedLeads = countByStatus(rows, "qualified");
-  const showingLeads = countByStatus(rows, "showing");
-  const applicationLeads = countByStatus(rows, "application");
-  const closedLeads = countByStatus(rows, "closed");
-  const lostLeads = countByStatus(rows, "lost");
+  const newLeads = countByStage(rows, "new");
+  const contactedLeads = countByStage(rows, "contacted");
+  const conversationLeads = countByStage(rows, "conversation");
+  const appointmentSetLeads = countByStage(rows, "appointment_set");
+  const appointmentDoneLeads = countByStage(rows, "appointment_done");
+  const followUpLeads = countByStage(rows, "follow_up");
+  const listingSignedLeads = countByStage(rows, "listing_signed");
+  const closedLeads = countByStage(rows, "closed");
+  const lostLeads = countByStage(rows, "lost");
+  const nurtureLeads = countByStage(rows, "nurture");
 
   const priorityALeads = countByQuality(rows, "priority_a");
   const priorityBLeads = countByQuality(rows, "priority_b");
@@ -135,12 +141,15 @@ export default async function DashboardPage() {
   const activePipeline =
     newLeads +
     contactedLeads +
-    qualifiedLeads +
-    showingLeads +
-    applicationLeads;
+    conversationLeads +
+    appointmentSetLeads +
+    appointmentDoneLeads +
+    followUpLeads +
+    listingSignedLeads +
+    nurtureLeads;
 
-  const topSources = groupCounts(rows, "source");
-  const topSegments = groupCounts(rows, "segment");
+  const topSources = groupCounts(rows, "source_detail");
+  const topPriorities = groupCounts(rows, "priority");
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -149,21 +158,21 @@ export default async function DashboardPage() {
   tomorrow.setDate(today.getDate() + 1);
 
   const { data: followUpsTodayData, error: followUpsTodayError } = await supabase
-    .from("leads")
+    .from("crm_leads")
     .select("id")
-    .gte("follow_up_at", today.toISOString())
-    .lt("follow_up_at", tomorrow.toISOString())
-    .neq("status", "closed")
-    .neq("status", "lost");
+    .gte("next_follow_up_at", today.toISOString())
+    .lt("next_follow_up_at", tomorrow.toISOString())
+    .neq("stage", "closed")
+    .neq("stage", "lost");
 
   const { data: overdueFollowUpsData, error: overdueFollowUpsError } =
     await supabase
-      .from("leads")
+      .from("crm_leads")
       .select("id")
-      .lt("follow_up_at", today.toISOString())
-      .not("follow_up_at", "is", null)
-      .neq("status", "closed")
-      .neq("status", "lost");
+      .lt("next_follow_up_at", today.toISOString())
+      .not("next_follow_up_at", "is", null)
+      .neq("stage", "closed")
+      .neq("stage", "lost");
 
   const followUpsToday = ((followUpsTodayData ?? []) as FollowUpRow[]).length;
   const overdueFollowUps = ((overdueFollowUpsData ?? []) as FollowUpRow[]).length;
@@ -196,69 +205,69 @@ export default async function DashboardPage() {
             <StatCard
               label="Total Leads"
               value={totalLeads}
-              hint="All captured opportunities in the system."
-              href="/dashboard/leads"
+              hint="All CRM opportunities in the system."
+              href="/ops/leads"
             />
             <StatCard
               label="New Leads"
               value={newLeads}
-              hint="Fresh submissions needing first response."
-              href="/dashboard/leads?status=new"
+              hint="Fresh records needing first response."
+              href="/ops/leads?stage=new"
             />
             <StatCard
               label="Priority A"
               value={priorityALeads}
               hint="Highest-value leads needing close attention."
-              href="/dashboard/leads?quality=priority_a"
+              href="/ops/leads"
             />
             <StatCard
               label="Priority B"
               value={priorityBLeads}
               hint="Workable leads with good potential."
-              href="/dashboard/leads?quality=priority_b"
+              href="/ops/leads"
             />
             <StatCard
-              label="Qualified"
-              value={qualifiedLeads}
-              hint="Leads worth advancing toward a decision."
-              href="/dashboard/leads?status=qualified"
+              label="Conversation"
+              value={conversationLeads}
+              hint="Leads currently in active discussion."
+              href="/ops/leads?stage=conversation"
             />
             <StatCard
               label="Active Pipeline"
               value={activePipeline}
               hint="Open opportunities not yet closed or lost."
-              href="/dashboard/leads"
+              href="/ops/pipeline"
             />
             <StatCard
               label="Follow Ups Today"
               value={followUpsToday}
               hint="Contacts that should be handled today."
-              href="/dashboard/leads?followup=today"
+              href="/ops/leads?followup=today"
             />
             <StatCard
               label="Overdue Follow Ups"
               value={overdueFollowUps}
               hint="Past-due follow-ups needing immediate attention."
-              href="/dashboard/leads?followup=overdue"
+              href="/ops/leads?followup=overdue"
             />
             <StatCard
               label="Follow-Up Queue"
               value={followUpQueue}
               hint="Leads needing contact today."
-              href="/dashboard/followups"
+              href="/ops/today"
             />
           </div>
         )}
 
         <div className="mt-10 grid gap-6 md:grid-cols-2">
           <ActionCard
-            href="/dashboard/leads"
+            href="/ops/leads"
             title="Leads"
-            description="View incoming submissions, quality, status, source, segmentation, notes, and follow-up dates."
+            description="View CRM records, stage, priority, notes, and follow-up dates."
           />
 
           <ActionCard
-            href="/dashboard/followups"
+            href="/ops/today"
             title="Follow-Up Queue"
             description="Work overdue and due-today leads from a dedicated daily execution screen."
           />
@@ -271,59 +280,20 @@ export default async function DashboardPage() {
             </h2>
 
             <div className="mt-4 space-y-3 text-sm text-neutral-700">
-              <p>
-                <span className="font-medium text-neutral-950">
-                  Overdue follow ups:
-                </span>{" "}
-                {overdueFollowUps}
-              </p>
-              <p>
-                <span className="font-medium text-neutral-950">
-                  Follow ups today:
-                </span>{" "}
-                {followUpsToday}
-              </p>
-              <p>
-                <span className="font-medium text-neutral-950">
-                  Follow-up queue:
-                </span>{" "}
-                {followUpQueue}
-              </p>
-              <p>
-                <span className="font-medium text-neutral-950">New leads:</span>{" "}
-                {newLeads}
-              </p>
-              <p>
-                <span className="font-medium text-neutral-950">
-                  Priority A leads:
-                </span>{" "}
-                {priorityALeads}
-              </p>
-              <p>
-                <span className="font-medium text-neutral-950">
-                  Priority B leads:
-                </span>{" "}
-                {priorityBLeads}
-              </p>
-              <p>
-                <span className="font-medium text-neutral-950">
-                  Qualified leads:
-                </span>{" "}
-                {qualifiedLeads}
-              </p>
-              <p>
-                <span className="font-medium text-neutral-950">
-                  Closed leads:
-                </span>{" "}
-                {closedLeads}
-              </p>
+              <p><span className="font-medium text-neutral-950">Overdue follow ups:</span> {overdueFollowUps}</p>
+              <p><span className="font-medium text-neutral-950">Follow ups today:</span> {followUpsToday}</p>
+              <p><span className="font-medium text-neutral-950">Follow-up queue:</span> {followUpQueue}</p>
+              <p><span className="font-medium text-neutral-950">New leads:</span> {newLeads}</p>
+              <p><span className="font-medium text-neutral-950">Priority A leads:</span> {priorityALeads}</p>
+              <p><span className="font-medium text-neutral-950">Priority B leads:</span> {priorityBLeads}</p>
+              <p><span className="font-medium text-neutral-950">Conversation leads:</span> {conversationLeads}</p>
+              <p><span className="font-medium text-neutral-950">Closed leads:</span> {closedLeads}</p>
             </div>
 
             <p className="mt-4 text-sm leading-7 text-neutral-600">
               Prioritize overdue follow-ups first, then today’s scheduled
-              follow-ups, then new high-fit leads, and then qualified
-              opportunities that need movement toward tours, applications, and
-              closed transactions.
+              follow-ups, then new high-fit leads, and then active conversations
+              that need movement toward appointments and signed business.
             </p>
           </div>
 
@@ -334,75 +304,36 @@ export default async function DashboardPage() {
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                  Priority A
-                </p>
-                <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">
-                  {priorityALeads}
-                </p>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">Priority A</p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">{priorityALeads}</p>
               </div>
-
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                  Priority B
-                </p>
-                <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">
-                  {priorityBLeads}
-                </p>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">Priority B</p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">{priorityBLeads}</p>
               </div>
-
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                  Contacted
-                </p>
-                <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">
-                  {contactedLeads}
-                </p>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">Contacted</p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">{contactedLeads}</p>
               </div>
-
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                  Showing
-                </p>
-                <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">
-                  {showingLeads}
-                </p>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">Conversation</p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">{conversationLeads}</p>
               </div>
-
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                  Application
-                </p>
-                <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">
-                  {applicationLeads}
-                </p>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">Appointment Set</p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">{appointmentSetLeads}</p>
               </div>
-
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                  Closed
-                </p>
-                <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">
-                  {closedLeads}
-                </p>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">Listing Signed</p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">{listingSignedLeads}</p>
               </div>
-
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                  Lost
-                </p>
-                <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">
-                  {lostLeads}
-                </p>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">Closed</p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">{closedLeads}</p>
               </div>
-
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                  Total
-                </p>
-                <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">
-                  {totalLeads}
-                </p>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">Lost</p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-neutral-950">{lostLeads}</p>
               </div>
             </div>
           </div>
@@ -411,10 +342,10 @@ export default async function DashboardPage() {
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <div className="rounded-[1.5rem] border border-black/5 bg-white p-6">
             <h2 className="text-lg font-semibold tracking-tight text-neutral-950">
-              Top lead sources
+              Top source detail
             </h2>
             <p className="mt-2 text-sm leading-7 text-neutral-600">
-              Shows which channels are actually producing inquiries.
+              Shows which acquisition buckets are actually producing opportunities.
             </p>
 
             <div className="mt-4 space-y-3">
@@ -438,17 +369,17 @@ export default async function DashboardPage() {
 
           <div className="rounded-[1.5rem] border border-black/5 bg-white p-6">
             <h2 className="text-lg font-semibold tracking-tight text-neutral-950">
-              Top segments
+              Top priorities
             </h2>
             <p className="mt-2 text-sm leading-7 text-neutral-600">
-              Shows which operational segments are filling your pipeline.
+              Shows where your current CRM weighting is concentrated.
             </p>
 
             <div className="mt-4 space-y-3">
-              {topSegments.length === 0 ? (
-                <p className="text-sm text-neutral-600">No segment data yet.</p>
+              {topPriorities.length === 0 ? (
+                <p className="text-sm text-neutral-600">No priority data yet.</p>
               ) : (
-                topSegments.map((item) => (
+                topPriorities.map((item) => (
                   <div
                     key={item.name}
                     className="flex items-center justify-between rounded-xl border border-black/5 bg-neutral-50 px-4 py-3"

@@ -1,6 +1,5 @@
-export type SiteLang = "en" | "es" | "ar";
-
 export function getSiteLang(value?: string | null): SiteLang {
-  if (value === "es" || value === "ar") return value;
+  const v = value?.trim().toLowerCase();
+  if (v === "es" || v === "ar") return v;
   return "en";
 }

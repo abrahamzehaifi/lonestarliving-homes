@@ -68,13 +68,11 @@ export async function generateMetadata({
   params,
   searchParams,
 }: {
-  params: Promise<Params>;
-  searchParams?: Promise<SearchParams> | SearchParams;
+  params: Params;
+  searchParams?: SearchParams;
 }): Promise<Metadata> {
-  const { slug } = await params;
-  const sp =
-    searchParams instanceof Promise ? await searchParams : searchParams;
-  const lang = getSiteLang(sp?.lang);
+  const { slug } = params;
+  const lang = getSiteLang(searchParams?.lang);
 
   const page = getHoustonAreaBySlug(slug);
 
@@ -118,7 +116,8 @@ function getCompareLinks(currentSlug: string) {
     .filter(
       (
         item
-      ): item is NonNullable<ReturnType<typeof getHoustonAreaBySlug>> => Boolean(item)
+      ): item is NonNullable<ReturnType<typeof getHoustonAreaBySlug>> =>
+        Boolean(item)
     );
 }
 
@@ -126,13 +125,11 @@ export default async function HoustonAreaPage({
   params,
   searchParams,
 }: {
-  params: Promise<Params>;
-  searchParams?: Promise<SearchParams> | SearchParams;
+  params: Params;
+  searchParams?: SearchParams;
 }) {
-  const { slug } = await params;
-  const sp =
-    searchParams instanceof Promise ? await searchParams : searchParams;
-  const lang = getSiteLang(sp?.lang);
+  const { slug } = params;
+  const lang = getSiteLang(searchParams?.lang);
 
   const page = getHoustonAreaBySlug(slug);
 
@@ -296,7 +293,7 @@ export default async function HoustonAreaPage({
 
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
-            href={`/intake?service=tenant&area=${page.slug}&lang=${lang}`}
+            href={`/intake?type=tenant&area=${page.slug}&lang=${lang}`}
             className="inline-flex items-center justify-center rounded-full bg-neutral-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-neutral-800"
           >
             {labels.startRequest[lang]}
@@ -371,13 +368,13 @@ export default async function HoustonAreaPage({
 
           <ul className="mt-4 space-y-3 text-sm leading-7 text-neutral-600">
             {bestFor.map((item) => (
-              <li key={item}>• {item}</li>
+              <li key={item}>{item}</li>
             ))}
           </ul>
 
           <div className="mt-5">
             <Link
-              href={`/intake?service=tenant&area=${page.slug}&lang=${lang}`}
+              href={`/intake?type=tenant&area=${page.slug}&lang=${lang}`}
               className="text-sm font-medium underline underline-offset-4 transition hover:text-neutral-900"
             >
               {labels.startSearch[lang]}
@@ -392,7 +389,7 @@ export default async function HoustonAreaPage({
 
           <ul className="mt-4 space-y-3 text-sm leading-7 text-neutral-600">
             {housing.map((item) => (
-              <li key={item}>• {item}</li>
+              <li key={item}>{item}</li>
             ))}
           </ul>
 
@@ -413,7 +410,7 @@ export default async function HoustonAreaPage({
 
           <ul className="mt-4 space-y-3 text-sm leading-7 text-neutral-600">
             {lifestyle.map((item) => (
-              <li key={item}>• {item}</li>
+              <li key={item}>{item}</li>
             ))}
           </ul>
 
@@ -435,7 +432,7 @@ export default async function HoustonAreaPage({
           <p className="mt-4 text-sm leading-7 text-neutral-600">
             {pickText(page.pricingNote as LocalizedText, lang)}{" "}
             <Link
-              href={`/intake?service=tenant&area=${page.slug}&lang=${lang}`}
+              href={`/intake?type=tenant&area=${page.slug}&lang=${lang}`}
               className="underline underline-offset-4 transition hover:text-neutral-900"
             >
               {labels.startSearch[lang]}
@@ -449,11 +446,11 @@ export default async function HoustonAreaPage({
 
           <ul className="mt-3 space-y-3 text-sm leading-7 text-neutral-600">
             {commute.map((item) => (
-              <li key={item}>• {item}</li>
+              <li key={item}>{item}</li>
             ))}
           </ul>
 
-          {page.zipCodes.length > 0 ? (
+          {Array.isArray(page.zipCodes) && page.zipCodes.length > 0 ? (
             <>
               <h3 className="mt-6 text-lg font-semibold tracking-tight">
                 {labels.zipCodes[lang]}
@@ -474,10 +471,12 @@ export default async function HoustonAreaPage({
         </div>
       </section>
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
+      {localizedFaqs.length > 0 ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      ) : null}
     </main>
   );
 }

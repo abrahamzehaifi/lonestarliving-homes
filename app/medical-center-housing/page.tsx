@@ -10,9 +10,9 @@ export const metadata: Metadata = {
 type Language = "en" | "es" | "ar";
 
 type MedicalCenterHousingPageProps = {
-  searchParams?: Promise<{
+  searchParams?: {
     lang?: string;
-  }>;
+  };
 };
 
 function getLanguage(value?: string): Language {
@@ -51,8 +51,14 @@ const copy = {
 
     areaTitle: "Nearby Houston areas to compare",
     areaLinks: [
-      { href: "/houston/west-university-rice-museum-district", label: "West University, Rice & Museum District" },
-      { href: "/houston/downtown-midtown-montrose-river-oaks-adjacent", label: "Downtown, Midtown & Montrose" },
+      {
+        href: "/houston/west-university-rice-museum-district",
+        label: "West University, Rice & Museum District",
+      },
+      {
+        href: "/houston/downtown-midtown-montrose-river-oaks-adjacent",
+        label: "Downtown, Midtown & Montrose",
+      },
       { href: "/houston/the-heights", label: "The Heights" },
       { href: "/houston/galleria-tanglewood", label: "Galleria & Tanglewood" },
       { href: "/houston/spring-branch", label: "Spring Branch" },
@@ -93,8 +99,14 @@ const copy = {
 
     areaTitle: "Zonas cercanas de Houston para comparar",
     areaLinks: [
-      { href: "/houston/west-university-rice-museum-district", label: "West University, Rice y Museum District" },
-      { href: "/houston/downtown-midtown-montrose-river-oaks-adjacent", label: "Downtown, Midtown y Montrose" },
+      {
+        href: "/houston/west-university-rice-museum-district",
+        label: "West University, Rice y Museum District",
+      },
+      {
+        href: "/houston/downtown-midtown-montrose-river-oaks-adjacent",
+        label: "Downtown, Midtown y Montrose",
+      },
       { href: "/houston/the-heights", label: "The Heights" },
       { href: "/houston/galleria-tanglewood", label: "Galleria y Tanglewood" },
       { href: "/houston/spring-branch", label: "Spring Branch" },
@@ -135,8 +147,14 @@ const copy = {
 
     areaTitle: "مناطق قريبة في هيوستن للمقارنة",
     areaLinks: [
-      { href: "/houston/west-university-rice-museum-district", label: "وست يونيفرسيتي ورايس وميوزيوم ديستركت" },
-      { href: "/houston/downtown-midtown-montrose-river-oaks-adjacent", label: "داونتاون وميدتاون ومونتروز" },
+      {
+        href: "/houston/west-university-rice-museum-district",
+        label: "وست يونيفرسيتي ورايس وميوزيوم ديستركت",
+      },
+      {
+        href: "/houston/downtown-midtown-montrose-river-oaks-adjacent",
+        label: "داونتاون وميدتاون ومونتروز",
+      },
       { href: "/houston/the-heights", label: "ذا هايتس" },
       { href: "/houston/galleria-tanglewood", label: "غاليريا وتانلوود" },
       { href: "/houston/spring-branch", label: "سبرينغ برانش" },
@@ -165,11 +183,10 @@ function DetailCard({
   );
 }
 
-export default async function MedicalCenterHousingPage({
+export default function MedicalCenterHousingPage({
   searchParams,
 }: MedicalCenterHousingPageProps) {
-  const resolvedSearchParams = (await searchParams) ?? {};
-  const lang = getLanguage(resolvedSearchParams.lang);
+  const lang = getLanguage(searchParams?.lang);
   const t = copy[lang];
   const isArabic = lang === "ar";
 
@@ -197,7 +214,7 @@ export default async function MedicalCenterHousingPage({
 
         <div className="mt-10 flex flex-wrap gap-4">
           <Link
-            href={`/intake?service=tenant&area=medical-center&src=tmc-seo&lang=${lang}`}
+            href={`/intake?type=tenant&area=medical-center&src=tmc-seo&lang=${lang}`}
             className="inline-flex h-12 items-center justify-center rounded-full bg-neutral-950 px-6 text-sm font-medium text-white transition hover:bg-neutral-800"
           >
             {t.primaryCta}

@@ -8,8 +8,11 @@ export default function OpsLoginPage() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    if (loading) return;
+
     setLoading(true);
     setError(null);
 
@@ -19,21 +22,20 @@ export default function OpsLoginPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
 
-      if (!res.ok || !data.ok) {
-        setError(data.error || "Failed to send access link.");
-        setLoading(false);
+      if (!res.ok || !data?.ok) {
+        setError(data?.error || "Failed to send access link.");
         return;
       }
 
       setSent(true);
-      setLoading(false);
     } catch {
       setError("Something went wrong.");
+    } finally {
       setLoading(false);
     }
   }
@@ -55,19 +57,24 @@ export default function OpsLoginPage() {
               type="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (error) setError(null);
+              }}
               className="w-full rounded-lg border px-3 py-2"
+              autoComplete="email"
+              placeholder="you@example.com"
             />
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-black py-2 text-white"
+              className="w-full rounded-lg bg-black py-2 text-white disabled:opacity-60"
             >
               {loading ? "Sending..." : "Send Access Link"}
             </button>
 
-            {error && <p className="text-red-600 text-sm">{error}</p>}
+            {error ? <p className="text-sm text-red-600">{error}</p> : null}
           </form>
         ) : (
           <p className="mt-6 text-sm text-neutral-600">

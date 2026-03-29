@@ -1,23 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { CRM_STAGE_OPTIONS } from "@/lib/crm/stages";
 
 async function getSupabase() {
-  const cookieStore = await cookies();
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: () => {},
-      },
-    }
-  );
+  return createSupabaseServiceClient();
 }
 
 function getNextFollowUpByStage(stage: string, priority?: string | null) {
@@ -36,9 +24,12 @@ function getNextFollowUpByStage(stage: string, priority?: string | null) {
     return d.toISOString();
   };
 
-  if (stage === "new_lead") return highPriority ? addHours(2) : addHours(24);
+  if (stage === "new") return highPriority ? addHours(2) : addHours(24);
   if (stage === "contacted") return highPriority ? addHours(24) : addDays(2);
+  if (stage === "conversation") return highPriority ? addDays(1) : addDays(3);
   if (stage === "appointment_set") return addDays(1);
+  if (stage === "appointment_done") return addDays(2);
+  if (stage === "follow_up") return addDays(7);
   if (stage === "listing_signed") return addDays(3);
   if (stage === "nurture") return addDays(7);
 
@@ -47,7 +38,12 @@ function getNextFollowUpByStage(stage: string, priority?: string | null) {
 
 function cleanPriority(value: FormDataEntryValue | null): string | null {
   const x = String(value || "").trim().toLowerCase();
-  return x || null;
+  if (!x) return null;
+
+  if (x === "normal") return "medium";
+  if (x === "high" || x === "medium" || x === "low") return x;
+
+  return "medium";
 }
 
 function cleanNumber(value: FormDataEntryValue | null): number | null {
@@ -58,30 +54,79 @@ function cleanNumber(value: FormDataEntryValue | null): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+function cleanText(value: FormDataEntryValue | null, max = 500): string | null {
+  const s = String(value || "").trim();
+  if (!s) return null;
+  return s.length > max ? s.slice(0, max) : s;
+}
+
+function cleanEmail(value: FormDataEntryValue | null): string | null {
+  const email = String(value || "").trim().toLowerCase();
+  if (!email) return null;
+
+  const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  return isValid ? email : null;
+}
+
+function revalidateCrmViews() {
+  revalidatePath("/ops/dashboard/crm");
+  revalidatePath("/ops/leads");
+  revalidatePath("/ops/pipeline");
+  revalidatePath("/ops/dashboard");
+}
+
 export async function createLead(formData: FormData) {
   const supabase = await getSupabase();
 
-  const full_name = String(formData.get("full_name") || "").trim();
-  const property_address = String(formData.get("property_address") || "").trim();
-  const phone = String(formData.get("phone") || "").trim() || null;
-  const email = String(formData.get("email") || "").trim() || null;
-  const source = String(formData.get("source") || "manual").trim();
-  const motivation = String(formData.get("motivation") || "medium").trim();
+  const full_name = cleanText(formData.get("full_name"), 120);
+  const property_address = cleanText(formData.get("property_address"), 250);
+  const phone = cleanText(formData.get("phone"), 40);
+  const email = cleanEmail(formData.get("email"));
 
-  const priority = cleanPriority(formData.get("priority")) || "normal";
+  const allowedSources = [
+    "expired",
+    "withdrawn",
+    "terminated",
+    "referral",
+    "sphere",
+    "website",
+    "manual",
+  ] as const;
+
+  const rawSource = String(formData.get("source") || "manual")
+    .trim()
+    .toLowerCase();
+
+  const source = allowedSources.includes(
+    rawSource as (typeof allowedSources)[number]
+  )
+    ? rawSource
+    : "manual";
+
+  const allowedMotivations = ["high", "medium", "low"] as const;
+  const rawMotivation = String(formData.get("motivation") || "medium")
+    .trim()
+    .toLowerCase();
+
+  const motivation = allowedMotivations.includes(
+    rawMotivation as (typeof allowedMotivations)[number]
+  )
+    ? rawMotivation
+    : "medium";
+
+  const priority = cleanPriority(formData.get("priority")) || "medium";
   const lead_score = cleanNumber(formData.get("lead_score"));
-  const source_detail =
-    String(formData.get("source_detail") || "").trim() || null;
-  const channel = String(formData.get("channel") || "").trim() || null;
+  const source_detail = cleanText(formData.get("source_detail"), 120);
+  const channel = cleanText(formData.get("channel"), 80)?.toLowerCase() || null;
 
   if (!full_name || !property_address) {
     throw new Error("Name and property address are required.");
   }
 
-  const stage = "new_lead";
+  const stage = "new";
   const next_follow_up_at = getNextFollowUpByStage(stage, priority);
 
-  const { error } = await supabase.from("crm_leads").insert({
+  const payload = {
     full_name,
     property_address,
     phone,
@@ -94,11 +139,24 @@ export async function createLead(formData: FormData) {
     lead_score,
     stage,
     next_follow_up_at,
-  });
+  };
 
-  if (error) throw new Error(error.message);
+  console.log("CRM INSERT PAYLOAD:", payload);
 
-  revalidatePath("/ops/dashboard/crm");
+  const { data, error } = await supabase
+    .from("crm_leads")
+    .insert(payload)
+    .select("id")
+    .single();
+
+  if (error) {
+    console.error("CRM INSERT ERROR:", error);
+    return;
+  }
+
+  console.log("CRM INSERT SUCCESS:", data?.id);
+
+  revalidateCrmViews();
 }
 
 export async function updateLeadStage(formData: FormData) {
@@ -107,7 +165,7 @@ export async function updateLeadStage(formData: FormData) {
   const id = String(formData.get("id") || "").trim();
   const stage = String(formData.get("stage") || "").trim();
 
-  if (!id || !CRM_STAGE_OPTIONS.has(stage as never)) {
+  if (!id || !CRM_STAGE_OPTIONS.has(stage)) {
     throw new Error("Invalid stage update.");
   }
 
@@ -117,7 +175,10 @@ export async function updateLeadStage(formData: FormData) {
     .eq("id", id)
     .single();
 
-  if (fetchError) throw new Error(fetchError.message);
+  if (fetchError) {
+    console.error("CRM FETCH ERROR:", fetchError);
+    return;
+  }
 
   const next_follow_up_at = getNextFollowUpByStage(
     stage,
@@ -133,9 +194,12 @@ export async function updateLeadStage(formData: FormData) {
     })
     .eq("id", id);
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("CRM STAGE UPDATE ERROR:", error);
+    return;
+  }
 
-  revalidatePath("/ops/dashboard/crm");
+  revalidateCrmViews();
 }
 
 export async function updateLeadDetails(formData: FormData) {
@@ -145,15 +209,14 @@ export async function updateLeadDetails(formData: FormData) {
   if (!id) throw new Error("Missing lead id.");
 
   const payload = {
-    timeline: String(formData.get("timeline") || "").trim() || null,
-    pain_point: String(formData.get("pain_point") || "").trim() || null,
-    next_follow_up_at:
-      String(formData.get("next_follow_up_at") || "").trim() || null,
+    timeline: cleanText(formData.get("timeline"), 80),
+    pain_point: cleanText(formData.get("pain_point"), 500),
+    next_follow_up_at: cleanText(formData.get("next_follow_up_at"), 80),
     price_expectation: cleanNumber(formData.get("price_expectation")),
     market_low: cleanNumber(formData.get("market_low")),
     market_high: cleanNumber(formData.get("market_high")),
     recommended_price: cleanNumber(formData.get("recommended_price")),
-    cma_notes: String(formData.get("cma_notes") || "").trim() || null,
+    cma_notes: cleanText(formData.get("cma_notes"), 4000),
   };
 
   const { error } = await supabase
@@ -161,9 +224,12 @@ export async function updateLeadDetails(formData: FormData) {
     .update(payload)
     .eq("id", id);
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("CRM DETAILS UPDATE ERROR:", error);
+    return;
+  }
 
-  revalidatePath("/ops/dashboard/crm");
+  revalidateCrmViews();
 }
 
 export async function addActivity(formData: FormData) {
@@ -183,7 +249,10 @@ export async function addActivity(formData: FormData) {
     content,
   });
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("CRM ACTIVITY INSERT ERROR:", error);
+    return;
+  }
 
-  revalidatePath("/ops/dashboard/crm");
+  revalidateCrmViews();
 }

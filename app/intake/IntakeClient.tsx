@@ -61,6 +61,9 @@ function formatAreaLabel(area: string) {
     .join(" ");
 }
 
+const inputClass =
+  "w-full rounded-xl border border-neutral-300 px-4 py-3 text-sm outline-none transition focus:border-neutral-900";
+
 export default function IntakeClient({
   lang,
   intent,
@@ -138,7 +141,7 @@ export default function IntakeClient({
         return;
       }
 
-      router.push("/thanks");
+      router.push(`/thanks?lang=${lang}`);
     } catch {
       setStatus("error");
       setMsg(t.messages.networkError);
@@ -219,7 +222,7 @@ export default function IntakeClient({
           </select>
 
           <select
-            name="leadType"
+            name="leadTypeUi"
             className={inputClass}
             value={leadType}
             onChange={(e) => setLeadType(coerceLeadType(e.target.value))}
@@ -382,6 +385,3 @@ export default function IntakeClient({
     </main>
   );
 }
-
-const inputClass =
-  "w-full rounded-xl border border-neutral-300 px-4 py-3 text-sm outline-none transition focus:border-neutral-900";

@@ -18,7 +18,7 @@ export async function createServerSupabaseClient() {
               cookieStore.set(name, value, options);
             });
           } catch {
-            // Safe in server components when middleware/proxy refresh is used
+            // Safe in server components when cookie writes are not allowed.
           }
         },
       },

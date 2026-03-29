@@ -1,3 +1,5 @@
+import { getPreferredSiteLang } from "@/lib/i18n/getLangServer";
+
 type Language = "en" | "es" | "ar";
 
 type ContactPageProps = {
@@ -5,11 +7,6 @@ type ContactPageProps = {
     lang?: string;
   }>;
 };
-
-function getLanguage(value?: string): Language {
-  if (value === "es" || value === "ar") return value;
-  return "en";
-}
 
 const copy = {
   en: {
@@ -23,6 +20,8 @@ const copy = {
     brokerage: "Brokerage",
     serviceArea: "Service Area",
     city: "Houston, Texas",
+    legal:
+      "Representation services are provided by Abraham Zehaifi, Texas REALTOR®, brokered by 5th Stream Realty LLC.",
   },
 
   es: {
@@ -36,6 +35,8 @@ const copy = {
     brokerage: "Correduría",
     serviceArea: "Área de servicio",
     city: "Houston, Texas",
+    legal:
+      "Los servicios de representación son proporcionados por Abraham Zehaifi, Texas REALTOR®, brokered by 5th Stream Realty LLC.",
   },
 
   ar: {
@@ -49,12 +50,14 @@ const copy = {
     brokerage: "الوساطة العقارية",
     serviceArea: "منطقة الخدمة",
     city: "هيوستن، تكساس",
+    legal:
+      "تُقدَّم خدمات التمثيل العقاري من قبل Abraham Zehaifi, Texas REALTOR®, brokered by 5th Stream Realty LLC.",
   },
 } as const;
 
 export default async function ContactPage({ searchParams }: ContactPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
-  const lang = getLanguage(resolvedSearchParams.lang);
+  const lang: Language = await getPreferredSiteLang(resolvedSearchParams.lang);
   const t = copy[lang];
   const isArabic = lang === "ar";
 
@@ -109,6 +112,8 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
           <p className="mt-1 text-lg font-medium">{t.city}</p>
         </address>
       </div>
+
+      <p className="mt-6 text-sm text-neutral-500">{t.legal}</p>
     </section>
   );
 }

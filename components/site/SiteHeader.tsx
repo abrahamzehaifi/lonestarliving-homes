@@ -7,6 +7,8 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { getSiteLang } from "@/lib/i18n/getLang";
 import { siteCopy } from "@/lib/i18n/siteCopy";
 
+type Language = "en" | "es" | "ar";
+
 function NavLink({
   href,
   children,
@@ -59,7 +61,7 @@ function BrokerLogo() {
 function buildHref(
   pathname: string,
   searchParams: URLSearchParams,
-  nextLang: "en" | "es" | "ar"
+  nextLang: Language
 ) {
   const params = new URLSearchParams(searchParams.toString());
   params.set("lang", nextLang);
@@ -67,7 +69,7 @@ function buildHref(
   return query ? `${pathname}?${query}` : pathname;
 }
 
-function withLang(path: string, lang: "en" | "es" | "ar") {
+function withLang(path: string, lang: Language) {
   return `${path}?lang=${lang}`;
 }
 
@@ -77,7 +79,7 @@ function LanguageLink({
   searchParams,
   children,
 }: {
-  lang: "en" | "es" | "ar";
+  lang: Language;
   pathname: string;
   searchParams: URLSearchParams;
   children: ReactNode;
@@ -161,15 +163,15 @@ export default function SiteHeader() {
               aria-label="Primary navigation"
               className="flex flex-wrap items-center gap-4 lg:gap-6"
             >
-              <NavLink href={`/intake?type=tenant&src=nav_rent&lang=${lang}`}>
+              <NavLink href={`/intake?type=rent&src=nav_rent&lang=${lang}`}>
                 {copy.nav.rent}
               </NavLink>
 
-              <NavLink href={`/intake?type=buyer&src=nav_buy&lang=${lang}`}>
+              <NavLink href={`/intake?type=buy&src=nav_buy&lang=${lang}`}>
                 {copy.nav.buy}
               </NavLink>
 
-              <NavLink href={`/intake?type=seller&src=nav_sell&lang=${lang}`}>
+              <NavLink href={`/intake?type=sell&src=nav_sell&lang=${lang}`}>
                 {copy.nav.sell}
               </NavLink>
 
@@ -186,7 +188,7 @@ export default function SiteHeader() {
               </HeaderButton>
 
               <Link
-                href={`/intake?type=buyer&src=header_priority&channel=organic&lang=${lang}`}
+                href={`/intake?type=buy&src=header_priority&channel=organic&lang=${lang}`}
                 className="inline-flex h-10 items-center justify-center rounded-full border border-white/20 px-4 text-sm font-medium text-white transition hover:border-white/35 hover:bg-white/5"
               >
                 Buy a Home

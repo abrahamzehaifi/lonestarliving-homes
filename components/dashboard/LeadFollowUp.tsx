@@ -28,6 +28,7 @@ function toLocalInputValue(value: string | null) {
 export default function LeadFollowUp({ leadId, followUpAt }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [saving, setSaving] = useState(false);
   const [value, setValue] = useState(toLocalInputValue(followUpAt));
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -47,7 +48,7 @@ export default function LeadFollowUp({ leadId, followUpAt }: Props) {
   }, [success]);
 
   async function saveFollowUp(nextValue: string | null) {
-    if (isPending) return;
+    if (saving) return;
 
     const current = toLocalInputValue(followUpAt);
     const normalizedNext = nextValue ?? "";
@@ -58,6 +59,7 @@ export default function LeadFollowUp({ leadId, followUpAt }: Props) {
       return;
     }
 
+    setSaving(true);
     setError("");
     setSuccess("");
 
@@ -91,8 +93,12 @@ export default function LeadFollowUp({ leadId, followUpAt }: Props) {
       });
     } catch {
       setError("Network error while updating follow-up.");
+    } finally {
+      setSaving(false);
     }
   }
+
+  const disabled = saving || isPending;
 
   return (
     <div className="space-y-2">
@@ -100,23 +106,23 @@ export default function LeadFollowUp({ leadId, followUpAt }: Props) {
         <input
           type="datetime-local"
           value={value}
-          disabled={isPending}
+          disabled={disabled}
           onChange={(e) => setValue(e.target.value)}
           className="min-w-[240px] rounded-xl border border-black/10 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-black/20 disabled:cursor-not-allowed disabled:opacity-60"
         />
 
         <button
           type="button"
-          disabled={isPending}
+          disabled={disabled}
           onClick={() => void saveFollowUp(value || null)}
           className="inline-flex h-10 items-center justify-center rounded-full bg-neutral-950 px-4 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isPending ? "Saving..." : "Save"}
+          {saving ? "Saving..." : "Save"}
         </button>
 
         <button
           type="button"
-          disabled={isPending || !value}
+          disabled={disabled || !value}
           onClick={() => {
             setValue("");
             void saveFollowUp(null);

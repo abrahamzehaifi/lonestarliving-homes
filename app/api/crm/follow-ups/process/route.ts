@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { jwtVerify } from "jose";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+
+const encoder = new TextEncoder();
 
 type DueLead = {
   id: string;
-  user_id: string;
   full_name: string | null;
   phone: string | null;
   email: string | null;
@@ -17,25 +18,20 @@ type DueLead = {
   channel: string | null;
 };
 
-async function getAuthedUser() {
+async function requireOpsSession() {
   const cookieStore = await cookies();
+  const token = cookieStore.get("ops_session")?.value;
+  const secret = process.env.OPS_AUTH_SECRET;
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: () => {},
-      },
-    }
-  );
+  if (!token || !secret) return false;
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const { payload } = await jwtVerify(token, encoder.encode(secret));
 
-  return user;
+    return payload?.purpose === "ops_login";
+  } catch {
+    return false;
+  }
 }
 
 function formatDateTime(value: string | null) {
@@ -98,9 +94,9 @@ async function sendTelegramNotification(message: string) {
 }
 
 export async function POST() {
-  const user = await getAuthedUser();
+  const isAuthed = await requireOpsSession();
 
-  if (!user) {
+  if (!isAuthed) {
     return NextResponse.json(
       { ok: false, error: "Unauthorized." },
       { status: 401 }
@@ -113,9 +109,8 @@ export async function POST() {
   const { data: leads, error } = await supabase
     .from("crm_leads")
     .select(
-      "id, user_id, full_name, phone, email, stage, next_follow_up_at, priority, lead_score, source_detail, channel"
+      "id, full_name, phone, email, stage, next_follow_up_at, priority, lead_score, source_detail, channel"
     )
-    .eq("user_id", user.id)
     .not("next_follow_up_at", "is", null)
     .lte("next_follow_up_at", now)
     .order("next_follow_up_at", { ascending: true })
@@ -130,7 +125,7 @@ export async function POST() {
   }
 
   const dueLeads = ((leads ?? []) as DueLead[]).filter(
-    (lead) => lead.stage !== "closed" && lead.stage !== "archived"
+    (lead) => lead.stage !== "closed" && lead.stage !== "lost"
   );
 
   if (dueLeads.length === 0) {
@@ -184,7 +179,6 @@ export async function POST() {
 
   const activityRows = dueLeads.map((lead) => ({
     lead_id: lead.id,
-    user_id: user.id,
     activity_type: "system_followup_due",
     content: `Follow-up due processed. Priority: ${lead.priority || "normal"} | Score: ${lead.lead_score ?? "—"} | Source: ${lead.source_detail || "—"}${lead.channel ? ` | Channel: ${lead.channel}` : ""}`,
   }));

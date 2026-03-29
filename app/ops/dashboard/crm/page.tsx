@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 import SellerOpportunityPanel from "@/components/crm/SellerOpportunityPanel";
 import DailyCadencePanel from "@/components/crm/DailyCadencePanel";
@@ -47,18 +46,7 @@ type CrmLead = {
 };
 
 async function getSupabase() {
-  const cookieStore = await cookies();
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: () => {},
-      },
-    }
-  );
+  return createSupabaseServiceClient();
 }
 
 function isOverdue(value?: string | null) {
@@ -80,6 +68,53 @@ function sortLeadsForExecution(leads: CrmLead[]) {
   });
 }
 
+function normalizeLead(row: any): CrmLead {
+  return {
+    id: String(row?.id ?? "").trim(),
+    stage: String(row?.stage ?? "new").trim().toLowerCase(),
+    created_at: row?.created_at ?? null,
+    next_follow_up_at: row?.next_follow_up_at ?? null,
+    last_contacted_at: row?.last_contacted_at ?? null,
+    priority:
+      typeof row?.priority === "string"
+        ? row.priority.trim().toLowerCase()
+        : null,
+    lead_score:
+      typeof row?.lead_score === "number"
+        ? row.lead_score
+        : Number.isFinite(Number(row?.lead_score))
+        ? Number(row.lead_score)
+        : null,
+    lead_quality: row?.lead_quality ?? null,
+
+    full_name: String(row?.full_name ?? ""),
+    property_address: String(row?.property_address ?? ""),
+    motivation: row?.motivation ?? null,
+    source_detail: row?.source_detail ?? null,
+    channel: row?.channel ?? null,
+    phone: row?.phone ?? null,
+    email: row?.email ?? null,
+  };
+}
+
+function normalizeActivity(row: any): CrmActivity | null {
+  const id = String(row?.id ?? "").trim();
+  const lead_id = String(row?.lead_id ?? "").trim();
+  const activity_type = String(row?.activity_type ?? "note").trim();
+  const content = String(row?.content ?? "").trim();
+  const created_at = String(row?.created_at ?? "").trim();
+
+  if (!id || !lead_id || !content || !created_at) return null;
+
+  return {
+    id,
+    lead_id,
+    activity_type,
+    content,
+    created_at,
+  };
+}
+
 export default async function CrmPage({
   searchParams,
 }: {
@@ -88,10 +123,7 @@ export default async function CrmPage({
   const supabase = await getSupabase();
   const { lead: selectedLeadId } = await searchParams;
 
-  const [
-    { data: leads, error: leadsError },
-    { data: activities, error: activitiesError },
-  ] = await Promise.all([
+  const [leadsResult, activitiesResult] = await Promise.all([
     supabase
       .from("crm_leads")
       .select("*")
@@ -102,47 +134,36 @@ export default async function CrmPage({
       .order("created_at", { ascending: false }),
   ]);
 
-  if (leadsError) throw new Error(leadsError.message);
-  if (activitiesError) throw new Error(activitiesError.message);
+  if (leadsResult.error) {
+    console.error("CRM PAGE LEADS ERROR:", leadsResult.error);
+  }
 
-  const normalizedLeads: CrmLead[] = (leads ?? []).map((l: any) => ({
-    id: l.id,
-    stage: l.stage,
-    created_at: l.created_at ?? null,
-    next_follow_up_at: l.next_follow_up_at ?? null,
-    last_contacted_at: l.last_contacted_at ?? null,
-    priority: l.priority ?? null,
-    lead_score: l.lead_score ?? null,
-    lead_quality: l.lead_quality ?? null,
+  if (activitiesResult.error) {
+    console.error("CRM PAGE ACTIVITIES ERROR:", activitiesResult.error);
+  }
 
-    full_name: l.full_name ?? "",
-    property_address: l.property_address ?? "",
-    motivation: l.motivation ?? null,
-    source_detail: l.source_detail ?? null,
-    channel: l.channel ?? null,
-    phone: l.phone ?? null,
-    email: l.email ?? null,
-  }));
+  const normalizedLeads: CrmLead[] = Array.isArray(leadsResult.data)
+    ? leadsResult.data.map(normalizeLead).filter((l) => l.id)
+    : [];
 
-  const normalizedActivities: CrmActivity[] = (activities ?? []).map(
-    (a: any) => ({
-      id: a.id,
-      lead_id: a.lead_id,
-      activity_type: a.activity_type,
-      content: a.content,
-      created_at: a.created_at,
-    })
-  );
+  const normalizedActivities: CrmActivity[] = Array.isArray(activitiesResult.data)
+    ? activitiesResult.data
+        .map(normalizeActivity)
+        .filter((a): a is CrmActivity => Boolean(a))
+    : [];
 
   const sortedLeads = sortLeadsForExecution(normalizedLeads);
 
   const selectedLead =
-    sortedLeads.find((l) => l.id === selectedLeadId) ??
-    sortedLeads[0] ??
-    null;
+    sortedLeads.find((l) => l.id === selectedLeadId) ?? sortedLeads[0] ?? null;
 
   const selectedActivities = selectedLead
-    ? normalizedActivities.filter((a) => a.lead_id === selectedLead.id)
+    ? normalizedActivities
+        .filter((a) => a.lead_id === selectedLead.id)
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
     : [];
 
   return (
@@ -158,17 +179,11 @@ export default async function CrmPage({
       />
 
       <HotLeadsPanel leads={sortedLeads} />
-
       <TaskQueuePanel leads={sortedLeads} />
-
       <SellerOpportunityPanel leads={sortedLeads} />
-
       <NextBestActionPanel leads={sortedLeads} />
-
       <SourcePerformancePanel leads={sortedLeads} />
-
       <StageConversionPanel leads={sortedLeads} />
-
       <StaleLeadsPanel leads={sortedLeads} />
 
       <section className="flex flex-wrap gap-3">
@@ -190,7 +205,7 @@ export default async function CrmPage({
         </div>
 
         <LeadDetailPanel
-          lead={selectedLead as any}
+          lead={selectedLead}
           activities={selectedActivities}
         />
       </section>
