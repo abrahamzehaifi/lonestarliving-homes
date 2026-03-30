@@ -286,12 +286,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center brightness-[0.68] saturate-[0.9]"
+            className="object-cover object-center brightness-[0.85] saturate-[0.95]"
           />
         </div>
 
-        <div className="absolute inset-0 bg-[#03081b]/52" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#020617]/88 via-[#03081b]/66 to-[#03081b]/30" />
+        <div className="absolute inset-0 bg-[#03081b]/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#020617]/60 via-[#03081b]/40 to-[#03081b]/10" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/8 to-transparent" />
 
         <div className="relative mx-auto max-w-7xl px-6 py-20 md:py-24 lg:py-28">

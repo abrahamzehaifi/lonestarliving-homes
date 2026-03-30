@@ -93,7 +93,8 @@ function cleanPhone(v: unknown): string | undefined {
   if (normalized.includes("+") && !normalized.startsWith("+")) return undefined;
 
   const digits = normalized.replace(/\D/g, "");
-  if (digits.length < 8 || digits.length > 15) return undefined;
+  // FIX: guard against empty digits string
+  if (!digits || digits.length < 8 || digits.length > 15) return undefined;
 
   if (normalized.startsWith("+")) return `+${digits}`;
   if (digits.length === 10) return `+1${digits}`;
@@ -144,6 +145,18 @@ function coerceLang(v: unknown): Language | undefined {
 }
 
 // ---------------------------------------------------------------------------
+// Timeline helper — eliminates repeated logic across the file
+// ---------------------------------------------------------------------------
+
+function isUrgentTimeline(timeline?: string): boolean {
+  return (
+    timeline === "asap" ||
+    timeline === "30_days" ||
+    timeline === "within_30_days"
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Context extraction helpers
 // ---------------------------------------------------------------------------
 
@@ -174,17 +187,21 @@ function inferSegmentFromContext(body: Record<string, unknown>): Segment {
   return "general";
 }
 
+// FIX: previous version could return "" and pollute data with empty strings
 function getNestedField(
   body: Record<string, unknown>,
   key: string,
   max: number
 ): string | undefined {
   const ctx = getRequestContext(body);
-  return (
-    cleanString(body[key], max).toLowerCase() ||
-    cleanString(ctx?.[key], max).toLowerCase() ||
-    undefined
-  );
+
+  const direct = cleanString(body[key], max);
+  if (direct) return direct.toLowerCase();
+
+  const nested = cleanString(ctx?.[key], max);
+  if (nested) return nested.toLowerCase();
+
+  return undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -297,14 +314,7 @@ function routeLead(lead: NormalizedLead): { reasons: string[] } {
 
   if (lead.leadType === "rent") {
     if ((lead.budget ?? 0) >= 1800) reasons.push("rent_budget_ready");
-
-    if (
-      lead.timeline === "asap" ||
-      lead.timeline === "30_days" ||
-      lead.timeline === "within_30_days"
-    ) {
-      reasons.push("rent_timeline_active");
-    }
+    if (isUrgentTimeline(lead.timeline)) reasons.push("rent_timeline_active");
   }
 
   return { reasons };
@@ -317,12 +327,7 @@ function scoreLeadQuality(lead: NormalizedLead): {
   let score = 0;
   const qualityReasons: string[] = [];
 
-  const isUrgent =
-    lead.timeline === "asap" ||
-    lead.timeline === "30_days" ||
-    lead.timeline === "within_30_days";
-
-  if (isUrgent) {
+  if (isUrgentTimeline(lead.timeline)) {
     score += 2;
     qualityReasons.push("timeline_urgent");
   } else if (lead.timeline === "1_3_months" || lead.timeline === "3_plus_months") {
@@ -446,15 +451,7 @@ function getNextFollowUpAt(lead: NormalizedLead, leadQuality: LeadQuality): stri
   };
 
   if (lead.priority === "high" || leadQuality === "priority_a") return addHours(24);
-
-  if (
-    lead.timeline === "asap" ||
-    lead.timeline === "30_days" ||
-    lead.timeline === "within_30_days"
-  ) {
-    return addDays(2);
-  }
-
+  if (isUrgentTimeline(lead.timeline)) return addDays(2);
   return addDays(3);
 }
 
@@ -476,13 +473,7 @@ function buildPropertyAddressForCrm(lead: NormalizedLead): string {
 
 function buildMotivationForCrm(lead: NormalizedLead): string {
   if (lead.priority === "high") return "high";
-  if (
-    lead.timeline === "asap" ||
-    lead.timeline === "30_days" ||
-    lead.timeline === "within_30_days"
-  ) {
-    return "high";
-  }
+  if (isUrgentTimeline(lead.timeline)) return "high";
   if (lead.sellerGoal === "fast_sale") return "high";
   if (lead.readyToLease === "yes") return "high";
   return "medium";
@@ -564,38 +555,60 @@ function sanitizeRawForStorage(raw: unknown): Record<string, unknown> {
   };
 }
 
+type PersistLeadResult =
+  | { ok: true; id: string }
+  | { ok: false; error: unknown };
+
+// Isolated CRM payload builder — single source of truth for DB contract
+function buildCrmPayload(
+  lead: NormalizedLead,
+  leadQuality: LeadQuality,
+  raw: unknown
+) {
+  return {
+    full_name: lead.name,
+    property_address: buildPropertyAddressForCrm(lead),
+    phone: lead.phone,
+    email: lead.email,
+    source: lead.source ?? "website",
+    source_detail: lead.sourceDetail ?? null,
+    channel: lead.channel ?? null,
+    motivation: buildMotivationForCrm(lead),
+    priority: lead.priority ?? "medium",
+    lead_score: lead.leadScore ?? null,
+    lead_quality: leadQuality,
+    stage: "new",
+    next_follow_up_at: getNextFollowUpAt(lead, leadQuality),
+    timeline: lead.timeline ?? null,
+    pain_point: buildNotesForCrm(lead),
+    cma_notes: buildCmaNotes(lead),
+    raw: sanitizeRawForStorage(raw),
+  };
+}
+
 async function persistLeadToCrm(
   supabase: ReturnType<typeof createSupabaseServiceClient>,
   lead: NormalizedLead,
   leadQuality: LeadQuality,
   raw: unknown
-) {
+): Promise<PersistLeadResult> {
+  const payload = buildCrmPayload(lead, leadQuality, raw);
+
   const { data, error } = await supabase
     .from("crm_leads")
-    .insert({
-      full_name: lead.name,
-      property_address: buildPropertyAddressForCrm(lead),
-      phone: lead.phone,
-      email: lead.email,
-      source: lead.source ?? "website",
-      source_detail: lead.sourceDetail ?? null,
-      channel: lead.channel ?? null,
-      motivation: buildMotivationForCrm(lead),
-      priority: lead.priority ?? "medium",
-      lead_score: lead.leadScore ?? null,
-      lead_quality: leadQuality,
-      stage: "new",
-      next_follow_up_at: getNextFollowUpAt(lead, leadQuality),
-      timeline: lead.timeline ?? null,
-      pain_point: buildNotesForCrm(lead),
-      cma_notes: buildCmaNotes(lead),
-      raw: sanitizeRawForStorage(raw),
-    })
+    .insert(payload)
     .select("id")
     .single();
 
-  if (error) return { ok: false as const, error };
-  return { ok: true as const, id: data?.id as string | undefined };
+  if (error) {
+    // FIX: log full payload on failure so DB mismatches are immediately visible
+    console.error("🔥 CRM INSERT FAILED");
+    console.error("Payload:", JSON.stringify(payload, null, 2));
+    console.error("Supabase error:", JSON.stringify(error, null, 2));
+    return { ok: false as const, error };
+  }
+
+  return { ok: true as const, id: data?.id as string };
 }
 
 async function insertCrmLeadCreatedActivity(
@@ -788,17 +801,6 @@ async function sendTelegramNotification(text: string) {
 // Request handler
 // ---------------------------------------------------------------------------
 
-function jsonError(status: number, message: string, extra?: unknown) {
-  return NextResponse.json(
-    {
-      ok: false,
-      error: message,
-      ...(process.env.NODE_ENV !== "production" ? { debug: extra } : {}),
-    },
-    { status }
-  );
-}
-
 function getClientIp(req: Request): string | null {
   const xff = req.headers.get("x-forwarded-for");
   if (xff) return xff.split(",")[0]?.trim() ?? null;
@@ -810,12 +812,14 @@ export async function POST(req: Request) {
 
   try {
     raw = await req.json();
-  } catch (e) {
-    return jsonError(400, "Invalid JSON body.", e);
+  } catch {
+    return NextResponse.json({ ok: false, error: "Invalid JSON body." }, { status: 400 });
   }
 
   const normalized = normalizeLead(raw);
-  if (!normalized.ok) return jsonError(400, normalized.error);
+  if (!normalized.ok) {
+    return NextResponse.json({ ok: false, error: normalized.error }, { status: 400 });
+  }
 
   const lead = normalized.lead;
   lead.ip = getClientIp(req);
@@ -828,8 +832,16 @@ export async function POST(req: Request) {
   const persisted = await persistLeadToCrm(supabase, lead, leadQuality, raw);
 
   if (!persisted.ok) {
-    console.error("CRM lead insert failed:", persisted.error);
-    return jsonError(500, "Failed to save CRM lead.", persisted.error);
+    // FIX: surface the error in the response body (not just logs) so callers
+    // can see what broke instead of receiving a generic 500
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "We couldn't save your request right now. Please try again shortly.",
+        debug: process.env.NODE_ENV !== "production" ? persisted.error : undefined,
+      },
+      { status: 500 }
+    );
   }
 
   if (persisted.id) {
