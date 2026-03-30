@@ -6,7 +6,14 @@ import { buildHref } from "@/lib/i18n/buildHref";
 
 export default function Hero() {
   const searchParams = useSearchParams();
-  const lang = searchParams.get("lang") || "en";
+  const rawLang = searchParams.get("lang");
+  const lang = rawLang === "es" || rawLang === "ar" ? rawLang : "en";
+
+  const highlights = [
+    "Buyer and seller support",
+    "Leasing and rental guidance",
+    "Houston market knowledge",
+  ] as const;
 
   return (
     <section className="relative overflow-hidden bg-slate-950 text-white">
@@ -64,11 +71,7 @@ export default function Hero() {
         </div>
 
         <div className="mt-10 grid gap-3 md:grid-cols-3">
-          {[
-            "Buyer and seller support",
-            "Leasing and rental guidance",
-            "Houston market knowledge",
-          ].map((text) => (
+          {highlights.map((text) => (
             <div
               key={text}
               className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.25)]"

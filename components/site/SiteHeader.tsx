@@ -4,10 +4,8 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
-import { getSiteLang } from "@/lib/i18n/getLang";
+import { getSiteLang, type SiteLang } from "@/lib/i18n/getLang";
 import { siteCopy } from "@/lib/i18n/siteCopy";
-
-type Language = "en" | "es" | "ar";
 
 function NavLink({
   href,
@@ -61,7 +59,7 @@ function BrokerLogo() {
 function buildHref(
   pathname: string,
   searchParams: URLSearchParams,
-  nextLang: Language
+  nextLang: SiteLang
 ) {
   const params = new URLSearchParams(searchParams.toString());
   params.set("lang", nextLang);
@@ -69,7 +67,7 @@ function buildHref(
   return query ? `${pathname}?${query}` : pathname;
 }
 
-function withLang(path: string, lang: Language) {
+function withLang(path: string, lang: SiteLang) {
   return `${path}?lang=${lang}`;
 }
 
@@ -79,7 +77,7 @@ function LanguageLink({
   searchParams,
   children,
 }: {
-  lang: Language;
+  lang: SiteLang;
   pathname: string;
   searchParams: URLSearchParams;
   children: ReactNode;

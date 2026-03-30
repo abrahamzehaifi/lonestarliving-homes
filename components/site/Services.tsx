@@ -36,7 +36,8 @@ const services = [
 
 export default function ServicesSection() {
   const searchParams = useSearchParams();
-  const lang = searchParams.get("lang") || "en";
+  const rawLang = searchParams.get("lang");
+  const lang = rawLang === "es" || rawLang === "ar" ? rawLang : "en";
 
   return (
     <section id="services" className="bg-slate-50 py-24">
@@ -59,7 +60,11 @@ export default function ServicesSection() {
 
         <div className="mt-14 grid gap-8 md:grid-cols-2">
           {services.map((service) => {
-            const href = `/intake?type=${service.type}&src=${service.src}&channel=organic&lang=${lang}`;
+            const href = `/intake?type=${encodeURIComponent(
+              service.type
+            )}&src=${encodeURIComponent(
+              service.src
+            )}&channel=organic&lang=${encodeURIComponent(lang)}`;
 
             return (
               <div

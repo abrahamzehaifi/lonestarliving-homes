@@ -1,100 +1,66 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateLeadStatus } from "@/app/ops/leads/actions";
+import { updateLeadStage } from "@/app/ops/dashboard/crm/actions";
 
 const STATUS_OPTIONS = [
   { value: "new", label: "New" },
   { value: "contacted", label: "Contacted" },
-  { value: "qualified", label: "Qualified" },
-  { value: "showing", label: "Showing" },
-  { value: "application", label: "Application" },
+  { value: "conversation", label: "Conversation" },
+  { value: "appointment_set", label: "Appointment Set" },
+  { value: "appointment_done", label: "Appointment Done" },
+  { value: "follow_up", label: "Follow Up" },
+  { value: "listing_signed", label: "Listing Signed" },
+  { value: "active_listing", label: "Active Listing" },
+  { value: "under_contract", label: "Under Contract" },
   { value: "closed", label: "Closed" },
   { value: "lost", label: "Lost" },
+  { value: "nurture", label: "Nurture" },
 ] as const;
 
-function normalizeStatus(value?: string | null) {
-  const status = String(value || "").trim().toLowerCase();
-  return STATUS_OPTIONS.some((option) => option.value === status) ? status : "new";
-}
-
-function getStatusClass(status: string) {
-  switch (status) {
-    case "new":
-      return "border-slate-200 bg-slate-50 text-slate-700";
-    case "contacted":
-      return "border-amber-200 bg-amber-50 text-amber-800";
-    case "qualified":
-      return "border-blue-200 bg-blue-50 text-blue-800";
-    case "showing":
-      return "border-violet-200 bg-violet-50 text-violet-800";
-    case "application":
-      return "border-cyan-200 bg-cyan-50 text-cyan-800";
-    case "closed":
-      return "border-emerald-200 bg-emerald-50 text-emerald-800";
-    case "lost":
-      return "border-neutral-200 bg-neutral-100 text-neutral-700";
-    default:
-      return "border-black/10 bg-white text-neutral-800";
-  }
-}
-
-type Props = {
-  leadId: string;
-  initialStatus?: string | null;
-};
+type StatusValue = (typeof STATUS_OPTIONS)[number]["value"];
 
 export default function LeadStatusInline({
   leadId,
-  initialStatus,
-}: Props) {
-  const [status, setStatus] = useState(normalizeStatus(initialStatus));
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState("");
+  currentStatus,
+}: {
+  leadId: string;
+  currentStatus: string | null;
+}) {
+  const [value, setValue] = useState<StatusValue>(
+    (currentStatus as StatusValue) || "new"
+  );
   const [isPending, startTransition] = useTransition();
 
-  function handleChange(nextStatus: string) {
-    const previous = status;
-    setStatus(nextStatus);
-    setSaved(false);
-    setError("");
+  function handleChange(nextValue: string) {
+    const prev = value;
+    const next = nextValue as StatusValue;
+
+    setValue(next);
 
     startTransition(() => {
-      void (async () => {
-        const result = await updateLeadStatus(leadId, nextStatus);
+      const formData = new FormData();
+      formData.append("id", leadId);
+      formData.append("stage", next);
 
-        if (!result.ok) {
-          setStatus(previous);
-          setError(result.error || "Failed to save");
-          return;
-        }
-
-        setSaved(true);
-        window.setTimeout(() => setSaved(false), 1200);
-      })();
+      void updateLeadStage(formData).catch(() => {
+        setValue(prev);
+      });
     });
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <select
-        value={status}
-        onChange={(e) => handleChange(e.target.value)}
-        disabled={isPending}
-        className={`h-9 rounded-full border px-3 text-xs font-medium outline-none transition disabled:cursor-not-allowed disabled:opacity-60 ${getStatusClass(
-          status
-        )}`}
-      >
-        {STATUS_OPTIONS.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-
-      <span className="min-w-[52px] text-xs text-neutral-500">
-        {isPending ? "Saving" : saved ? "Saved" : error ? "Error" : ""}
-      </span>
-    </div>
+    <select
+      value={value}
+      onChange={(e) => handleChange(e.target.value)}
+      disabled={isPending}
+      className="rounded-lg border px-2 py-1 text-sm"
+    >
+      {STATUS_OPTIONS.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
   );
 }

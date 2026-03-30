@@ -1,16 +1,13 @@
+import { getSiteLang, type SiteLang } from "@/lib/i18n/getLang";
+
 function isValidLang(value: string | null | undefined): value is SiteLang {
   return value === "en" || value === "es" || value === "ar";
 }
 
-export async function getPreferredSiteLang(
-  searchParamLang?: string | null
-): Promise<SiteLang> {
-  if (isValidLang(searchParamLang)) {
-    return searchParamLang;
+export function getPreferredSiteLang(value?: string | null): SiteLang {
+  if (isValidLang(value)) {
+    return value;
   }
 
-  const cookieStore = await cookies();
-  const cookieLang = cookieStore.get("site_lang")?.value;
-
-  return getSiteLang(cookieLang);
+  return getSiteLang(value);
 }

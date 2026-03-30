@@ -163,11 +163,19 @@ export async function updateLeadStage(formData: FormData) {
   const supabase = await getSupabase();
 
   const id = String(formData.get("id") || "").trim();
-  const stage = String(formData.get("stage") || "").trim();
+  const rawStage = String(formData.get("stage") || "").trim();
 
-  if (!id || !CRM_STAGE_OPTIONS.has(stage)) {
+  if (!id) {
     throw new Error("Invalid stage update.");
   }
+
+  const allowedStages = Array.from(CRM_STAGE_OPTIONS);
+
+  if (!allowedStages.includes(rawStage as (typeof allowedStages)[number])) {
+    throw new Error("Invalid stage update.");
+  }
+
+  const stage = rawStage as (typeof allowedStages)[number];
 
   const { data: existingLead, error: fetchError } = await supabase
     .from("crm_leads")

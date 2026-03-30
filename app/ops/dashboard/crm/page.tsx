@@ -43,6 +43,15 @@ type CrmLead = {
   channel: string | null;
   phone: string | null;
   email: string | null;
+
+  source: string;
+  timeline: string | null;
+  pain_point: string | null;
+  price_expectation: number | null;
+  market_low: number | null;
+  market_high: number | null;
+  recommended_price: number | null;
+  cma_notes: string | null;
 };
 
 async function getSupabase() {
@@ -68,6 +77,16 @@ function sortLeadsForExecution(leads: CrmLead[]) {
   });
 }
 
+function normalizeNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function normalizeText(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
 function normalizeLead(row: any): CrmLead {
   return {
     id: String(row?.id ?? "").trim(),
@@ -79,21 +98,25 @@ function normalizeLead(row: any): CrmLead {
       typeof row?.priority === "string"
         ? row.priority.trim().toLowerCase()
         : null,
-    lead_score:
-      typeof row?.lead_score === "number"
-        ? row.lead_score
-        : Number.isFinite(Number(row?.lead_score))
-        ? Number(row.lead_score)
-        : null,
+    lead_score: normalizeNumber(row?.lead_score),
     lead_quality: row?.lead_quality ?? null,
 
     full_name: String(row?.full_name ?? ""),
     property_address: String(row?.property_address ?? ""),
-    motivation: row?.motivation ?? null,
-    source_detail: row?.source_detail ?? null,
-    channel: row?.channel ?? null,
-    phone: row?.phone ?? null,
-    email: row?.email ?? null,
+    motivation: normalizeText(row?.motivation),
+    source_detail: normalizeText(row?.source_detail),
+    channel: normalizeText(row?.channel),
+    phone: normalizeText(row?.phone),
+    email: normalizeText(row?.email),
+
+    source: typeof row?.source === "string" ? row.source : "",
+    timeline: normalizeText(row?.timeline),
+    pain_point: normalizeText(row?.pain_point),
+    price_expectation: normalizeNumber(row?.price_expectation),
+    market_low: normalizeNumber(row?.market_low),
+    market_high: normalizeNumber(row?.market_high),
+    recommended_price: normalizeNumber(row?.recommended_price),
+    cma_notes: normalizeText(row?.cma_notes),
   };
 }
 

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 export default function VisitTracker() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const trackablePaths = [
@@ -19,13 +20,13 @@ export default function VisitTracker() {
       return;
     }
 
-    const key = `visit:${pathname}`;
-    if (sessionStorage.getItem(key)) return;
+    const search = searchParams.toString();
+    const sessionKey = `visit:${pathname}${search ? `?${search}` : ""}`;
 
-    sessionStorage.setItem(key, "1");
+    if (sessionStorage.getItem(sessionKey)) return;
+    sessionStorage.setItem(sessionKey, "1");
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const lang = urlParams.get("lang") || "en";
+    const lang = searchParams.get("lang") || "en";
 
     function getIntent(path: string) {
       if (path.startsWith("/rent")) return "rent";
@@ -38,6 +39,7 @@ export default function VisitTracker() {
 
     const payload = JSON.stringify({
       path: pathname,
+      query: search || null,
       intent: getIntent(pathname),
       lang,
       visitSource: "website",
@@ -45,15 +47,17 @@ export default function VisitTracker() {
     });
 
     if (navigator.sendBeacon) {
-      navigator.sendBeacon("/api/visit", payload);
+      const blob = new Blob([payload], { type: "application/json" });
+      navigator.sendBeacon("/api/visit", blob);
     } else {
       fetch("/api/visit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: payload,
+        keepalive: true,
       }).catch(() => {});
     }
-  }, [pathname]);
+  }, [pathname, searchParams]);
 
   return null;
 }
